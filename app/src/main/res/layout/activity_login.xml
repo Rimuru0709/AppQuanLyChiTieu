@@ -175,7 +175,7 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnFacebook"
         android:layout_width="180dp"
-        android:layout_height="55dp"
+        android:layout_height="56dp"
         android:layout_marginTop="20dp"
         android:backgroundTint="#FFFFFF"
 
