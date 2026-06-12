@@ -1,5 +1,6 @@
 package com.quanlychitieu.doan.database;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -7,7 +8,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "ExpenseDB.db";
-    private static final int DATABASE_VERSION = 1;
+
+    // Tăng version để SQLite tạo lại DB
+    private static final int DATABASE_VERSION = 2;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -23,21 +26,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         "date TEXT," +
                         "amount INTEGER)"
         );
-
-        db.execSQL(
-                "INSERT INTO transactions(title,date,amount) " +
-                        "VALUES('Ăn uống','11/06/2026',-120000)"
-        );
-
-        db.execSQL(
-                "INSERT INTO transactions(title,date,amount) " +
-                        "VALUES('Lương tháng 6','10/06/2026',15000000)"
-        );
-
-        db.execSQL(
-                "INSERT INTO transactions(title,date,amount) " +
-                        "VALUES('Đi lại','09/06/2026',-30000)"
-        );
     }
 
     @Override
@@ -45,5 +33,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                           int oldVersion,
                           int newVersion) {
 
+        db.execSQL("DROP TABLE IF EXISTS transactions");
+        onCreate(db);
+    }
+
+    // Thêm giao dịch mới
+    public void insertTransaction(String title,
+                                  String date,
+                                  int amount) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("title", title);
+        values.put("date", date);
+        values.put("amount", amount);
+
+        db.insert("transactions", null, values);
+
+        db.close();
     }
 }

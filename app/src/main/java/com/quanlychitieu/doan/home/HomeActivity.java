@@ -1,6 +1,7 @@
 package com.quanlychitieu.doan.home;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -16,20 +17,19 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.quanlychitieu.doan.R;
-import com.quanlychitieu.doan.database.DatabaseHelper;
-
-import com.quanlychitieu.doan.addtransaction.AddTransactionActivity;
 import com.quanlychitieu.doan.category.CategoryActivity;
+import com.quanlychitieu.doan.choosetransaction.ChooseTransactionActivity;
+import com.quanlychitieu.doan.database.DatabaseHelper;
+import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
+import com.quanlychitieu.doan.history.IncomeHistoryActivity;
 import com.quanlychitieu.doan.setting.SettingActivity;
 import com.quanlychitieu.doan.statistic.StatisticActivity;
-import com.quanlychitieu.doan.choosetransaction.ChooseTransactionActivity;
-
-import android.content.SharedPreferences;
 
 public class HomeActivity extends AppCompatActivity {
 
     private TextView tvHello, tvBalance, tvIncome, tvExpense;
     private TextView navHome, navStatistic, navAdd, navCategory, navSetting;
+    private TextView btnIncome, btnExpense;
     private ImageView imgEye;
     private LinearLayout layoutTransactions;
 
@@ -57,13 +57,30 @@ public class HomeActivity extends AppCompatActivity {
         navCategory = findViewById(R.id.navCategory);
         navSetting = findViewById(R.id.navSetting);
 
+        btnIncome = findViewById(R.id.btnIncome);
+        btnExpense = findViewById(R.id.btnExpense);
+
         dbHelper = new DatabaseHelper(this);
         database = dbHelper.getWritableDatabase();
 
         loadHomeData();
         hideMoney();
         setupEyeButton();
+        setupQuickButtons();
         setupBottomNavigation();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        loadRecentTransactions();
+
+        if (isBalanceVisible) {
+            showMoney();
+        } else {
+            hideMoney();
+        }
     }
 
     private void setupEyeButton() {
@@ -76,6 +93,16 @@ public class HomeActivity extends AppCompatActivity {
         });
     }
 
+    private void setupQuickButtons() {
+        btnIncome.setOnClickListener(v -> {
+            startActivity(new Intent(HomeActivity.this, IncomeHistoryActivity.class));
+        });
+
+        btnExpense.setOnClickListener(v -> {
+            startActivity(new Intent(HomeActivity.this, ExpenseHistoryActivity.class));
+        });
+    }
+
     private void setupBottomNavigation() {
         navHome.setTextColor(Color.parseColor("#0057FF"));
 
@@ -84,7 +111,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         navAdd.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, AddTransactionActivity.class));
+            startActivity(new Intent(HomeActivity.this, ChooseTransactionActivity.class));
         });
 
         navCategory.setOnClickListener(v -> {
@@ -94,18 +121,12 @@ public class HomeActivity extends AppCompatActivity {
         navSetting.setOnClickListener(v -> {
             startActivity(new Intent(HomeActivity.this, SettingActivity.class));
         });
-
-        navAdd.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, ChooseTransactionActivity.class));
-        });
     }
 
     private void loadHomeData() {
-        SharedPreferences prefs =
-                getSharedPreferences("UserData", MODE_PRIVATE);
+        SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
 
-        String fullName =
-                prefs.getString("fullName", "Người dùng");
+        String fullName = prefs.getString("fullName", "Người dùng");
 
         tvHello.setText("Xin chào, " + fullName + "! 👋");
 
