@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bottomNav"
+    android:layout_width="match_parent"
+    android:layout_height="110dp"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:background="#FFFFFF"
+    android:elevation="10dp"
+    android:paddingBottom="50dp">
+
+    <TextView
+        android:id="@+id/navHome"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="⌂\nTrang chủ"
+        android:textColor="#0057FF"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/navStatistic"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="▥\nThống kê"
+        android:textColor="#777777"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/navAdd"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:textColor="#FFFFFF"
+        android:textSize="34sp"
+        android:background="@drawable/bg_circle_blue" />
+
+    <TextView
+        android:id="@+id/navCategory"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="▣\nDanh mục"
+        android:textColor="#777777"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/navSetting"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="⚙\nCài đặt"
+        android:textColor="#777777"
+        android:textSize="14sp" />
+
+</LinearLayout>
