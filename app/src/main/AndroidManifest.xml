@@ -33,11 +33,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".choosetransaction.ChooseTransactionActivity"
+            android:name=".history.IncomeHistoryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
-            android:name=".history.IncomeHistoryActivity"
+            android:name=".choosetransaction.ChooseTransactionActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity

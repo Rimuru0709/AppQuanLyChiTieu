@@ -8,9 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "ExpenseDB.db";
-
-    // Tăng version để SQLite tạo lại DB
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -18,39 +16,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
         db.execSQL(
                 "CREATE TABLE transactions (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "title TEXT," +
                         "date TEXT," +
-                        "amount INTEGER)"
+                        "amount INTEGER," +
+                        "wallet TEXT)"
         );
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase db,
-                          int oldVersion,
-                          int newVersion) {
-
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS transactions");
         onCreate(db);
     }
 
-    // Thêm giao dịch mới
-    public void insertTransaction(String title,
-                                  String date,
-                                  int amount) {
-
+    public void insertTransaction(String title, String date, int amount, String wallet) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put("title", title);
         values.put("date", date);
         values.put("amount", amount);
+        values.put("wallet", wallet);
 
         db.insert("transactions", null, values);
-
         db.close();
     }
 }
