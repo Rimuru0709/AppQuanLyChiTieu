@@ -12,24 +12,22 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.quanlychitieu.doan.R;
-import com.quanlychitieu.doan.category.CategoryActivity;
 import com.quanlychitieu.doan.choosetransaction.ChooseTransactionActivity;
 import com.quanlychitieu.doan.database.DatabaseHelper;
 import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
 import com.quanlychitieu.doan.history.IncomeHistoryActivity;
-import com.quanlychitieu.doan.setting.SettingActivity;
-import com.quanlychitieu.doan.statistic.StatisticActivity;
+import com.quanlychitieu.doan.navigation.BottomNavHelper;
 
 public class HomeActivity extends AppCompatActivity {
 
     private TextView tvHello, tvBalance, tvIncome, tvExpense;
-    private TextView navHome, navStatistic, navAdd, navCategory, navSetting;
-    private TextView btnIncome, btnExpense;
+    private LinearLayout btnIncome, btnExpense, btnTransfer, btnWallet;
     private ImageView imgEye;
     private LinearLayout layoutTransactions;
 
@@ -44,6 +42,8 @@ public class HomeActivity extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_home);
 
+        BottomNavHelper.setup(this);
+
         tvHello = findViewById(R.id.tvHello);
         tvBalance = findViewById(R.id.tvBalance);
         tvIncome = findViewById(R.id.tvIncome);
@@ -51,14 +51,10 @@ public class HomeActivity extends AppCompatActivity {
         imgEye = findViewById(R.id.imgEye);
         layoutTransactions = findViewById(R.id.layoutTransactions);
 
-        navHome = findViewById(R.id.navHome);
-        navStatistic = findViewById(R.id.navStatistic);
-        navAdd = findViewById(R.id.navAdd);
-        navCategory = findViewById(R.id.navCategory);
-        navSetting = findViewById(R.id.navSetting);
-
         btnIncome = findViewById(R.id.btnIncome);
         btnExpense = findViewById(R.id.btnExpense);
+        btnTransfer = findViewById(R.id.btnTransfer);
+        btnWallet = findViewById(R.id.btnWallet);
 
         dbHelper = new DatabaseHelper(this);
         database = dbHelper.getWritableDatabase();
@@ -67,7 +63,6 @@ public class HomeActivity extends AppCompatActivity {
         hideMoney();
         setupEyeButton();
         setupQuickButtons();
-        setupBottomNavigation();
     }
 
     @Override
@@ -101,25 +96,13 @@ public class HomeActivity extends AppCompatActivity {
         btnExpense.setOnClickListener(v -> {
             startActivity(new Intent(HomeActivity.this, ExpenseHistoryActivity.class));
         });
-    }
 
-    private void setupBottomNavigation() {
-        navHome.setTextColor(Color.parseColor("#0057FF"));
-
-        navStatistic.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, StatisticActivity.class));
-        });
-
-        navAdd.setOnClickListener(v -> {
+        btnTransfer.setOnClickListener(v -> {
             startActivity(new Intent(HomeActivity.this, ChooseTransactionActivity.class));
         });
 
-        navCategory.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, CategoryActivity.class));
-        });
-
-        navSetting.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, SettingActivity.class));
+        btnWallet.setOnClickListener(v -> {
+            Toast.makeText(this, "Ví của tôi", Toast.LENGTH_SHORT).show();
         });
     }
 
