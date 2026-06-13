@@ -16,7 +16,6 @@
         android:layout_weight="1"
         android:gravity="center"
         android:text="⌂\nTrang chủ"
-        android:textColor="#0057FF"
         android:textSize="14sp" />
 
     <TextView
