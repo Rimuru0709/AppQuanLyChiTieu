@@ -314,7 +314,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             amount = -amount;
         }
 
-        databaseHelper.insertTransaction(category, date, amount);
+        databaseHelper.insertTransaction(category, date, amount, tvWallet.getText().toString());
 
         Toast.makeText(this, "Lưu giao dịch thành công", Toast.LENGTH_SHORT).show();
 
