@@ -1,4 +1,4 @@
-package com.quanlychitieu.doan.navigation;
+package com.quanlychitieu.doan.bottomnav;
 
 import android.app.Activity;
 import android.content.Intent;

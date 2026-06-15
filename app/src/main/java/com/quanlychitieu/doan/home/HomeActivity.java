@@ -22,7 +22,7 @@ import com.quanlychitieu.doan.choosetransaction.ChooseTransactionActivity;
 import com.quanlychitieu.doan.database.DatabaseHelper;
 import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
 import com.quanlychitieu.doan.history.IncomeHistoryActivity;
-import com.quanlychitieu.doan.navigation.BottomNavHelper;
+import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -224,9 +224,33 @@ public class HomeActivity extends AppCompatActivity {
         } else if (title.contains("Mua sắm")) {
             imgIcon.setImageResource(R.drawable.ic_shopping);
             bg.setColor(Color.parseColor("#F1C40F"));
-        } else {
+        } else if (title.contains("Giải trí")) {
             imgIcon.setImageResource(R.drawable.ic_default);
-            bg.setColor(Color.parseColor("#9B59B6"));
+            bg.setColor(Color.parseColor("#9C27B0"));
+        } else if (title.contains("Hóa đơn")) {
+            imgIcon.setImageResource(R.drawable.ic_bill);
+            bg.setColor(Color.parseColor("##FF9800"));
+        } else if (title.contains("Sức khỏe")) {
+            imgIcon.setImageResource(R.drawable.ic_heart);
+            bg.setColor(Color.parseColor("#FFB3C6"));
+        } else if (title.contains("Thưởng")) {
+            imgIcon.setImageResource(R.drawable.ic_reward);
+            bg.setColor(Color.parseColor("#FB8500"));
+        } else if (title.contains("Làm thêm")) {
+            imgIcon.setImageResource(R.drawable.ic_work);
+            bg.setColor(Color.parseColor("#A2D2FF"));
+        } else if (title.contains("Đầu tư")) {
+            imgIcon.setImageResource(R.drawable.ic_invest);
+            bg.setColor(Color.parseColor("#2A9D8F"));
+        } else if (title.contains("Bán hàng")) {
+            imgIcon.setImageResource(R.drawable.ic_sell);
+            bg.setColor(Color.parseColor("#9D4EDD"));
+        } else if (title.contains("Được tặng")) {
+            imgIcon.setImageResource(R.drawable.ic_donate);
+            bg.setColor(Color.parseColor("#9D6B53"));
+        } else {
+            imgIcon.setImageResource(R.drawable.ic_dot);
+            bg.setColor(Color.parseColor("#ADB5BD"));
         }
 
         iconContainer.setBackground(bg);
@@ -243,8 +267,11 @@ public class HomeActivity extends AppCompatActivity {
         tvInfo.setTextColor(Color.parseColor("#222222"));
 
         TextView tvMoney = new TextView(this);
-        String sign = money > 0 ? "+" : "-";
-        tvMoney.setText(sign + formatMoney(money));
+        if (money > 0) {
+            tvMoney.setText("+" + formatMoney(money));
+        } else {
+            tvMoney.setText(formatMoney(money));
+        }
         tvMoney.setTextSize(14);
 
         if (money > 0) {
@@ -261,6 +288,6 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private String formatMoney(int money) {
-        return String.format("%,d đ", Math.abs(money)).replace(",", ".");
+        return String.format("%,d đ", money).replace(",", ".");
     }
 }
