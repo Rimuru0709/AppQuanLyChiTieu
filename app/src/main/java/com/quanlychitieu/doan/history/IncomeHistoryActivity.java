@@ -17,34 +17,21 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.quanlychitieu.doan.R;
+import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
 import com.quanlychitieu.doan.database.DatabaseHelper;
-import com.quanlychitieu.doan.navigation.BottomNavHelper;
 
 import java.util.Calendar;
 
 public class IncomeHistoryActivity extends AppCompatActivity {
 
     LinearLayout layoutTransactions;
+    LinearLayout boxTransactionCount, boxIncome, boxRefund, boxAverage;
 
-    LinearLayout boxTransactionCount;
-    LinearLayout boxIncome;
-    LinearLayout boxRefund;
-    LinearLayout boxAverage;
-
-    TextView btnMonth;
-    TextView btnMonthTop;
-    TextView btnWallet;
-    TextView btnSort;
-
+    TextView btnMonth, btnMonthTop, btnWallet, btnSort;
     EditText edtSearch;
-
     ImageView imgBack;
 
-    TextView tvTotalIncome;
-    TextView tvTransactionCount;
-    TextView tvIncome;
-    TextView tvRefund;
-    TextView tvAverage;
+    TextView tvTotalIncome, tvTransactionCount, tvIncome, tvRefund, tvAverage;
 
     DatabaseHelper dbHelper;
     SQLiteDatabase database;
@@ -53,8 +40,8 @@ public class IncomeHistoryActivity extends AppCompatActivity {
     int transactionCount = 0;
     int refund = 0;
 
-    int selectedMonth = 6;
-    int selectedYear = 2024;
+    int selectedMonth;
+    int selectedYear;
 
     String selectedWallet = "Tất cả ví";
     String sortType = "Mới nhất";
@@ -67,7 +54,6 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         BottomNavHelper.setup(this);
 
         imgBack = findViewById(R.id.imgBack);
-
         layoutTransactions = findViewById(R.id.layoutTransactions);
 
         boxTransactionCount = findViewById(R.id.boxTransactionCount);
@@ -91,8 +77,18 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         dbHelper = new DatabaseHelper(this);
         database = dbHelper.getReadableDatabase();
 
+        Calendar calendar = Calendar.getInstance();
+        selectedMonth = calendar.get(Calendar.MONTH) + 1;
+        selectedYear = calendar.get(Calendar.YEAR);
+
         updateMonthText();
         setClickEvents();
+        loadIncomeHistory();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         loadIncomeHistory();
     }
 
@@ -109,13 +105,12 @@ public class IncomeHistoryActivity extends AppCompatActivity {
 
         btnMonth.setOnClickListener(v -> showDatePicker());
         btnMonthTop.setOnClickListener(v -> showDatePicker());
-
         btnWallet.setOnClickListener(v -> showWalletDialog());
-
         btnSort.setOnClickListener(v -> showSortDialog());
 
         edtSearch.setOnEditorActionListener((v, actionId, event) -> {
             hideKeyboard();
+            loadIncomeHistory();
             return false;
         });
 
@@ -174,8 +169,6 @@ public class IncomeHistoryActivity extends AppCompatActivity {
     }
 
     private void showDatePicker() {
-        Calendar calendar = Calendar.getInstance();
-
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
                 (view, year, month, dayOfMonth) -> {
@@ -187,7 +180,7 @@ public class IncomeHistoryActivity extends AppCompatActivity {
                 },
                 selectedYear,
                 selectedMonth - 1,
-                calendar.get(Calendar.DAY_OF_MONTH)
+                1
         );
 
         datePickerDialog.show();
@@ -208,6 +201,8 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         refund = 0;
 
         String monthText = String.format("%02d/%04d", selectedMonth, selectedYear);
+
+        String keyword = edtSearch.getText().toString().trim().toLowerCase();
 
         String orderBy = "id DESC";
 
@@ -241,6 +236,10 @@ public class IncomeHistoryActivity extends AppCompatActivity {
             String title = cursor.getString(0);
             String date = cursor.getString(1);
             int amount = cursor.getInt(2);
+
+            if (!keyword.isEmpty() && !title.toLowerCase().contains(keyword)) {
+                continue;
+            }
 
             totalIncome += amount;
             transactionCount++;
@@ -295,6 +294,6 @@ public class IncomeHistoryActivity extends AppCompatActivity {
     }
 
     private String formatMoney(int money) {
-        return String.format("%,d đ", Math.abs(money)).replace(",", ".");
+        return String.format("%,d đ", money).replace(",", ".");
     }
 }
