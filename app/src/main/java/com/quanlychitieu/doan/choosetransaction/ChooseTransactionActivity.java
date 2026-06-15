@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -35,7 +36,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     private TextView tvCategoryName, tvWallet;
     private TextView tabChiTieu, tabThuNhap;
     private ImageView imgCategoryIcon;
-    private EditText edtAmount, edtDate, edtNote;
+    private EditText edtAmount, edtDate, edtNote, edtOtherCategory;
     private Button btnSave;
 
     private DatabaseHelper databaseHelper;
@@ -65,6 +66,8 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         edtAmount = findViewById(R.id.edtAmount);
         edtDate = findViewById(R.id.edtDate);
         edtNote = findViewById(R.id.edtNote);
+        edtOtherCategory = findViewById(R.id.edtOtherCategory);
+
         tvWallet = findViewById(R.id.tvWallet);
         btnSave = findViewById(R.id.btnSave);
 
@@ -88,6 +91,11 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         });
 
         edtNote.setOnEditorActionListener((v, actionId, event) -> {
+            hideKeyboard();
+            return false;
+        });
+
+        edtOtherCategory.setOnEditorActionListener((v, actionId, event) -> {
             hideKeyboard();
             return false;
         });
@@ -126,6 +134,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         tvCategoryName.setText("Ăn uống");
         imgCategoryIcon.setImageResource(R.drawable.ic_food);
         setIconBackgroundColor("#FF3131");
+
+        edtOtherCategory.setVisibility(View.GONE);
+        edtOtherCategory.setText("");
     }
 
     private void setIncomeMode() {
@@ -140,6 +151,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         tvCategoryName.setText("Lương");
         imgCategoryIcon.setImageResource(R.drawable.ic_salary);
         setIconBackgroundColor("#2ECC71");
+
+        edtOtherCategory.setVisibility(View.GONE);
+        edtOtherCategory.setText("");
     }
 
     private void setIconBackgroundColor(String color) {
@@ -220,7 +234,16 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         builder.setTitle("Chọn danh mục");
 
         builder.setItems(categories, (dialog, which) -> {
-            tvCategoryName.setText(categories[which]);
+            String selectedCategory = categories[which];
+
+            tvCategoryName.setText(selectedCategory);
+
+            if (selectedCategory.equals("Khác")) {
+                edtOtherCategory.setVisibility(View.VISIBLE);
+            } else {
+                edtOtherCategory.setVisibility(View.GONE);
+                edtOtherCategory.setText("");
+            }
 
             if (transactionType.equals("INCOME")) {
                 setIncomeCategoryIcon(which);
@@ -302,10 +325,22 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         String amountText = edtAmount.getText().toString().trim();
         String category = tvCategoryName.getText().toString();
         String date = edtDate.getText().toString();
+        String wallet = tvWallet.getText().toString();
 
         if (amountText.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập số tiền", Toast.LENGTH_SHORT).show();
             return;
+        }
+
+        if (category.equals("Khác")) {
+            String otherCategory = edtOtherCategory.getText().toString().trim();
+
+            if (otherCategory.isEmpty()) {
+                edtOtherCategory.setError("Nhập tên danh mục khác");
+                return;
+            }
+
+            category = otherCategory;
         }
 
         int amount = Integer.parseInt(amountText);
@@ -314,7 +349,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             amount = -amount;
         }
 
-        databaseHelper.insertTransaction(category, date, amount, tvWallet.getText().toString());
+        databaseHelper.insertTransaction(category, date, amount, wallet);
 
         Toast.makeText(this, "Lưu giao dịch thành công", Toast.LENGTH_SHORT).show();
 
