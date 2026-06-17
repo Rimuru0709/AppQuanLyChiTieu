@@ -1,157 +1,87 @@
-package com.quanlychitieu.doan.home;
+package com.quanlychitieu.doan.alltransaction;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.quanlychitieu.doan.R;
-import com.quanlychitieu.doan.choosetransaction.ChooseTransactionActivity;
-import com.quanlychitieu.doan.database.DatabaseHelper;
-import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
-import com.quanlychitieu.doan.history.IncomeHistoryActivity;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
-import com.quanlychitieu.doan.alltransaction.AllTransactionActivity;
+import com.quanlychitieu.doan.database.DatabaseHelper;
 
-public class HomeActivity extends AppCompatActivity {
+public class AllTransactionActivity extends AppCompatActivity {
 
-    private TextView tvHello, tvBalance, tvIncome, tvExpense, tvViewAll;
-    private LinearLayout btnIncome, btnExpense, btnTransfer, btnWallet, btnGoal, btnAlert;
-    private ImageView imgEye;
+    private ImageView btnBack;
+    private TextView tvTotalIncome, tvTotalExpense, tvTotalTransaction;
+    private EditText edtSearch;
     private LinearLayout layoutTransactions;
 
     private DatabaseHelper dbHelper;
     private SQLiteDatabase database;
 
-    private boolean isBalanceVisible = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_home);
+        setContentView(R.layout.activity_all_transaction);
 
         BottomNavHelper.setup(this);
 
-        tvHello = findViewById(R.id.tvHello);
-        tvBalance = findViewById(R.id.tvBalance);
-        tvIncome = findViewById(R.id.tvIncome);
-        tvExpense = findViewById(R.id.tvExpense);
-        imgEye = findViewById(R.id.imgEye);
+        btnBack = findViewById(R.id.btnBack);
+        edtSearch = findViewById(R.id.edtSearch);
+        tvTotalIncome = findViewById(R.id.tvTotalIncome);
+        tvTotalExpense = findViewById(R.id.tvTotalExpense);
+        tvTotalTransaction = findViewById(R.id.tvTotalTransaction);
         layoutTransactions = findViewById(R.id.layoutTransactions);
-
-        btnIncome = findViewById(R.id.btnIncome);
-        btnExpense = findViewById(R.id.btnExpense);
-        btnTransfer = findViewById(R.id.btnTransfer);
-        btnWallet = findViewById(R.id.btnWallet);
-        btnGoal = findViewById(R.id.btnGoal);
-        btnAlert = findViewById(R.id.btnAlert);
-        tvViewAll = findViewById(R.id.tvViewAll);
 
         dbHelper = new DatabaseHelper(this);
         database = dbHelper.getWritableDatabase();
 
-        loadHomeData();
-        hideMoney();
-        setupEyeButton();
-        setupQuickButtons();
+        btnBack.setOnClickListener(v -> finish());
+
+        edtSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                loadAllTransactions(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        loadRecentTransactions();
-
-        if (isBalanceVisible) {
-            showMoney();
-        } else {
-            hideMoney();
-        }
+        loadSummary();
+        loadAllTransactions(edtSearch.getText().toString());
     }
 
-    private void setupEyeButton() {
-        imgEye.setOnClickListener(v -> {
-            if (isBalanceVisible) {
-                hideMoney();
-            } else {
-                showMoney();
-            }
-        });
-    }
-
-    private void setupQuickButtons() {
-        btnIncome.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, IncomeHistoryActivity.class));
-        });
-
-        btnExpense.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, ExpenseHistoryActivity.class));
-        });
-
-        btnTransfer.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, ChooseTransactionActivity.class));
-        });
-
-        btnWallet.setOnClickListener(v -> {
-            Toast.makeText(this, "Ví của tôi", Toast.LENGTH_SHORT).show();
-        });
-
-        btnGoal.setOnClickListener(v -> {
-            Toast.makeText(this, "Mục tiêu tiết kiệm", Toast.LENGTH_SHORT).show();
-        });
-
-        btnAlert.setOnClickListener(v -> {
-            Toast.makeText(this, "Cảnh báo chi tiêu", Toast.LENGTH_SHORT).show();
-        });
-
-        tvViewAll.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, AllTransactionActivity.class));
-        });
-    }
-
-    private void loadHomeData() {
-        SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
-
-        String fullName = prefs.getString("fullName", "Người dùng");
-
-        tvHello.setText("Xin chào, " + fullName + "! 👋");
-
-        loadRecentTransactions();
-    }
-
-    private void showMoney() {
+    private void loadSummary() {
         int totalIncome = getTotalIncome();
         int totalExpense = getTotalExpense();
-        int balance = totalIncome - totalExpense;
+        int totalCount = getTotalCount();
 
-        tvBalance.setText(formatMoney(balance));
-        tvIncome.setText("Tổng thu\n" + formatMoney(totalIncome));
-        tvExpense.setText("Tổng chi\n" + formatMoney(totalExpense));
-
-        imgEye.setImageResource(R.drawable.ic_eye);
-        isBalanceVisible = true;
-    }
-
-    private void hideMoney() {
-        tvBalance.setText("******");
-        tvIncome.setText("Tổng thu\n******");
-        tvExpense.setText("Tổng chi\n******");
-
-        imgEye.setImageResource(R.drawable.ic_eye_off);
-        isBalanceVisible = false;
+        tvTotalIncome.setText("Tổng thu\n" + formatMoney(totalIncome));
+        tvTotalExpense.setText("Tổng chi\n" + formatMoney(totalExpense));
+        tvTotalTransaction.setText("Tổng giao dịch\n" + totalCount);
     }
 
     private int getTotalIncome() {
@@ -186,13 +116,44 @@ public class HomeActivity extends AppCompatActivity {
         return total;
     }
 
-    private void loadRecentTransactions() {
+    private int getTotalCount() {
+        int count = 0;
+
+        Cursor cursor = database.rawQuery(
+                "SELECT COUNT(*) FROM transactions",
+                null
+        );
+
+        if (cursor.moveToFirst()) {
+            count = cursor.getInt(0);
+        }
+
+        cursor.close();
+        return count;
+    }
+
+    private void loadAllTransactions(String keyword) {
         layoutTransactions.removeAllViews();
 
         Cursor cursor = database.rawQuery(
-                "SELECT title, date, amount FROM transactions ORDER BY id DESC LIMIT 5",
-                null
+                "SELECT title, date, amount FROM transactions " +
+                        "WHERE title LIKE ? " +
+                        "ORDER BY id DESC",
+                new String[]{"%" + keyword + "%"}
         );
+
+        if (cursor.getCount() == 0) {
+            TextView empty = new TextView(this);
+            empty.setText("Không có giao dịch nào");
+            empty.setTextSize(16);
+            empty.setTextColor(Color.GRAY);
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, 40, 0, 40);
+
+            layoutTransactions.addView(empty);
+            cursor.close();
+            return;
+        }
 
         while (cursor.moveToNext()) {
             String title = cursor.getString(0);
@@ -283,16 +244,14 @@ public class HomeActivity extends AppCompatActivity {
         tvInfo.setTextColor(Color.parseColor("#222222"));
 
         TextView tvMoney = new TextView(this);
-        if (money > 0) {
-            tvMoney.setText("+" + formatMoney(money));
-        } else {
-            tvMoney.setText(formatMoney(money));
-        }
         tvMoney.setTextSize(14);
+        tvMoney.setTypeface(null, Typeface.BOLD);
 
         if (money > 0) {
+            tvMoney.setText("+" + formatMoney(money));
             tvMoney.setTextColor(Color.parseColor("#00A86B"));
         } else {
+            tvMoney.setText(formatMoney(money));
             tvMoney.setTextColor(Color.parseColor("#FF3B3B"));
         }
 
