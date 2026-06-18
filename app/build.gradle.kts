@@ -44,6 +44,7 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:34.0.0"))
     implementation("com.google.firebase:firebase-auth")
+    implementation("org.apache.poi:poi-ooxml:5.5.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.espresso.core)
