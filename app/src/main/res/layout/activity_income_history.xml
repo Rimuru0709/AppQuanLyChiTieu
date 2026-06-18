@@ -45,12 +45,10 @@
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
-                <ImageView
-                    android:id="@+id/imgFilter"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_filter" />
+                <View
+                    android:layout_width="40dp"
+                    android:layout_height="40dp" />
+
             </LinearLayout>
 
             <!-- CARD TỔNG THU -->
@@ -414,7 +412,6 @@
                 android:id="@+id/layoutTransactions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_camera"
                 android:orientation="vertical" />
 
             <TextView
