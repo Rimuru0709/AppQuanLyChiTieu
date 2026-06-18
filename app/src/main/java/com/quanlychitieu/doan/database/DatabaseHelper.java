@@ -8,7 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "ExpenseDB.db";
-    private static final int DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -22,7 +22,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         "title TEXT," +
                         "date TEXT," +
                         "amount INTEGER," +
-                        "wallet TEXT)"
+                        "wallet TEXT," +
+                        "icon TEXT," +
+                        "color TEXT)"
         );
     }
 
@@ -32,7 +34,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void insertTransaction(String title, String date, int amount, String wallet) {
+    public void insertTransaction(String title, String date, int amount,
+                                  String wallet, String icon, String color) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -40,6 +43,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("date", date);
         values.put("amount", amount);
         values.put("wallet", wallet);
+        values.put("icon", icon);
+        values.put("color", color);
 
         db.insert("transactions", null, values);
         db.close();

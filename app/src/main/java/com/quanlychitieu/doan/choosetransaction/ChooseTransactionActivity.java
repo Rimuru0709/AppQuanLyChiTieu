@@ -42,6 +42,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     private DatabaseHelper databaseHelper;
     private String transactionType = "EXPENSE";
 
+    private String selectedIcon = "ic_food";
+    private String selectedColor = "#FF3131";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -135,6 +138,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         imgCategoryIcon.setImageResource(R.drawable.ic_food);
         setIconBackgroundColor("#FF3131");
 
+        selectedIcon = "ic_food";
+        selectedColor = "#FF3131";
+
         edtOtherCategory.setVisibility(View.GONE);
         edtOtherCategory.setText("");
     }
@@ -151,6 +157,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         tvCategoryName.setText("Lương");
         imgCategoryIcon.setImageResource(R.drawable.ic_salary);
         setIconBackgroundColor("#2ECC71");
+
+        selectedIcon = "ic_salary";
+        selectedColor = "#2ECC71";
 
         edtOtherCategory.setVisibility(View.GONE);
         edtOtherCategory.setText("");
@@ -199,9 +208,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Chọn ví");
-
         builder.setItems(wallets, (dialog, which) -> tvWallet.setText(wallets[which]));
-
         builder.show();
     }
 
@@ -235,7 +242,6 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
         builder.setItems(categories, (dialog, which) -> {
             String selectedCategory = categories[which];
-
             tvCategoryName.setText(selectedCategory);
 
             if (selectedCategory.equals("Khác")) {
@@ -260,30 +266,50 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             case 0:
                 imgCategoryIcon.setImageResource(R.drawable.ic_food);
                 setIconBackgroundColor("#FF3131");
+                selectedIcon = "ic_food";
+                selectedColor = "#FF3131";
                 break;
+
             case 1:
                 imgCategoryIcon.setImageResource(R.drawable.ic_bus);
                 setIconBackgroundColor("#2196F3");
+                selectedIcon = "ic_bus";
+                selectedColor = "#2196F3";
                 break;
+
             case 2:
                 imgCategoryIcon.setImageResource(R.drawable.ic_shopping);
                 setIconBackgroundColor("#FF9800");
+                selectedIcon = "ic_shopping";
+                selectedColor = "#FF9800";
                 break;
+
             case 3:
                 imgCategoryIcon.setImageResource(R.drawable.ic_default);
                 setIconBackgroundColor("#9C27B0");
+                selectedIcon = "ic_default";
+                selectedColor = "#9C27B0";
                 break;
+
             case 4:
                 imgCategoryIcon.setImageResource(R.drawable.ic_bill);
                 setIconBackgroundColor("#FF9800");
+                selectedIcon = "ic_bill";
+                selectedColor = "#FF9800";
                 break;
+
             case 5:
                 imgCategoryIcon.setImageResource(R.drawable.ic_heart);
                 setIconBackgroundColor("#FFB3C6");
+                selectedIcon = "ic_heart";
+                selectedColor = "#FFB3C6";
                 break;
+
             case 6:
                 imgCategoryIcon.setImageResource(R.drawable.ic_dot);
                 setIconBackgroundColor("#ADB5BD");
+                selectedIcon = "ic_dot";
+                selectedColor = "#ADB5BD";
                 break;
         }
     }
@@ -293,30 +319,50 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             case 0:
                 imgCategoryIcon.setImageResource(R.drawable.ic_salary);
                 setIconBackgroundColor("#2ECC71");
+                selectedIcon = "ic_salary";
+                selectedColor = "#2ECC71";
                 break;
+
             case 1:
                 imgCategoryIcon.setImageResource(R.drawable.ic_reward);
                 setIconBackgroundColor("#FB8500");
+                selectedIcon = "ic_reward";
+                selectedColor = "#FB8500";
                 break;
+
             case 2:
                 imgCategoryIcon.setImageResource(R.drawable.ic_work);
                 setIconBackgroundColor("#A2D2FF");
+                selectedIcon = "ic_work";
+                selectedColor = "#A2D2FF";
                 break;
+
             case 3:
                 imgCategoryIcon.setImageResource(R.drawable.ic_invest);
                 setIconBackgroundColor("#2A9D8F");
+                selectedIcon = "ic_invest";
+                selectedColor = "#2A9D8F";
                 break;
+
             case 4:
                 imgCategoryIcon.setImageResource(R.drawable.ic_sell);
                 setIconBackgroundColor("#9D4EDD");
+                selectedIcon = "ic_sell";
+                selectedColor = "#9D4EDD";
                 break;
+
             case 5:
                 imgCategoryIcon.setImageResource(R.drawable.ic_donate);
                 setIconBackgroundColor("#9D6B53");
+                selectedIcon = "ic_donate";
+                selectedColor = "#9D6B53";
                 break;
+
             case 6:
                 imgCategoryIcon.setImageResource(R.drawable.ic_dot);
                 setIconBackgroundColor("#ADB5BD");
+                selectedIcon = "ic_dot";
+                selectedColor = "#ADB5BD";
                 break;
         }
     }
@@ -341,6 +387,8 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             }
 
             category = otherCategory;
+            selectedIcon = "ic_dot";
+            selectedColor = "#ADB5BD";
         }
 
         int amount = Integer.parseInt(amountText);
@@ -349,10 +397,16 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             amount = -amount;
         }
 
-        databaseHelper.insertTransaction(category, date, amount, wallet);
+        databaseHelper.insertTransaction(
+                category,
+                date,
+                amount,
+                wallet,
+                selectedIcon,
+                selectedColor
+        );
 
         Toast.makeText(this, "Lưu giao dịch thành công", Toast.LENGTH_SHORT).show();
-
         finish();
     }
 }
