@@ -1,5 +1,6 @@
 package com.quanlychitieu.doan.alltransaction;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -9,6 +10,8 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -64,6 +67,12 @@ public class AllTransactionActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
+
+        edtSearch.setOnEditorActionListener((v, actionId, event) -> {
+            hideKeyboard();
+            edtSearch.clearFocus();
+            return false;
+        });
     }
 
     @Override
@@ -72,6 +81,14 @@ public class AllTransactionActivity extends AppCompatActivity {
 
         loadSummary();
         loadAllTransactions(edtSearch.getText().toString());
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            hideKeyboard();
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
     private void loadSummary() {
@@ -136,7 +153,7 @@ public class AllTransactionActivity extends AppCompatActivity {
         layoutTransactions.removeAllViews();
 
         Cursor cursor = database.rawQuery(
-                "SELECT title, date, amount FROM transactions " +
+                "SELECT title, date, amount, icon, color FROM transactions " +
                         "WHERE title LIKE ? " +
                         "ORDER BY id DESC",
                 new String[]{"%" + keyword + "%"}
@@ -159,14 +176,22 @@ public class AllTransactionActivity extends AppCompatActivity {
             String title = cursor.getString(0);
             String date = cursor.getString(1);
             int amount = cursor.getInt(2);
+            String iconName = cursor.getString(3);
+            String colorCode = cursor.getString(4);
 
-            addTransaction(title, date, amount);
+            addTransaction(title, date, amount, iconName, colorCode);
         }
 
         cursor.close();
     }
 
-    private void addTransaction(String title, String date, int money) {
+    private void addTransaction(
+            String title,
+            String date,
+            int money,
+            String iconName,
+            String colorCode
+    ) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
@@ -182,6 +207,12 @@ public class AllTransactionActivity extends AppCompatActivity {
         GradientDrawable bg = new GradientDrawable();
         bg.setShape(GradientDrawable.OVAL);
 
+        try {
+            bg.setColor(Color.parseColor(colorCode));
+        } catch (Exception e) {
+            bg.setColor(Color.parseColor("#ADB5BD"));
+        }
+
         ImageView imgIcon = new ImageView(this);
 
         FrameLayout.LayoutParams iconParams =
@@ -189,46 +220,18 @@ public class AllTransactionActivity extends AppCompatActivity {
         iconParams.gravity = Gravity.CENTER;
         imgIcon.setLayoutParams(iconParams);
 
-        if (title.contains("Ăn uống")) {
-            imgIcon.setImageResource(R.drawable.ic_food);
-            bg.setColor(Color.parseColor("#FF4D4D"));
-        } else if (title.contains("Lương")) {
-            imgIcon.setImageResource(R.drawable.ic_salary);
-            bg.setColor(Color.parseColor("#2ECC71"));
-        } else if (title.contains("Đi lại")) {
-            imgIcon.setImageResource(R.drawable.ic_bus);
-            bg.setColor(Color.parseColor("#3498DB"));
-        } else if (title.contains("Mua sắm")) {
-            imgIcon.setImageResource(R.drawable.ic_shopping);
-            bg.setColor(Color.parseColor("#F1C40F"));
-        } else if (title.contains("Giải trí")) {
-            imgIcon.setImageResource(R.drawable.ic_default);
-            bg.setColor(Color.parseColor("#9C27B0"));
-        } else if (title.contains("Hóa đơn")) {
-            imgIcon.setImageResource(R.drawable.ic_bill);
-            bg.setColor(Color.parseColor("#FF9800"));
-        } else if (title.contains("Sức khỏe")) {
-            imgIcon.setImageResource(R.drawable.ic_heart);
-            bg.setColor(Color.parseColor("#FFB3C6"));
-        } else if (title.contains("Thưởng")) {
-            imgIcon.setImageResource(R.drawable.ic_reward);
-            bg.setColor(Color.parseColor("#FB8500"));
-        } else if (title.contains("Làm thêm")) {
-            imgIcon.setImageResource(R.drawable.ic_work);
-            bg.setColor(Color.parseColor("#A2D2FF"));
-        } else if (title.contains("Đầu tư")) {
-            imgIcon.setImageResource(R.drawable.ic_invest);
-            bg.setColor(Color.parseColor("#2A9D8F"));
-        } else if (title.contains("Bán hàng")) {
-            imgIcon.setImageResource(R.drawable.ic_sell);
-            bg.setColor(Color.parseColor("#9D4EDD"));
-        } else if (title.contains("Được tặng")) {
-            imgIcon.setImageResource(R.drawable.ic_donate);
-            bg.setColor(Color.parseColor("#9D6B53"));
-        } else {
-            imgIcon.setImageResource(R.drawable.ic_dot);
-            bg.setColor(Color.parseColor("#ADB5BD"));
+        int iconRes = getResources().getIdentifier(
+                iconName,
+                "drawable",
+                getPackageName()
+        );
+
+        if (iconRes == 0) {
+            iconRes = R.drawable.ic_dot;
         }
+
+        imgIcon.setImageResource(iconRes);
+        imgIcon.setColorFilter(Color.WHITE);
 
         iconContainer.setBackground(bg);
         iconContainer.addView(imgIcon);
@@ -260,6 +263,19 @@ public class AllTransactionActivity extends AppCompatActivity {
         row.addView(tvMoney);
 
         layoutTransactions.addView(row);
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm =
+                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        if (getCurrentFocus() != null) {
+            imm.hideSoftInputFromWindow(
+                    getCurrentFocus().getWindowToken(),
+                    0
+            );
+            getCurrentFocus().clearFocus();
+        }
     }
 
     private String formatMoney(int money) {
