@@ -3,16 +3,11 @@ package com.quanlychitieu.doan.history;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
-import android.graphics.pdf.PdfDocument;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -21,34 +16,25 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.FileProvider;
 
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
 import com.quanlychitieu.doan.database.DatabaseHelper;
+import com.quanlychitieu.doan.export.ReportExporter;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.Calendar;
 
 public class IncomeHistoryActivity extends AppCompatActivity {
 
     LinearLayout layoutTransactions;
-    LinearLayout boxTransactionCount, boxIncome, boxRefund, boxAverage;
 
     TextView btnMonth, btnMonthTop, btnWallet, btnSort, btnExport;
     EditText edtSearch;
     ImageView imgBack;
 
-    TextView tvTotalIncome, tvTransactionCount, tvIncome, tvRefund, tvAverage;
+    TextView tvTotalIncome;
 
     DatabaseHelper dbHelper;
     SQLiteDatabase database;
@@ -73,11 +59,6 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         imgBack = findViewById(R.id.imgBack);
         layoutTransactions = findViewById(R.id.layoutTransactions);
 
-        boxTransactionCount = findViewById(R.id.boxTransactionCount);
-        boxIncome = findViewById(R.id.boxIncome);
-        boxRefund = findViewById(R.id.boxRefund);
-        boxAverage = findViewById(R.id.boxAverage);
-
         btnMonth = findViewById(R.id.btnMonth);
         btnMonthTop = findViewById(R.id.btnMonthTop);
         btnWallet = findViewById(R.id.btnWallet);
@@ -85,12 +66,7 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         btnExport = findViewById(R.id.btnExport);
 
         edtSearch = findViewById(R.id.edtSearch);
-
         tvTotalIncome = findViewById(R.id.tvTotalIncome);
-        tvTransactionCount = findViewById(R.id.tvTransactionCount);
-        tvIncome = findViewById(R.id.tvIncome);
-        tvRefund = findViewById(R.id.tvRefund);
-        tvAverage = findViewById(R.id.tvAverage);
 
         dbHelper = new DatabaseHelper(this);
         database = dbHelper.getReadableDatabase();
@@ -132,22 +108,6 @@ public class IncomeHistoryActivity extends AppCompatActivity {
             loadIncomeHistory();
             return false;
         });
-
-        boxTransactionCount.setOnClickListener(v ->
-                Toast.makeText(this, "Số giao dịch: " + transactionCount, Toast.LENGTH_SHORT).show()
-        );
-
-        boxIncome.setOnClickListener(v ->
-                Toast.makeText(this, "Tổng thu: " + formatMoney(totalIncome), Toast.LENGTH_SHORT).show()
-        );
-
-        boxRefund.setOnClickListener(v ->
-                Toast.makeText(this, "Hoàn tiền: " + formatMoney(refund), Toast.LENGTH_SHORT).show()
-        );
-
-        boxAverage.setOnClickListener(v ->
-                Toast.makeText(this, "Trung bình: " + tvAverage.getText().toString(), Toast.LENGTH_SHORT).show()
-        );
     }
 
     private void showExportDialog() {
@@ -157,9 +117,25 @@ public class IncomeHistoryActivity extends AppCompatActivity {
                 .setTitle("Chọn định dạng báo cáo")
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) {
-                        exportPdf();
+                        ReportExporter.exportPdf(
+                                this,
+                                database,
+                                selectedMonth,
+                                selectedYear,
+                                selectedWallet,
+                                totalIncome,
+                                transactionCount,
+                                refund,
+                                ""
+                        );
                     } else {
-                        exportExcel();
+                        ReportExporter.exportExcel(
+                                this,
+                                database,
+                                selectedMonth,
+                                selectedYear,
+                                selectedWallet
+                        );
                     }
                 })
                 .show();
@@ -291,17 +267,7 @@ public class IncomeHistoryActivity extends AppCompatActivity {
     }
 
     private void updateStatistics() {
-        int average = 0;
-
-        if (transactionCount > 0) {
-            average = totalIncome / transactionCount;
-        }
-
         tvTotalIncome.setText(formatMoney(totalIncome));
-        tvTransactionCount.setText(String.valueOf(transactionCount));
-        tvIncome.setText(formatMoney(totalIncome));
-        tvRefund.setText(formatMoney(refund));
-        tvAverage.setText(formatMoney(average));
     }
 
     private void addItem(String title, String date, int amount, String iconName, String colorCode) {
@@ -394,207 +360,6 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         card.addView(tvAmount);
 
         layoutTransactions.addView(card);
-    }
-
-    private void exportPdf() {
-        PdfDocument pdfDocument = new PdfDocument();
-
-        PdfDocument.PageInfo pageInfo =
-                new PdfDocument.PageInfo.Builder(595, 842, 1).create();
-
-        PdfDocument.Page page = pdfDocument.startPage(pageInfo);
-
-        Canvas canvas = page.getCanvas();
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-
-        int y = 60;
-
-        paint.setColor(Color.BLACK);
-        paint.setTextSize(30);
-        paint.setFakeBoldText(true);
-        canvas.drawText("BÁO CÁO KHOẢN THU", 50, y, paint);
-
-        paint.setFakeBoldText(false);
-        paint.setTextSize(18);
-
-        y += 50;
-        canvas.drawText("Tháng: " + selectedMonth + "/" + selectedYear, 50, y, paint);
-
-        y += 32;
-        canvas.drawText("Ví: " + selectedWallet, 50, y, paint);
-
-        y += 32;
-        canvas.drawText("Tổng thu: " + formatMoney(totalIncome), 50, y, paint);
-
-        y += 32;
-        canvas.drawText("Số giao dịch: " + transactionCount, 50, y, paint);
-
-        y += 32;
-        canvas.drawText("Hoàn tiền: " + formatMoney(refund), 50, y, paint);
-
-        y += 32;
-        canvas.drawText("Trung bình: " + tvAverage.getText().toString(), 50, y, paint);
-
-        y += 55;
-        paint.setTextSize(22);
-        paint.setFakeBoldText(true);
-        canvas.drawText("DANH SÁCH GIAO DỊCH", 50, y, paint);
-
-        paint.setFakeBoldText(false);
-        paint.setTextSize(17);
-
-        String monthText = String.format("%02d/%04d", selectedMonth, selectedYear);
-
-        Cursor cursor;
-
-        if (selectedWallet.equals("Tất cả ví")) {
-            cursor = database.rawQuery(
-                    "SELECT title, date, amount FROM transactions " +
-                            "WHERE amount > 0 AND substr(date, 4, 7) = ? " +
-                            "ORDER BY id DESC",
-                    new String[]{monthText}
-            );
-        } else {
-            cursor = database.rawQuery(
-                    "SELECT title, date, amount FROM transactions " +
-                            "WHERE amount > 0 AND substr(date, 4, 7) = ? AND wallet = ? " +
-                            "ORDER BY id DESC",
-                    new String[]{monthText, selectedWallet}
-            );
-        }
-
-        while (cursor.moveToNext()) {
-            String title = cursor.getString(0);
-            String date = cursor.getString(1);
-            int amount = cursor.getInt(2);
-
-            y += 34;
-
-            if (y > 800) {
-                break;
-            }
-
-            canvas.drawText(
-                    title + " - " + date + " - +" + formatMoney(amount),
-                    50,
-                    y,
-                    paint
-            );
-        }
-
-        cursor.close();
-
-        pdfDocument.finishPage(page);
-
-        try {
-            File file = new File(
-                    getExternalFilesDir(null),
-                    "BaoCaoThu_" + selectedMonth + "_" + selectedYear + ".pdf"
-            );
-
-            FileOutputStream fos = new FileOutputStream(file);
-            pdfDocument.writeTo(fos);
-            fos.close();
-            pdfDocument.close();
-
-            Toast.makeText(this, "Đã xuất PDF", Toast.LENGTH_LONG).show();
-
-            openFile(file, "application/pdf");
-
-        } catch (Exception e) {
-            pdfDocument.close();
-            Toast.makeText(this, "Lỗi xuất PDF", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void exportExcel() {
-        Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("BaoCaoThu");
-
-        Row header = sheet.createRow(0);
-        header.createCell(0).setCellValue("Danh mục");
-        header.createCell(1).setCellValue("Ngày");
-        header.createCell(2).setCellValue("Số tiền");
-        header.createCell(3).setCellValue("Ví");
-
-        String monthText = String.format("%02d/%04d", selectedMonth, selectedYear);
-
-        Cursor cursor;
-
-        if (selectedWallet.equals("Tất cả ví")) {
-            cursor = database.rawQuery(
-                    "SELECT title, date, amount, wallet FROM transactions " +
-                            "WHERE amount > 0 AND substr(date, 4, 7) = ? " +
-                            "ORDER BY id DESC",
-                    new String[]{monthText}
-            );
-        } else {
-            cursor = database.rawQuery(
-                    "SELECT title, date, amount, wallet FROM transactions " +
-                            "WHERE amount > 0 AND substr(date, 4, 7) = ? AND wallet = ? " +
-                            "ORDER BY id DESC",
-                    new String[]{monthText, selectedWallet}
-            );
-        }
-
-        int rowIndex = 1;
-
-        while (cursor.moveToNext()) {
-            String title = cursor.getString(0);
-            String date = cursor.getString(1);
-            int amount = cursor.getInt(2);
-            String wallet = cursor.getString(3);
-
-            Row row = sheet.createRow(rowIndex++);
-            row.createCell(0).setCellValue(title);
-            row.createCell(1).setCellValue(date);
-            row.createCell(2).setCellValue(amount);
-            row.createCell(3).setCellValue(wallet);
-        }
-
-        cursor.close();
-
-        try {
-            File file = new File(
-                    getExternalFilesDir(null),
-                    "BaoCaoThu_" + selectedMonth + "_" + selectedYear + ".xlsx"
-            );
-
-            FileOutputStream fos = new FileOutputStream(file);
-            workbook.write(fos);
-
-            fos.close();
-            workbook.close();
-
-            Toast.makeText(this, "Đã xuất Excel .xlsx", Toast.LENGTH_LONG).show();
-
-            openFile(
-                    file,
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            );
-
-        } catch (Exception e) {
-            Toast.makeText(this, "Lỗi xuất Excel .xlsx", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void openFile(File file, String mimeType) {
-        try {
-            Uri uri = FileProvider.getUriForFile(
-                    this,
-                    getPackageName() + ".provider",
-                    file
-            );
-
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setDataAndType(uri, mimeType);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-            startActivity(Intent.createChooser(intent, "Mở báo cáo bằng"));
-
-        } catch (Exception e) {
-            Toast.makeText(this, "Không tìm thấy ứng dụng để mở file", Toast.LENGTH_SHORT).show();
-        }
     }
 
     private int dp(int value) {

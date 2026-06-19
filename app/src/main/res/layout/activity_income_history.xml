@@ -21,7 +21,6 @@
             android:orientation="vertical"
             android:padding="18dp">
 
-            <!-- HEADER -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="58dp"
@@ -48,10 +47,8 @@
                 <View
                     android:layout_width="40dp"
                     android:layout_height="40dp" />
-
             </LinearLayout>
 
-            <!-- CARD TỔNG THU -->
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="118dp"
@@ -133,7 +130,6 @@
                 </LinearLayout>
             </FrameLayout>
 
-            <!-- BỘ LỌC -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
@@ -177,207 +173,15 @@
                     android:layout_weight="1.2"
                     android:background="@drawable/bg_camera"
                     android:hint="Tìm kiếm"
+                    android:imeOptions="actionSearch"
                     android:paddingStart="14dp"
                     android:paddingEnd="14dp"
                     android:singleLine="true"
                     android:textColor="#071033"
                     android:textColorHint="#7A86A8"
-                    android:textSize="13sp"
-                    android:imeOptions="actionSearch"
-/>
+                    android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- 4 Ô THỐNG KÊ -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="88dp"
-                android:layout_marginTop="16dp"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal">
-
-                    <!-- Ô 1 -->
-                    <LinearLayout
-                        android:id="@+id/boxTransactionCount"
-                        android:layout_width="145dp"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_camera"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <ImageView
-                            android:layout_width="42dp"
-                            android:layout_height="42dp"
-                            android:background="@drawable/bg_circle_white"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_arrow_down"
-                            app:tint="#12B76A" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Số giao dịch"
-                                android:textColor="#24345F"
-                                android:textSize="12sp" />
-
-                            <TextView
-                                android:id="@+id/tvTransactionCount"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="#071033"
-                                android:textSize="20sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Ô 2 -->
-                    <LinearLayout
-                        android:id="@+id/boxIncome"
-                        android:layout_width="160dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_camera"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <ImageView
-                            android:layout_width="42dp"
-                            android:layout_height="42dp"
-                            android:background="@drawable/bg_circle_white"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_work"
-                            app:tint="#12B76A" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Thu nhập"
-                                android:textColor="#24345F"
-                                android:textSize="12sp" />
-
-                            <TextView
-                                android:id="@+id/tvIncome"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0 đ"
-                                android:textColor="#071033"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Ô 3 -->
-                    <LinearLayout
-                        android:id="@+id/boxRefund"
-                        android:layout_width="170dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_camera"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <ImageView
-                            android:layout_width="42dp"
-                            android:layout_height="42dp"
-                            android:background="@drawable/bg_circle_white"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_refund"
-                            app:tint="#1683FF" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Hoàn tiền"
-                                android:textColor="#24345F"
-                                android:textSize="12sp" />
-
-                            <TextView
-                                android:id="@+id/tvRefund"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0 đ"
-                                android:textColor="#071033"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Ô 4 -->
-                    <LinearLayout
-                        android:id="@+id/boxAverage"
-                        android:layout_width="175dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/bg_camera"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:gravity="center_vertical"
-                        android:padding="12dp">
-
-                        <ImageView
-                            android:layout_width="42dp"
-                            android:layout_height="42dp"
-                            android:background="@drawable/bg_circle_white"
-                            android:padding="10dp"
-                            android:src="@drawable/ic_euro"
-                            app:tint="#1683FF" />
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Trung bình"
-                                android:textColor="#24345F"
-                                android:textSize="12sp" />
-
-                            <TextView
-                                android:id="@+id/tvAverage"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0 đ"
-                                android:textColor="#071033"
-                                android:textSize="15sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <!-- TITLE LIST -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
@@ -389,7 +193,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Danh sách giao dịch"
+                    android:text="Danh sách khoản thu"
                     android:textColor="#071033"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -398,14 +202,14 @@
                     android:id="@+id/btnSort"
                     android:layout_width="wrap_content"
                     android:layout_height="48dp"
-                    android:minWidth="48dp"
-                    android:gravity="center"
                     android:clickable="true"
                     android:focusable="true"
+                    android:gravity="center"
+                    android:minWidth="48dp"
                     android:text="Mới nhất ☷"
                     android:textColor="#0057FF"
                     android:textSize="15sp"
-                    android:textStyle="bold"/>
+                    android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout
@@ -420,13 +224,13 @@
                 android:layout_height="58dp"
                 android:layout_marginTop="20dp"
                 android:background="@drawable/bg_export_button"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center"
                 android:text="↗  Xuất báo cáo thu"
                 android:textColor="#0057FF"
                 android:textSize="17sp"
-                android:textStyle="bold"
-                android:clickable="true"
-                android:focusable="true"/>
+                android:textStyle="bold" />
 
             <Space
                 android:layout_width="match_parent"
@@ -441,6 +245,6 @@
         layout="@layout/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
