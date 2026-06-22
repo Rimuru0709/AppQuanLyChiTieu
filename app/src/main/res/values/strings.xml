@@ -1,3 +1,15 @@
 <resources>
+
     <string name="app_name">QuanLyChiTieu</string>
+
+    <string name="facebook_app_id">1489036102398256</string>
+
+    <string name="fb_login_protocol_scheme">
+        fb1489036102398256
+    </string>
+
+    <string name="facebook_client_token">
+        6b2354bcafef9eae5d9f48a745751520
+    </string>
+
 </resources>
