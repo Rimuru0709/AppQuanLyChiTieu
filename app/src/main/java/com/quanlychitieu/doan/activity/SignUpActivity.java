@@ -12,8 +12,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.quanlychitieu.doan.R;
@@ -26,8 +28,9 @@ public class SignUpActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_sign_up);
+
+        setupSafeArea();
 
         auth = FirebaseAuth.getInstance();
 
@@ -85,13 +88,12 @@ public class SignUpActivity extends AppCompatActivity {
             auth.createUserWithEmailAndPassword(email, password)
                     .addOnSuccessListener(authResult -> {
                         Toast.makeText(this, "Đăng ký thành công", Toast.LENGTH_SHORT).show();
-
                         startActivity(new Intent(SignUpActivity.this, LoginActivity.class));
                         finish();
                     })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    });
+                    .addOnFailureListener(e ->
+                            Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
         });
 
         edtFullName.setOnEditorActionListener((v, actionId, event) -> {
@@ -136,11 +138,32 @@ public class SignUpActivity extends AppCompatActivity {
         setupPasswordToggle(edtConfirmPassword);
     }
 
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
+
+        if (content == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    dp(24),
+                    systemBars.top + dp(20),
+                    dp(24),
+                    dp(24)
+            );
+
+            return insets;
+        });
+    }
+
     private void hideKeyboard(View view) {
         InputMethodManager imm =
                 (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -151,9 +174,10 @@ public class SignUpActivity extends AppCompatActivity {
             if (event.getAction() == MotionEvent.ACTION_UP) {
                 v.performClick();
 
-                if (event.getRawX() >= editText.getRight()
-                        - editText.getCompoundDrawables()[2].getBounds().width()
-                        - editText.getPaddingEnd()) {
+                if (editText.getCompoundDrawables()[2] != null &&
+                        event.getRawX() >= editText.getRight()
+                                - editText.getCompoundDrawables()[2].getBounds().width()
+                                - editText.getPaddingEnd()) {
 
                     if (isVisible[0]) {
                         editText.setInputType(
@@ -179,5 +203,9 @@ public class SignUpActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
     }
 }
