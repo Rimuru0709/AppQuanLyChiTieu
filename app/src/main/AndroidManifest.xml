@@ -57,12 +57,13 @@
             android:exported="false" />
 
         <activity
-            android:name=".home.HomeActivity"
+            android:name=".activity.LoginActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -73,7 +74,7 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".activity.LoginActivity"
+            android:name=".home.HomeActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
@@ -83,12 +84,12 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".choosetransaction.ChooseTransactionActivity"
+            android:name=".history.ExpenseHistoryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".history.ExpenseHistoryActivity"
+            android:name=".choosetransaction.ChooseTransactionActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
@@ -96,6 +97,18 @@
             android:name=".alltransaction.AllTransactionActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".setting.SettingActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".setting.BudgetActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+
 
     </application>
 

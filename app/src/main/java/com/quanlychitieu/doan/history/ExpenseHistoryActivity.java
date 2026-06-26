@@ -11,6 +11,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,6 +19,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
@@ -50,9 +54,9 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Nếu bạn có layout riêng thì đổi thành R.layout.activity_expense_history
         setContentView(R.layout.activity_expense_history);
+
+        setupSafeArea();
 
         BottomNavHelper.setup(this);
 
@@ -80,6 +84,25 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         loadExpenseHistory();
     }
 
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
+
+        if (content == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    dp(18),
+                    systemBars.top + dp(10),
+                    dp(18),
+                    dp(18)
+            );
+
+            return insets;
+        });
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -101,7 +124,6 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         btnMonthTop.setOnClickListener(v -> showDatePicker());
         btnWallet.setOnClickListener(v -> showWalletDialog());
         btnSort.setOnClickListener(v -> showSortDialog());
-
         btnExport.setOnClickListener(v -> showExportDialog());
 
         edtSearch.setOnEditorActionListener((v, actionId, event) -> {
@@ -215,7 +237,6 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         if (sortType.equals("Cũ nhất")) {
             orderBy = "id ASC";
         } else if (sortType.equals("Số tiền cao nhất")) {
-            // chi tiêu là số âm, muốn cao nhất theo tiền tuyệt đối thì ASC
             orderBy = "amount ASC";
         } else if (sortType.equals("Số tiền thấp nhất")) {
             orderBy = "amount DESC";
@@ -275,7 +296,7 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
-        cardParams.setMargins(dp(0), dp(6), dp(0), dp(10));
+        cardParams.setMargins(0, dp(6), 0, dp(10));
         card.setLayoutParams(cardParams);
 
         GradientDrawable cardBg = new GradientDrawable();
