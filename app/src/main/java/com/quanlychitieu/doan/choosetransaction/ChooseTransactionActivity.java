@@ -16,7 +16,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -48,14 +47,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_choose_transaction);
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        setupSafeArea();
 
         databaseHelper = new DatabaseHelper(this);
 
@@ -101,6 +95,25 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         edtOtherCategory.setOnEditorActionListener((v, actionId, event) -> {
             hideKeyboard();
             return false;
+        });
+    }
+
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
+
+        if (content == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    dp(24),
+                    systemBars.top + dp(10),
+                    dp(24),
+                    dp(24)
+            );
+
+            return insets;
         });
     }
 
@@ -269,42 +282,36 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                 selectedIcon = "ic_food";
                 selectedColor = "#FF3131";
                 break;
-
             case 1:
                 imgCategoryIcon.setImageResource(R.drawable.ic_bus);
                 setIconBackgroundColor("#2196F3");
                 selectedIcon = "ic_bus";
                 selectedColor = "#2196F3";
                 break;
-
             case 2:
                 imgCategoryIcon.setImageResource(R.drawable.ic_shopping);
                 setIconBackgroundColor("#FF9800");
                 selectedIcon = "ic_shopping";
                 selectedColor = "#FF9800";
                 break;
-
             case 3:
                 imgCategoryIcon.setImageResource(R.drawable.ic_default);
                 setIconBackgroundColor("#9C27B0");
                 selectedIcon = "ic_default";
                 selectedColor = "#9C27B0";
                 break;
-
             case 4:
                 imgCategoryIcon.setImageResource(R.drawable.ic_bill);
                 setIconBackgroundColor("#FF9800");
                 selectedIcon = "ic_bill";
                 selectedColor = "#FF9800";
                 break;
-
             case 5:
                 imgCategoryIcon.setImageResource(R.drawable.ic_heart);
                 setIconBackgroundColor("#FFB3C6");
                 selectedIcon = "ic_heart";
                 selectedColor = "#FFB3C6";
                 break;
-
             case 6:
                 imgCategoryIcon.setImageResource(R.drawable.ic_dot);
                 setIconBackgroundColor("#ADB5BD");
@@ -322,42 +329,36 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                 selectedIcon = "ic_salary";
                 selectedColor = "#2ECC71";
                 break;
-
             case 1:
                 imgCategoryIcon.setImageResource(R.drawable.ic_reward);
                 setIconBackgroundColor("#FB8500");
                 selectedIcon = "ic_reward";
                 selectedColor = "#FB8500";
                 break;
-
             case 2:
                 imgCategoryIcon.setImageResource(R.drawable.ic_work);
                 setIconBackgroundColor("#A2D2FF");
                 selectedIcon = "ic_work";
                 selectedColor = "#A2D2FF";
                 break;
-
             case 3:
                 imgCategoryIcon.setImageResource(R.drawable.ic_invest);
                 setIconBackgroundColor("#2A9D8F");
                 selectedIcon = "ic_invest";
                 selectedColor = "#2A9D8F";
                 break;
-
             case 4:
                 imgCategoryIcon.setImageResource(R.drawable.ic_sell);
                 setIconBackgroundColor("#9D4EDD");
                 selectedIcon = "ic_sell";
                 selectedColor = "#9D4EDD";
                 break;
-
             case 5:
                 imgCategoryIcon.setImageResource(R.drawable.ic_donate);
                 setIconBackgroundColor("#9D6B53");
                 selectedIcon = "ic_donate";
                 selectedColor = "#9D6B53";
                 break;
-
             case 6:
                 imgCategoryIcon.setImageResource(R.drawable.ic_dot);
                 setIconBackgroundColor("#ADB5BD");
@@ -408,5 +409,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
         Toast.makeText(this, "Lưu giao dịch thành công", Toast.LENGTH_SHORT).show();
         finish();
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
     }
 }

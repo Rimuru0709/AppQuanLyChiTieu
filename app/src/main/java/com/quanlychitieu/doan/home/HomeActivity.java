@@ -8,22 +8,25 @@ import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.quanlychitieu.doan.R;
+import com.quanlychitieu.doan.alltransaction.AllTransactionActivity;
+import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
 import com.quanlychitieu.doan.choosetransaction.ChooseTransactionActivity;
 import com.quanlychitieu.doan.database.DatabaseHelper;
 import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
 import com.quanlychitieu.doan.history.IncomeHistoryActivity;
-import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
-import com.quanlychitieu.doan.alltransaction.AllTransactionActivity;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -40,9 +43,9 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_home);
 
+        setupSafeArea();
         BottomNavHelper.setup(this);
 
         tvHello = findViewById(R.id.tvHello);
@@ -67,6 +70,25 @@ public class HomeActivity extends AppCompatActivity {
         hideMoney();
         setupEyeButton();
         setupQuickButtons();
+    }
+
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
+
+        if (content == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    dp(24),
+                    systemBars.top + dp(10),
+                    dp(24),
+                    dp(24)
+            );
+
+            return insets;
+        });
     }
 
     @Override
@@ -102,7 +124,7 @@ public class HomeActivity extends AppCompatActivity {
         });
 
         btnTransfer.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, ChooseTransactionActivity.class));
+            Toast.makeText(this, "Chức năng chuyển khoản", Toast.LENGTH_SHORT).show();
         });
 
         btnWallet.setOnClickListener(v -> {
@@ -209,13 +231,13 @@ public class HomeActivity extends AppCompatActivity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, 12, 0, 12);
+        row.setPadding(0, dp(5), 0, dp(5));
 
         FrameLayout iconContainer = new FrameLayout(this);
 
         LinearLayout.LayoutParams containerParams =
-                new LinearLayout.LayoutParams(80, 80);
-        containerParams.rightMargin = 20;
+                new LinearLayout.LayoutParams(dp(38), dp(38));
+        containerParams.rightMargin = dp(10);
         iconContainer.setLayoutParams(containerParams);
 
         GradientDrawable bg = new GradientDrawable();
@@ -224,7 +246,7 @@ public class HomeActivity extends AppCompatActivity {
         ImageView imgIcon = new ImageView(this);
 
         FrameLayout.LayoutParams iconParams =
-                new FrameLayout.LayoutParams(42, 42);
+                new FrameLayout.LayoutParams(dp(18), dp(18));
         iconParams.gravity = Gravity.CENTER;
         imgIcon.setLayoutParams(iconParams);
 
@@ -283,16 +305,13 @@ public class HomeActivity extends AppCompatActivity {
         tvInfo.setTextColor(Color.parseColor("#222222"));
 
         TextView tvMoney = new TextView(this);
-        if (money > 0) {
-            tvMoney.setText("+" + formatMoney(money));
-        } else {
-            tvMoney.setText(formatMoney(money));
-        }
         tvMoney.setTextSize(14);
 
         if (money > 0) {
+            tvMoney.setText("+" + formatMoney(money));
             tvMoney.setTextColor(Color.parseColor("#00A86B"));
         } else {
+            tvMoney.setText(formatMoney(money));
             tvMoney.setTextColor(Color.parseColor("#FF3B3B"));
         }
 
@@ -301,6 +320,10 @@ public class HomeActivity extends AppCompatActivity {
         row.addView(tvMoney);
 
         layoutTransactions.addView(row);
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
     }
 
     private String formatMoney(int money) {

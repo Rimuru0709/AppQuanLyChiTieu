@@ -11,6 +11,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -19,6 +20,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
@@ -39,6 +43,7 @@ public class AllTransactionActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_all_transaction);
 
+        setupSafeArea();
         BottomNavHelper.setup(this);
 
         btnBack = findViewById(R.id.btnBack);
@@ -72,6 +77,25 @@ public class AllTransactionActivity extends AppCompatActivity {
             hideKeyboard();
             edtSearch.clearFocus();
             return false;
+        });
+    }
+
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
+
+        if (content == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    dp(24),
+                    systemBars.top + dp(10),
+                    dp(24),
+                    dp(24)
+            );
+
+            return insets;
         });
     }
 
@@ -165,7 +189,7 @@ public class AllTransactionActivity extends AppCompatActivity {
             empty.setTextSize(16);
             empty.setTextColor(Color.GRAY);
             empty.setGravity(Gravity.CENTER);
-            empty.setPadding(0, 40, 0, 40);
+            empty.setPadding(0, dp(40), 0, dp(40));
 
             layoutTransactions.addView(empty);
             cursor.close();
@@ -195,13 +219,13 @@ public class AllTransactionActivity extends AppCompatActivity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, 12, 0, 12);
+        row.setPadding(0, dp(5), 0, dp(5));
 
         FrameLayout iconContainer = new FrameLayout(this);
 
         LinearLayout.LayoutParams containerParams =
-                new LinearLayout.LayoutParams(80, 80);
-        containerParams.rightMargin = 20;
+                new LinearLayout.LayoutParams(dp(38), dp(38));
+        containerParams.rightMargin = dp(10);
         iconContainer.setLayoutParams(containerParams);
 
         GradientDrawable bg = new GradientDrawable();
@@ -216,7 +240,7 @@ public class AllTransactionActivity extends AppCompatActivity {
         ImageView imgIcon = new ImageView(this);
 
         FrameLayout.LayoutParams iconParams =
-                new FrameLayout.LayoutParams(42, 42);
+                new FrameLayout.LayoutParams(dp(18), dp(18));
         iconParams.gravity = Gravity.CENTER;
         imgIcon.setLayoutParams(iconParams);
 
@@ -276,6 +300,10 @@ public class AllTransactionActivity extends AppCompatActivity {
             );
             getCurrentFocus().clearFocus();
         }
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
     }
 
     private String formatMoney(int money) {

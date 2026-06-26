@@ -11,6 +11,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,6 +19,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
@@ -54,6 +58,8 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_income_history);
 
+        setupSafeArea();
+
         BottomNavHelper.setup(this);
 
         imgBack = findViewById(R.id.imgBack);
@@ -78,6 +84,25 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         updateMonthText();
         setClickEvents();
         loadIncomeHistory();
+    }
+
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
+
+        if (content == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    dp(18),
+                    systemBars.top + dp(10),
+                    dp(18),
+                    dp(18)
+            );
+
+            return insets;
+        });
     }
 
     @Override
@@ -281,7 +306,7 @@ public class IncomeHistoryActivity extends AppCompatActivity {
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
-        cardParams.setMargins(dp(0), dp(6), dp(0), dp(10));
+        cardParams.setMargins(0, dp(6), 0, dp(10));
         card.setLayoutParams(cardParams);
 
         GradientDrawable cardBg = new GradientDrawable();
