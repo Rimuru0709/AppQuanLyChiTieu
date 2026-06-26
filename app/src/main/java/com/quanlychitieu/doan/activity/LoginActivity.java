@@ -13,10 +13,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -70,8 +72,9 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
+
+        setupSafeArea();
 
         auth = FirebaseAuth.getInstance();
         callbackManager = CallbackManager.Factory.create();
@@ -161,6 +164,25 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         setupPasswordToggle(edtPassword);
+    }
+
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
+
+        if (content == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    dp(28),
+                    systemBars.top + dp(30),
+                    dp(28),
+                    dp(28)
+            );
+
+            return insets;
+        });
     }
 
     private void setupGoogleSignIn() {
@@ -317,6 +339,10 @@ public class LoginActivity extends AppCompatActivity {
             }
             return false;
         });
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
     }
 
     @Override
