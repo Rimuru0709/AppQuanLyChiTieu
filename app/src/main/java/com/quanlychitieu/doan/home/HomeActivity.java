@@ -180,7 +180,7 @@ public class HomeActivity extends AppCompatActivity {
         int total = 0;
 
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(amount) FROM transactions WHERE amount > 0",
+                "SELECT SUM(amount) FROM transactions WHERE type='INCOME'",
                 null
         );
 
@@ -196,12 +196,12 @@ public class HomeActivity extends AppCompatActivity {
         int total = 0;
 
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(amount) FROM transactions WHERE amount < 0",
+                "SELECT SUM(amount) FROM transactions WHERE type='EXPENSE'",
                 null
         );
 
         if (cursor.moveToFirst()) {
-            total = Math.abs(cursor.getInt(0));
+            total = cursor.getInt(0);
         }
 
         cursor.close();
@@ -212,7 +212,7 @@ public class HomeActivity extends AppCompatActivity {
         layoutTransactions.removeAllViews();
 
         Cursor cursor = database.rawQuery(
-                "SELECT title, date, amount FROM transactions ORDER BY id DESC LIMIT 5",
+                "SELECT title, date, amount, type FROM transactions ORDER BY id DESC LIMIT 5",
                 null
         );
 
@@ -220,14 +220,15 @@ public class HomeActivity extends AppCompatActivity {
             String title = cursor.getString(0);
             String date = cursor.getString(1);
             int amount = cursor.getInt(2);
+            String type = cursor.getString(3);
 
-            addTransaction(title, date, amount);
+            addTransaction(title, date, amount, type);
         }
 
         cursor.close();
     }
 
-    private void addTransaction(String title, String date, int money) {
+    private void addTransaction(String title, String date, int money, String type) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
@@ -307,11 +308,11 @@ public class HomeActivity extends AppCompatActivity {
         TextView tvMoney = new TextView(this);
         tvMoney.setTextSize(14);
 
-        if (money > 0) {
+        if ("INCOME".equals(type)) {
             tvMoney.setText("+" + formatMoney(money));
             tvMoney.setTextColor(Color.parseColor("#00A86B"));
         } else {
-            tvMoney.setText(formatMoney(money));
+            tvMoney.setText("-" + formatMoney(money));
             tvMoney.setTextColor(Color.parseColor("#FF3B3B"));
         }
 

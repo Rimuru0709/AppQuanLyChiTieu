@@ -394,15 +394,12 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
         int amount = Integer.parseInt(amountText);
 
-        if (transactionType.equals("EXPENSE")) {
-            amount = -amount;
-        }
-
         databaseHelper.insertTransaction(
                 category,
                 date,
                 amount,
                 wallet,
+                transactionType,
                 selectedIcon,
                 selectedColor
         );

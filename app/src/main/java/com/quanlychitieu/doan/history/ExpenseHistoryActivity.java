@@ -237,9 +237,9 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         if (sortType.equals("Cũ nhất")) {
             orderBy = "id ASC";
         } else if (sortType.equals("Số tiền cao nhất")) {
-            orderBy = "amount ASC";
-        } else if (sortType.equals("Số tiền thấp nhất")) {
             orderBy = "amount DESC";
+        } else if (sortType.equals("Số tiền thấp nhất")) {
+            orderBy = "amount ASC";
         }
 
         Cursor cursor;
@@ -247,14 +247,14 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         if (selectedWallet.equals("Tất cả ví")) {
             cursor = database.rawQuery(
                     "SELECT title, date, amount, icon, color FROM transactions " +
-                            "WHERE amount < 0 AND substr(date, 4, 7) = ? " +
+                            "WHERE type='EXPENSE' AND substr(date, 4, 7) = ? " +
                             "ORDER BY " + orderBy,
                     new String[]{monthText}
             );
         } else {
             cursor = database.rawQuery(
                     "SELECT title, date, amount, icon, color FROM transactions " +
-                            "WHERE amount < 0 AND substr(date, 4, 7) = ? AND wallet = ? " +
+                            "WHERE type='EXPENSE' AND substr(date, 4, 7) = ? AND wallet = ? " +
                             "ORDER BY " + orderBy,
                     new String[]{monthText, selectedWallet}
             );
@@ -271,7 +271,7 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
                 continue;
             }
 
-            totalExpense += Math.abs(amount);
+            totalExpense += amount;
             transactionCount++;
 
             addItem(title, date, amount, iconName, colorCode);
@@ -356,7 +356,7 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         textBox.addView(tvDate);
 
         TextView tvAmount = new TextView(this);
-        tvAmount.setText(formatMoney(amount));
+        tvAmount.setText("-" + formatMoney(amount));
         tvAmount.setTextSize(15);
         tvAmount.setTypeface(null, Typeface.BOLD);
         tvAmount.setTextColor(Color.parseColor("#EF4444"));
