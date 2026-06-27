@@ -1,99 +1,251 @@
 package com.quanlychitieu.doan.statistic;
 
-import android.os.Bundle;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
-import android.widget.TextView;
+import android.app.DatePickerDialog;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Description;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
-
-import java.util.ArrayList;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.quanlychitieu.doan.R;
+import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
+import com.quanlychitieu.doan.database.DatabaseHelper;
+
+import java.text.DecimalFormat;
+import java.util.Calendar;
 
 public class StatisticActivity extends AppCompatActivity {
 
-    private TextView txtIncome, txtExpense, txtSaving;
-    private Spinner spinnerMonth;
-    private PieChart pieChart;
+    TextView tvMonth, tvIncome, tvExpense, tvSaving;
+    ImageView imgBack;
+
+    DonutChartView donutChart;
+    BarChartView barChart;
+    LinearLayout layoutLegend;
+
+    DatabaseHelper dbHelper;
+
+    int selectedMonth, selectedYear;
+
+    int[] colors = {
+            Color.parseColor("#FF3131"),
+            Color.parseColor("#FF9800"),
+            Color.parseColor("#4285F4"),
+            Color.parseColor("#16A34A"),
+            Color.parseColor("#6D28D9"),
+            Color.parseColor("#ADB5BD")
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_statistic);
 
-        // Ánh xạ View
-        txtIncome = findViewById(R.id.txtIncome);
-        txtExpense = findViewById(R.id.txtExpense);
-        txtSaving = findViewById(R.id.txtSaving);
-        spinnerMonth = findViewById(R.id.spinnerMonth);
-        pieChart = findViewById(R.id.pieChart); // 3. ĐÃ ÁNH XẠ BIẾN PIECHART (Hãy chắc chắn bên XML id cũng là pieChart)
+        setupSafeArea();
+        BottomNavHelper.setup(this);
 
-        // Danh sách tháng
-        String[] months = {
-                "Tháng 1", "Tháng 2", "Tháng 3",
-                "Tháng 4", "Tháng 5", "Tháng 6",
-                "Tháng 7", "Tháng 8", "Tháng 9",
-                "Tháng 10", "Tháng 11", "Tháng 12"
-        };
+        imgBack = findViewById(R.id.imgBack);
+        tvMonth = findViewById(R.id.tvMonth);
+        tvIncome = findViewById(R.id.tvIncome);
+        tvExpense = findViewById(R.id.tvExpense);
+        tvSaving = findViewById(R.id.tvSaving);
+        donutChart = findViewById(R.id.donutChart);
+        barChart = findViewById(R.id.barChart);
+        layoutLegend = findViewById(R.id.layoutLegend);
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+        imgBack.setOnClickListener(v -> finish());
+
+        dbHelper = new DatabaseHelper(this);
+
+        Calendar calendar = Calendar.getInstance();
+        selectedMonth = calendar.get(Calendar.MONTH) + 1;
+        selectedYear = calendar.get(Calendar.YEAR);
+
+        updateMonthText();
+        loadData();
+
+        tvMonth.setOnClickListener(v -> showMonthPicker());
+    }
+
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
+
+        if (content == null) return;
+
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    dp(16),
+                    bars.top + dp(12),
+                    dp(16),
+                    dp(20)
+            );
+
+            return insets;
+        });
+    }
+
+    private void showMonthPicker() {
+        DatePickerDialog dialog = new DatePickerDialog(
                 this,
-                android.R.layout.simple_spinner_dropdown_item,
-                months
+                (view, year, month, dayOfMonth) -> {
+                    selectedMonth = month + 1;
+                    selectedYear = year;
+
+                    updateMonthText();
+                    loadData();
+                },
+                selectedYear,
+                selectedMonth - 1,
+                1
         );
 
-        spinnerMonth.setAdapter(adapter);
-
-        // Mặc định chọn tháng hiện tại (ví dụ Tháng 6)
-        spinnerMonth.setSelection(5);
-
-        loadData();
-        loadPieChart();
+        dialog.show();
     }
 
-    private void loadData(){
-        int income = 10000000;
-        int expense = 6500000;
-        int saving = income - expense;
-
-        txtIncome.setText(income + " đ");
-        txtExpense.setText(expense + " đ");
-        txtSaving.setText(saving + " đ");
+    private void updateMonthText() {
+        tvMonth.setText("Tháng " + selectedMonth + "/" + selectedYear + " ▼");
     }
 
-    private void loadPieChart(){
-        ArrayList<PieEntry> entries = new ArrayList<>();
+    private void loadData() {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-        entries.add(new PieEntry(10000000, "Thu"));
-        entries.add(new PieEntry(6500000, "Chi"));
+        String monthText = String.format("/%02d/%d", selectedMonth, selectedYear);
 
-        PieDataSet dataSet = new PieDataSet(entries, "");
+        int totalIncome = 0;
+        int totalExpense = 0;
 
-        ArrayList<Integer> colors = new ArrayList<>();
-        colors.add(Color.parseColor("#4CAF50")); // Màu xanh cho Thu
-        colors.add(Color.parseColor("#F44336")); // Màu đỏ cho Chi
+        Cursor c1 = db.rawQuery(
+                "SELECT type, SUM(amount) FROM transactions " +
+                        "WHERE date LIKE ? " +
+                        "GROUP BY type",
+                new String[]{"%" + monthText}
+        );
 
-        dataSet.setColors(colors);
-        dataSet.setValueTextColor(Color.WHITE); // Định dạng chữ trên biểu đồ màu trắng cho dễ nhìn
-        dataSet.setValueTextSize(14f);
+        while (c1.moveToNext()) {
+            String type = c1.getString(0);
+            int amount = c1.getInt(1);
 
-        PieData data = new PieData(dataSet);
+            if ("INCOME".equals(type)) {
+                totalIncome = amount;
+            } else if ("EXPENSE".equals(type)) {
+                totalExpense = amount;
+            }
+        }
 
-        pieChart.setData(data);
+        c1.close();
 
-        Description description = new Description();
-        description.setText("");
+        tvIncome.setText("Tổng thu\n" + formatMoney(totalIncome));
+        tvExpense.setText("Tổng chi\n" + formatMoney(totalExpense));
+        tvSaving.setText("Tiết kiệm\n" + formatMoney(totalIncome - totalExpense));
 
-        pieChart.setDescription(description);
-        pieChart.animateY(1000);
-        pieChart.invalidate(); // Refresh lại biểu đồ
+        loadCategoryChart(db, monthText, totalExpense);
+        loadBarChart(db, monthText);
+    }
+
+    private void loadCategoryChart(SQLiteDatabase db, String monthText, int totalExpense) {
+        layoutLegend.removeAllViews();
+
+        if (totalExpense == 0) {
+            donutChart.setData(new float[]{100}, new int[]{Color.parseColor("#D1D5DB")}, 0);
+            addLegend("Chưa có dữ liệu", 100, Color.parseColor("#D1D5DB"));
+            return;
+        }
+
+        Cursor c = db.rawQuery(
+                "SELECT title, SUM(amount) FROM transactions " +
+                        "WHERE type='EXPENSE' AND date LIKE ? " +
+                        "GROUP BY title " +
+                        "ORDER BY SUM(amount) DESC",
+                new String[]{"%" + monthText}
+        );
+
+        float[] values = new float[10];
+        int[] chartColors = new int[10];
+
+        int index = 0;
+
+        while (c.moveToNext() && index < 10) {
+            String title = c.getString(0);
+            int amount = c.getInt(1);
+
+            float percent = amount * 100f / totalExpense;
+            int color = colors[index % colors.length];
+
+            values[index] = percent;
+            chartColors[index] = color;
+
+            addLegend(title, percent, color);
+
+            index++;
+        }
+
+        c.close();
+
+        float[] finalValues = new float[index];
+        int[] finalColors = new int[index];
+
+        for (int i = 0; i < index; i++) {
+            finalValues[i] = values[i];
+            finalColors[i] = chartColors[i];
+        }
+
+        donutChart.setData(finalValues, finalColors, totalExpense);
+    }
+
+    private void loadBarChart(SQLiteDatabase db, String monthText) {
+        int[] dailyExpense = new int[31];
+
+        Cursor c = db.rawQuery(
+                "SELECT date, SUM(amount) FROM transactions " +
+                        "WHERE type='EXPENSE' AND date LIKE ? " +
+                        "GROUP BY date",
+                new String[]{"%" + monthText}
+        );
+
+        while (c.moveToNext()) {
+            String date = c.getString(0);
+            int amount = c.getInt(1);
+
+            try {
+                int day = Integer.parseInt(date.substring(0, 2));
+                if (day >= 1 && day <= 31) {
+                    dailyExpense[day - 1] = amount;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        c.close();
+
+        barChart.setData(dailyExpense);
+    }
+
+    private void addLegend(String name, float percent, int color) {
+        TextView tv = new TextView(this);
+        tv.setText("●  " + name + "   " + Math.round(percent) + "%");
+        tv.setTextSize(14);
+        tv.setTextColor(color);
+        tv.setPadding(0, 8, 0, 8);
+
+        layoutLegend.addView(tv);
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
+    }
+
+    private String formatMoney(int money) {
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        return formatter.format(money).replace(",", ".") + " đ";
     }
 }

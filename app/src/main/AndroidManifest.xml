@@ -57,7 +57,7 @@
             android:exported="false" />
 
         <activity
-            android:name=".activity.LoginActivity"
+            android:name=".home.HomeActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
 
@@ -74,7 +74,7 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-            android:name=".home.HomeActivity"
+            android:name=".activity.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
@@ -108,6 +108,10 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".statistic.StatisticActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
 
     </application>
