@@ -253,14 +253,14 @@ public class IncomeHistoryActivity extends AppCompatActivity {
         if (selectedWallet.equals("Tất cả ví")) {
             cursor = database.rawQuery(
                     "SELECT title, date, amount, icon, color FROM transactions " +
-                            "WHERE amount > 0 AND substr(date, 4, 7) = ? " +
+                            "WHERE type='INCOME' AND substr(date, 4, 7) = ? " +
                             "ORDER BY " + orderBy,
                     new String[]{monthText}
             );
         } else {
             cursor = database.rawQuery(
                     "SELECT title, date, amount, icon, color FROM transactions " +
-                            "WHERE amount > 0 AND substr(date, 4, 7) = ? AND wallet = ? " +
+                            "WHERE type='INCOME' AND substr(date, 4, 7) = ? AND wallet = ? " +
                             "ORDER BY " + orderBy,
                     new String[]{monthText, selectedWallet}
             );
