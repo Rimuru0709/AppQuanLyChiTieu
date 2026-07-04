@@ -108,7 +108,8 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-
+        <activity
+            android:name=".alert.AlertActivity"/>
 
     </application>
 
