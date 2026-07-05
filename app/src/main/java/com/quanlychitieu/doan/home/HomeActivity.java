@@ -23,10 +23,10 @@ import androidx.core.view.WindowInsetsCompat;
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.alltransaction.AllTransactionActivity;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
-import com.quanlychitieu.doan.choosetransaction.ChooseTransactionActivity;
-import com.quanlychitieu.doan.database.DatabaseHelper;
 import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
 import com.quanlychitieu.doan.history.IncomeHistoryActivity;
+import com.quanlychitieu.doan.goal.GoalActivity;
+import com.quanlychitieu.doan.database.DatabaseHelper;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -95,6 +95,7 @@ public class HomeActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        database = dbHelper.getWritableDatabase();
         loadRecentTransactions();
 
         if (isBalanceVisible) {
@@ -115,38 +116,30 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void setupQuickButtons() {
-        btnIncome.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, IncomeHistoryActivity.class));
-        });
+        btnIncome.setOnClickListener(v ->
+                startActivity(new Intent(HomeActivity.this, IncomeHistoryActivity.class)));
 
-        btnExpense.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, ExpenseHistoryActivity.class));
-        });
+        btnExpense.setOnClickListener(v ->
+                startActivity(new Intent(HomeActivity.this, ExpenseHistoryActivity.class)));
 
-        btnTransfer.setOnClickListener(v -> {
-            Toast.makeText(this, "Chức năng chuyển khoản", Toast.LENGTH_SHORT).show();
-        });
+        btnTransfer.setOnClickListener(v ->
+                Toast.makeText(this, "Chức năng chuyển khoản", Toast.LENGTH_SHORT).show());
 
-        btnWallet.setOnClickListener(v -> {
-            Toast.makeText(this, "Ví của tôi", Toast.LENGTH_SHORT).show();
-        });
+        btnWallet.setOnClickListener(v ->
+                Toast.makeText(this, "Ví của tôi", Toast.LENGTH_SHORT).show());
 
-        btnGoal.setOnClickListener(v -> {
-            Toast.makeText(this, "Mục tiêu tiết kiệm", Toast.LENGTH_SHORT).show();
-        });
+        btnGoal.setOnClickListener(v ->
+                startActivity(new Intent(HomeActivity.this, GoalActivity.class)));
 
-        btnAlert.setOnClickListener(v -> {
-            Toast.makeText(this, "Cảnh báo chi tiêu", Toast.LENGTH_SHORT).show();
-        });
+        btnAlert.setOnClickListener(v ->
+                Toast.makeText(this, "Cảnh báo chi tiêu", Toast.LENGTH_SHORT).show());
 
-        tvViewAll.setOnClickListener(v -> {
-            startActivity(new Intent(HomeActivity.this, AllTransactionActivity.class));
-        });
+        tvViewAll.setOnClickListener(v ->
+                startActivity(new Intent(HomeActivity.this, AllTransactionActivity.class)));
     }
 
     private void loadHomeData() {
         SharedPreferences prefs = getSharedPreferences("UserData", MODE_PRIVATE);
-
         String fullName = prefs.getString("fullName", "Người dùng");
 
         tvHello.setText("Xin chào, " + fullName + "! 👋");
@@ -201,7 +194,7 @@ public class HomeActivity extends AppCompatActivity {
         );
 
         if (cursor.moveToFirst()) {
-            total = cursor.getInt(0);
+            total = Math.abs(cursor.getInt(0));
         }
 
         cursor.close();
@@ -251,7 +244,10 @@ public class HomeActivity extends AppCompatActivity {
         iconParams.gravity = Gravity.CENTER;
         imgIcon.setLayoutParams(iconParams);
 
-        if (title.contains("Ăn uống")) {
+        if (title.contains("Tiết kiệm mục tiêu")) {
+            imgIcon.setImageResource(R.drawable.ic_dot);
+            bg.setColor(Color.parseColor("#FF9800"));
+        } else if (title.contains("Ăn uống")) {
             imgIcon.setImageResource(R.drawable.ic_food);
             bg.setColor(Color.parseColor("#FF4D4D"));
         } else if (title.contains("Lương")) {
@@ -309,10 +305,10 @@ public class HomeActivity extends AppCompatActivity {
         tvMoney.setTextSize(14);
 
         if ("INCOME".equals(type)) {
-            tvMoney.setText("+" + formatMoney(money));
+            tvMoney.setText("+" + formatMoney(Math.abs(money)));
             tvMoney.setTextColor(Color.parseColor("#00A86B"));
         } else {
-            tvMoney.setText("-" + formatMoney(money));
+            tvMoney.setText("-" + formatMoney(Math.abs(money)));
             tvMoney.setTextColor(Color.parseColor("#FF3B3B"));
         }
 
