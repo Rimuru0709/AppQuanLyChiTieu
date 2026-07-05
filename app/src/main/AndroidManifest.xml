@@ -109,15 +109,29 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
-<activity
-    android:name=".alert.AlertActivity"
-    android:exported="false"
-    android:windowSoftInputMode="adjustResize" />
+            android:name=".alert.AlertActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
-<activity
-    android:name=".statistic.StatisticActivity"
-    android:exported="false"
-    android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".statistic.StatisticActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".category.CategoryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".transfer.TransferActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".wallet.WalletActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
     </application>
 
