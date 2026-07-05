@@ -150,7 +150,7 @@ public class AllTransactionActivity extends AppCompatActivity {
         );
 
         if (cursor.moveToFirst()) {
-            total = cursor.getInt(0);
+            total = Math.abs(cursor.getInt(0));
         }
 
         cursor.close();
@@ -278,10 +278,10 @@ public class AllTransactionActivity extends AppCompatActivity {
         tvMoney.setTypeface(null, Typeface.BOLD);
 
         if ("INCOME".equals(type)) {
-            tvMoney.setText("+" + formatMoney(money));
+            tvMoney.setText("+" + formatMoney(Math.abs(money)));
             tvMoney.setTextColor(Color.parseColor("#00A86B"));
         } else {
-            tvMoney.setText("-" + formatMoney(money));
+            tvMoney.setText("-" + formatMoney(Math.abs(money)));
             tvMoney.setTextColor(Color.parseColor("#FF3B3B"));
         }
 

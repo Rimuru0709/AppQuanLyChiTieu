@@ -271,7 +271,7 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
                 continue;
             }
 
-            totalExpense += amount;
+            totalExpense += Math.abs(amount);
             transactionCount++;
 
             addItem(title, date, amount, iconName, colorCode);
@@ -356,7 +356,7 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         textBox.addView(tvDate);
 
         TextView tvAmount = new TextView(this);
-        tvAmount.setText("-" + formatMoney(amount));
+        tvAmount.setText("-" + formatMoney(Math.abs(amount)));
         tvAmount.setTextSize(15);
         tvAmount.setTypeface(null, Typeface.BOLD);
         tvAmount.setTextColor(Color.parseColor("#EF4444"));

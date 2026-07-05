@@ -1,143 +1,266 @@
 package com.quanlychitieu.doan.goal;
 
+import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.quanlychitieu.doan.R;
+import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
+import com.quanlychitieu.doan.database.DatabaseHelper;
 
-import java.util.Locale;
+import java.text.DecimalFormat;
 
 public class GoalActivity extends AppCompatActivity {
 
-    private EditText edtName, edtMoney, edtMonth;
-    private TextView txtGoalMoney, txtMonthly, txtSaved, txtRemain;
-    private ProgressBar progressGoal;
-    private SwitchCompat swAuto;
-    private Button btnSave;
+    private ImageView imgBack;
+    private Button btnAddGoal;
+    private LinearLayout layoutGoals;
+
+    private DatabaseHelper dbHelper;
+    private SQLiteDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_goal);
 
-        edtName = findViewById(R.id.edtName);
-        edtMoney = findViewById(R.id.edtMoney);
-        edtMonth = findViewById(R.id.edtMonth);
+        setupSafeArea();
+        BottomNavHelper.setup(this);
 
-        txtGoalMoney = findViewById(R.id.txtGoalMoney);
-        txtMonthly = findViewById(R.id.txtMonthly);
-        txtSaved = findViewById(R.id.txtSaved);
-        txtRemain = findViewById(R.id.txtRemain);
+        imgBack = findViewById(R.id.imgBack);
+        btnAddGoal = findViewById(R.id.btnAddGoal);
+        layoutGoals = findViewById(R.id.layoutGoals);
 
-        progressGoal = findViewById(R.id.progressGoal);
+        dbHelper = new DatabaseHelper(this);
 
-        swAuto = findViewById(R.id.swAuto);
+        imgBack.setOnClickListener(v -> finish());
 
-        btnSave = findViewById(R.id.btnSave);
+        btnAddGoal.setOnClickListener(v -> {
+            Intent intent = new Intent(GoalActivity.this, AddGoalActivity.class);
+            startActivity(intent);
+        });
+    }
 
-        btnSave.setOnClickListener(v -> {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadGoals();
+    }
 
-            String name = edtName.getText().toString().trim();
-            String money = edtMoney.getText().toString().trim();
-            String month = edtMonth.getText().toString().trim();
+    private void setupSafeArea() {
+        View content = findViewById(R.id.contentLayout);
 
-            if (name.isEmpty() || money.isEmpty() || month.isEmpty()) {
-                Toast.makeText(
-                        GoalActivity.this,
-                        "Vui lòng nhập đầy đủ thông tin",
-                        Toast.LENGTH_SHORT
-                ).show();
-                return;
-            }
+        if (content == null) return;
 
-            double total;
-            int months;
+        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-            try {
-                total = Double.parseDouble(money);
-                months = Integer.parseInt(month);
-            } catch (Exception e) {
-                Toast.makeText(
-                        GoalActivity.this,
-                        "Dữ liệu không hợp lệ",
-                        Toast.LENGTH_SHORT
-                ).show();
-                return;
-            }
-
-            if (months <= 0) {
-                Toast.makeText(
-                        GoalActivity.this,
-                        "Số tháng phải lớn hơn 0",
-                        Toast.LENGTH_SHORT
-                ).show();
-                return;
-            }
-
-            double monthly = total / months;
-
-            txtGoalMoney.setText(
-                    String.format(Locale.getDefault(), "%,.0f đ", total)
+            v.setPadding(
+                    dp(20),
+                    bars.top + dp(12),
+                    dp(20),
+                    dp(24)
             );
 
-            txtMonthly.setText(
-                    String.format(Locale.getDefault(), "%,.0f đ", monthly)
-            );
+            return insets;
+        });
+    }
 
-            double saved = total * 0.25;
-            double remain = total - saved;
+    private void loadGoals() {
+        layoutGoals.removeAllViews();
 
-            txtSaved.setText(
-                    String.format(
-                            Locale.getDefault(),
-                            "Đã tiết kiệm: %,.0f đ",
-                            saved
-                    )
-            );
+        database = dbHelper.getReadableDatabase();
 
-            txtRemain.setText(
-                    String.format(
-                            Locale.getDefault(),
-                            "Còn: %,.0f đ",
-                            remain
-                    )
-            );
+        Cursor cursor = database.rawQuery(
+                "SELECT id, name, targetAmount, savedAmount, deadline, wallet, autoSave FROM goals ORDER BY id DESC",
+                null
+        );
 
-            progressGoal.setProgress(25);
+        if (cursor.getCount() == 0) {
+            TextView empty = new TextView(this);
+            empty.setText("Chưa có mục tiêu tiết kiệm nào\nHãy bấm + Thêm mục tiêu để bắt đầu");
+            empty.setTextSize(16);
+            empty.setTextColor(Color.parseColor("#6B7280"));
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(0, dp(50), 0, dp(50));
+            layoutGoals.addView(empty);
+            cursor.close();
+            return;
+        }
 
-            Toast.makeText(
-                    GoalActivity.this,
-                    "Đã lưu mục tiêu tiết kiệm",
-                    Toast.LENGTH_SHORT
-            ).show();
+        while (cursor.moveToNext()) {
+            int id = cursor.getInt(0);
+            String name = cursor.getString(1);
+            int targetAmount = cursor.getInt(2);
+            int savedAmount = cursor.getInt(3);
+            String deadline = cursor.getString(4);
+            String wallet = cursor.getString(5);
+            int autoSave = cursor.getInt(6);
+
+            addGoalCard(id, name, targetAmount, savedAmount, deadline, wallet, autoSave);
+        }
+
+        cursor.close();
+    }
+
+    private void addGoalCard(
+            int id,
+            String name,
+            int targetAmount,
+            int savedAmount,
+            String deadline,
+            String wallet,
+            int autoSave
+    ) {
+        int percent = 0;
+
+        if (targetAmount > 0) {
+            percent = (int) ((savedAmount * 100.0) / targetAmount);
+        }
+
+        if (percent > 100) percent = 100;
+
+        int remain = targetAmount - savedAmount;
+
+        if (remain < 0) {
+            remain = 0;
+        }
+
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        card.setPadding(dp(18), dp(18), dp(18), dp(18));
+
+        LinearLayout.LayoutParams cardParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+
+        cardParams.setMargins(0, 0, 0, dp(16));
+        card.setLayoutParams(cardParams);
+
+        GradientDrawable bg = new GradientDrawable();
+        bg.setColor(Color.WHITE);
+        bg.setCornerRadius(dp(22));
+        bg.setStroke(dp(1), Color.parseColor("#E5E7EB"));
+
+        card.setBackground(bg);
+        card.setElevation(dp(3));
+
+        TextView tvName = new TextView(this);
+        tvName.setText("🎯 " + name);
+        tvName.setTextSize(18);
+        tvName.setTypeface(null, Typeface.BOLD);
+        tvName.setTextColor(Color.parseColor("#111827"));
+
+        TextView tvTarget = new TextView(this);
+        tvTarget.setText(formatMoney(targetAmount));
+        tvTarget.setTextSize(24);
+        tvTarget.setTypeface(null, Typeface.BOLD);
+        tvTarget.setTextColor(Color.parseColor("#0057FF"));
+        tvTarget.setPadding(0, dp(10), 0, 0);
+
+        ProgressBar progressBar = new ProgressBar(
+                this,
+                null,
+                android.R.attr.progressBarStyleHorizontal
+        );
+
+        progressBar.setMax(100);
+        progressBar.setProgress(percent);
+        progressBar.setProgressDrawable(getDrawable(R.drawable.progress_goal));
+
+        progressBar.setMax(100);
+        progressBar.setProgress(percent);
+
+        LinearLayout.LayoutParams progressParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(12)
+                );
+
+        progressParams.setMargins(0, dp(14), 0, dp(8));
+        progressBar.setLayoutParams(progressParams);
+
+        TextView tvPercent = new TextView(this);
+        tvPercent.setText(percent + "% hoàn thành");
+        tvPercent.setTextSize(13);
+        tvPercent.setTypeface(null, Typeface.BOLD);
+        tvPercent.setTextColor(Color.parseColor("#2563EB"));
+
+        TextView tvSaved = makeInfoText(
+                "Đã tiết kiệm: " + formatMoney(savedAmount),
+                "#16A34A"
+        );
+
+        TextView tvRemain = makeInfoText(
+                "Còn lại: " + formatMoney(remain),
+                "#EF4444"
+        );
+
+        String autoText = autoSave == 1 ? "Tự động: Bật" : "Tự động: Tắt";
+
+        TextView tvInfo = makeInfoText(
+                "📅 " + deadline + "\n💳 " + wallet + "\n⚡ " + autoText,
+                "#6B7280"
+        );
+
+        TextView tvEdit = makeInfoText(
+                "Nhấn để xem hoặc chỉnh sửa",
+                "#0057FF"
+        );
+
+        tvEdit.setTypeface(null, Typeface.BOLD);
+
+        card.addView(tvName);
+        card.addView(tvTarget);
+        card.addView(progressBar);
+        card.addView(tvPercent);
+        card.addView(tvSaved);
+        card.addView(tvRemain);
+        card.addView(tvInfo);
+        card.addView(tvEdit);
+
+        card.setOnClickListener(v -> {
+            Intent intent = new Intent(GoalActivity.this, AddGoalActivity.class);
+            intent.putExtra("goalId", id);
+            startActivity(intent);
         });
 
-        swAuto.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        layoutGoals.addView(card);
+    }
 
-            if (isChecked) {
+    private TextView makeInfoText(String text, String color) {
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextSize(14);
+        tv.setTextColor(Color.parseColor(color));
+        tv.setPadding(0, dp(7), 0, 0);
+        return tv;
+    }
 
-                Toast.makeText(
-                        GoalActivity.this,
-                        "Đã bật tự động tiết kiệm",
-                        Toast.LENGTH_SHORT
-                ).show();
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density);
+    }
 
-            } else {
-
-                Toast.makeText(
-                        GoalActivity.this,
-                        "Đã tắt tự động tiết kiệm",
-                        Toast.LENGTH_SHORT
-                ).show();
-
-            }
-        });
+    private String formatMoney(int money) {
+        DecimalFormat formatter = new DecimalFormat("#,###");
+        return formatter.format(money).replace(",", ".") + " đ";
     }
 }
