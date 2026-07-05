@@ -105,6 +105,19 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".goal.AddGoalActivity"
+
+        <activity
+            android:name=".category.CategoryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".transfer.TransferActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".wallet.WalletActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
