@@ -129,7 +129,7 @@ public class AllTransactionActivity extends AppCompatActivity {
         int total = 0;
 
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(amount) FROM transactions WHERE amount > 0",
+                "SELECT SUM(amount) FROM transactions WHERE type='INCOME'",
                 null
         );
 
@@ -145,12 +145,12 @@ public class AllTransactionActivity extends AppCompatActivity {
         int total = 0;
 
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(amount) FROM transactions WHERE amount < 0",
+                "SELECT SUM(amount) FROM transactions WHERE type='EXPENSE'",
                 null
         );
 
         if (cursor.moveToFirst()) {
-            total = Math.abs(cursor.getInt(0));
+            total = cursor.getInt(0);
         }
 
         cursor.close();
@@ -177,7 +177,7 @@ public class AllTransactionActivity extends AppCompatActivity {
         layoutTransactions.removeAllViews();
 
         Cursor cursor = database.rawQuery(
-                "SELECT title, date, amount, icon, color FROM transactions " +
+                "SELECT title, date, amount, icon, color, type FROM transactions " +
                         "WHERE title LIKE ? " +
                         "ORDER BY id DESC",
                 new String[]{"%" + keyword + "%"}
@@ -202,8 +202,9 @@ public class AllTransactionActivity extends AppCompatActivity {
             int amount = cursor.getInt(2);
             String iconName = cursor.getString(3);
             String colorCode = cursor.getString(4);
+            String type = cursor.getString(5);
 
-            addTransaction(title, date, amount, iconName, colorCode);
+            addTransaction(title, date, amount, iconName, colorCode, type);
         }
 
         cursor.close();
@@ -214,7 +215,9 @@ public class AllTransactionActivity extends AppCompatActivity {
             String date,
             int money,
             String iconName,
-            String colorCode
+            String colorCode,
+            String type
+
     ) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
@@ -274,11 +277,11 @@ public class AllTransactionActivity extends AppCompatActivity {
         tvMoney.setTextSize(14);
         tvMoney.setTypeface(null, Typeface.BOLD);
 
-        if (money > 0) {
+        if ("INCOME".equals(type)) {
             tvMoney.setText("+" + formatMoney(money));
             tvMoney.setTextColor(Color.parseColor("#00A86B"));
         } else {
-            tvMoney.setText(formatMoney(money));
+            tvMoney.setText("-" + formatMoney(money));
             tvMoney.setTextColor(Color.parseColor("#FF3B3B"));
         }
 
