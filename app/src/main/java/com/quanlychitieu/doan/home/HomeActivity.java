@@ -27,6 +27,7 @@ import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
 import com.quanlychitieu.doan.history.IncomeHistoryActivity;
 import com.quanlychitieu.doan.goal.GoalActivity;
 import com.quanlychitieu.doan.database.DatabaseHelper;
+import com.quanlychitieu.doan.wallet.WalletActivity;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -38,7 +39,7 @@ public class HomeActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private SQLiteDatabase database;
 
-    private boolean isBalanceVisible = false;
+    private boolean isBalanceVisible = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +68,7 @@ public class HomeActivity extends AppCompatActivity {
         database = dbHelper.getWritableDatabase();
 
         loadHomeData();
-        hideMoney();
+        showMoney();
         setupEyeButton();
         setupQuickButtons();
     }
@@ -125,8 +126,9 @@ public class HomeActivity extends AppCompatActivity {
         btnTransfer.setOnClickListener(v ->
                 Toast.makeText(this, "Chức năng chuyển khoản", Toast.LENGTH_SHORT).show());
 
-        btnWallet.setOnClickListener(v ->
-                Toast.makeText(this, "Ví của tôi", Toast.LENGTH_SHORT).show());
+        btnWallet.setOnClickListener(v -> {
+            startActivity(new Intent(HomeActivity.this, WalletActivity.class));
+        });
 
         btnGoal.setOnClickListener(v ->
                 startActivity(new Intent(HomeActivity.this, GoalActivity.class)));
@@ -156,16 +158,16 @@ public class HomeActivity extends AppCompatActivity {
         tvIncome.setText("Tổng thu\n" + formatMoney(totalIncome));
         tvExpense.setText("Tổng chi\n" + formatMoney(totalExpense));
 
-        imgEye.setImageResource(R.drawable.ic_eye);
+        imgEye.setImageResource(R.drawable.ic_eye_off);
         isBalanceVisible = true;
     }
 
     private void hideMoney() {
-        tvBalance.setText("******");
-        tvIncome.setText("Tổng thu\n******");
-        tvExpense.setText("Tổng chi\n******");
+        tvBalance.setText("********");
+        tvIncome.setText("Tổng thu\n********");
+        tvExpense.setText("Tổng chi\n********");
 
-        imgEye.setImageResource(R.drawable.ic_eye_off);
+        imgEye.setImageResource(R.drawable.ic_eye);
         isBalanceVisible = false;
     }
 
@@ -189,12 +191,12 @@ public class HomeActivity extends AppCompatActivity {
         int total = 0;
 
         Cursor cursor = database.rawQuery(
-                "SELECT SUM(amount) FROM transactions WHERE type='EXPENSE'",
+                "SELECT SUM(ABS(amount)) FROM transactions WHERE type='EXPENSE'",
                 null
         );
 
         if (cursor.moveToFirst()) {
-            total = Math.abs(cursor.getInt(0));
+            total = cursor.getInt(0);
         }
 
         cursor.close();

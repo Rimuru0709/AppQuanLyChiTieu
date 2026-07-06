@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
 import android.database.Cursor;
+import java.util.ArrayList;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -17,6 +18,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.content.Intent;
+import com.quanlychitieu.doan.edittransaction.EditTransactionActivity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -181,13 +184,19 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
     }
 
     private void showWalletDialog() {
-        String[] wallets = {
-                "Tất cả ví",
-                "Ví mặc định",
-                "Tiết kiệm",
-                "Ngân hàng",
-                "Momo"
-        };
+        ArrayList<String> walletList = new ArrayList<>();
+
+        walletList.add("Tất cả ví");
+
+        Cursor cursor = dbHelper.getAllWallets();
+
+        while (cursor.moveToNext()) {
+            walletList.add(cursor.getString(0));
+        }
+
+        cursor.close();
+
+        String[] wallets = walletList.toArray(new String[0]);
 
         new AlertDialog.Builder(this)
                 .setTitle("Chọn ví")
@@ -246,14 +255,14 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
 
         if (selectedWallet.equals("Tất cả ví")) {
             cursor = database.rawQuery(
-                    "SELECT title, date, amount, icon, color FROM transactions " +
+                    "SELECT id, title, date, amount, icon, color FROM transactions " +
                             "WHERE type='EXPENSE' AND substr(date, 4, 7) = ? " +
                             "ORDER BY " + orderBy,
                     new String[]{monthText}
             );
         } else {
             cursor = database.rawQuery(
-                    "SELECT title, date, amount, icon, color FROM transactions " +
+                    "SELECT id, title, date, amount, icon, color FROM transactions " +
                             "WHERE type='EXPENSE' AND substr(date, 4, 7) = ? AND wallet = ? " +
                             "ORDER BY " + orderBy,
                     new String[]{monthText, selectedWallet}
@@ -261,11 +270,12 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         }
 
         while (cursor.moveToNext()) {
-            String title = cursor.getString(0);
-            String date = cursor.getString(1);
-            int amount = cursor.getInt(2);
-            String iconName = cursor.getString(3);
-            String colorCode = cursor.getString(4);
+            int id = cursor.getInt(0);
+            String title = cursor.getString(1);
+            String date = cursor.getString(2);
+            int amount = cursor.getInt(3);
+            String iconName = cursor.getString(4);
+            String colorCode = cursor.getString(5);
 
             if (!keyword.isEmpty() && !title.toLowerCase().contains(keyword)) {
                 continue;
@@ -274,7 +284,7 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
             totalExpense += Math.abs(amount);
             transactionCount++;
 
-            addItem(title, date, amount, iconName, colorCode);
+            addItem(id, title, date, amount, iconName, colorCode);
         }
 
         cursor.close();
@@ -285,7 +295,7 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         tvTotalIncome.setText(formatMoney(totalExpense));
     }
 
-    private void addItem(String title, String date, int amount, String iconName, String colorCode) {
+    private void addItem(int id, String title, String date, int amount, String iconName, String colorCode) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.HORIZONTAL);
         card.setGravity(Gravity.CENTER_VERTICAL);
@@ -365,6 +375,12 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         card.addView(imgIcon);
         card.addView(textBox);
         card.addView(tvAmount);
+
+        card.setOnClickListener(v -> {
+            Intent intent = new Intent(ExpenseHistoryActivity.this, EditTransactionActivity.class);
+            intent.putExtra("transactionId", id);
+            startActivity(intent);
+        });
 
         layoutTransactions.addView(card);
     }

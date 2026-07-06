@@ -18,6 +18,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.content.Intent;
+import com.quanlychitieu.doan.edittransaction.EditTransactionActivity;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -177,7 +179,7 @@ public class AllTransactionActivity extends AppCompatActivity {
         layoutTransactions.removeAllViews();
 
         Cursor cursor = database.rawQuery(
-                "SELECT title, date, amount, icon, color, type FROM transactions " +
+                "SELECT id, title, date, amount, icon, color, type FROM transactions " +
                         "WHERE title LIKE ? " +
                         "ORDER BY id DESC",
                 new String[]{"%" + keyword + "%"}
@@ -197,20 +199,22 @@ public class AllTransactionActivity extends AppCompatActivity {
         }
 
         while (cursor.moveToNext()) {
-            String title = cursor.getString(0);
-            String date = cursor.getString(1);
-            int amount = cursor.getInt(2);
-            String iconName = cursor.getString(3);
-            String colorCode = cursor.getString(4);
-            String type = cursor.getString(5);
+            int id = cursor.getInt(0);
+            String title = cursor.getString(1);
+            String date = cursor.getString(2);
+            int amount = cursor.getInt(3);
+            String iconName = cursor.getString(4);
+            String colorCode = cursor.getString(5);
+            String type = cursor.getString(6);
 
-            addTransaction(title, date, amount, iconName, colorCode, type);
+            addTransaction(id, title, date, amount, iconName, colorCode, type);
         }
 
         cursor.close();
     }
 
     private void addTransaction(
+            int id,
             String title,
             String date,
             int money,
@@ -290,6 +294,19 @@ public class AllTransactionActivity extends AppCompatActivity {
         row.addView(tvMoney);
 
         layoutTransactions.addView(row);
+
+        row.setOnClickListener(v -> {
+
+            Intent intent = new Intent(
+                    AllTransactionActivity.this,
+                    EditTransactionActivity.class
+            );
+
+            intent.putExtra("transactionId", id);
+
+            startActivity(intent);
+
+        });
     }
 
     private void hideKeyboard() {

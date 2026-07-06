@@ -5,13 +5,14 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F8FC">
+    android:background="#F7F9FC">
 
     <ScrollView
         android:id="@+id/scrollStatistic"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
+        android:scrollbars="none"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/bottomNavContainer"
         app:layout_constraintStart_toStartOf="parent"
@@ -24,7 +25,7 @@
             android:orientation="vertical"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            android:paddingBottom="20dp">
+            android:paddingBottom="24dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -52,127 +53,224 @@
                 <View
                     android:layout_width="36dp"
                     android:layout_height="36dp" />
-
             </LinearLayout>
 
             <TextView
                 android:id="@+id/tvMonth"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:gravity="center"
-                android:text="Tháng 6/2024 ▼"
-                android:textColor="#333333"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:fillViewport="true"
-                android:scrollbars="none">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="3">
-
-                    <TextView
-                        android:id="@+id/tvIncome"
-                        android:layout_width="0dp"
-                        android:layout_height="90dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat_green"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:text="Tổng thu\n0 đ"
-                        android:textColor="#16A34A"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvExpense"
-                        android:layout_width="0dp"
-                        android:layout_height="90dp"
-                        android:layout_marginStart="3dp"
-                        android:layout_marginEnd="3dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat_red"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:text="Tổng chi\n0 đ"
-                        android:textColor="#EF4444"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:id="@+id/tvSaving"
-                        android:layout_width="0dp"
-                        android:layout_height="90dp"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:background="@drawable/bg_stat_blue"
-                        android:gravity="center"
-                        android:padding="10dp"
-                        android:text="Tiết kiệm\n0 đ"
-                        android:textColor="#2563EB"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                </LinearLayout>
-            </HorizontalScrollView>
-
-            <TextView
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="8dp"
-                android:text="Chi tiêu theo danh mục"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_month_button"
+                android:gravity="center"
+                android:paddingStart="18dp"
+                android:paddingEnd="18dp"
+                android:text="Tháng 7/2026 ▼"
                 android:textColor="#111827"
-                android:textSize="18sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:weightSum="2.2">
+                android:layout_marginTop="18dp"
+                android:orientation="horizontal">
 
-                <com.quanlychitieu.doan.statistic.DonutChartView
-                    android:id="@+id/donutChart"
+                <TextView
+                    android:id="@+id/tvIncome"
                     android:layout_width="0dp"
-                    android:layout_height="190dp"
-                    android:layout_weight="1.2" />
-
-                <LinearLayout
-                    android:id="@+id/layoutLegend"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="96dp"
+                    android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:orientation="vertical"
-                    android:paddingStart="8dp" />
+                    android:background="@drawable/bg_stat_green"
+                    android:gravity="center"
+                    android:text="Tổng thu\n0 đ"
+                    android:textColor="#16A34A"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
 
+                <TextView
+                    android:id="@+id/tvExpense"
+                    android:layout_width="0dp"
+                    android:layout_height="96dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_stat_red"
+                    android:gravity="center"
+                    android:text="Tổng chi\n0 đ"
+                    android:textColor="#EF4444"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvSaving"
+                    android:layout_width="0dp"
+                    android:layout_height="96dp"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_stat_blue"
+                    android:gravity="center"
+                    android:text="Tiết kiệm\n0 đ"
+                    android:textColor="#2563EB"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:layout_marginBottom="8dp"
-                android:text="Chi tiêu theo ngày"
-                android:textColor="#111827"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <com.quanlychitieu.doan.statistic.BarChartView
-                android:id="@+id/barChart"
+            <LinearLayout
+                android:id="@+id/cardCategoryChart"
                 android:layout_width="match_parent"
-                android:layout_height="240dp" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chi tiêu theo danh mục"
+                    android:textColor="#111827"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <com.quanlychitieu.doan.statistic.DonutChartView
+                        android:id="@+id/donutChart"
+                        android:layout_width="0dp"
+                        android:layout_height="220dp"
+                        android:layout_weight="1.15" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutLegend"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_vertical"
+                        android:orientation="vertical"
+                        android:paddingStart="8dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/cardBarChart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Chi tiêu theo ngày"
+                    android:textColor="#111827"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <com.quanlychitieu.doan.statistic.BarChartView
+                    android:id="@+id/barChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="230dp"
+                    android:layout_marginTop="10dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/cardQuickStats"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Thống kê nhanh"
+                    android:textColor="#111827"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvIncomeCount"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:layout_marginEnd="5dp"
+                            android:background="@drawable/bg_stat_green"
+                            android:gravity="center"
+                            android:text="⬇ Thu: 0"
+                            android:textColor="#16A34A"
+                            android:textStyle="bold"
+                            android:textSize="15sp"/>
+
+                        <TextView
+                            android:id="@+id/tvExpenseCount"
+                            android:layout_width="0dp"
+                            android:layout_height="48dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="5dp"
+                            android:background="@drawable/bg_stat_red"
+                            android:gravity="center"
+                            android:text="⬆ Chi: 0"
+                            android:textColor="#EF4444"
+                            android:textStyle="bold"
+                            android:textSize="15sp"/>
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvTopCategory"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:minHeight="48dp"
+                        android:background="@drawable/bg_stat_red"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:text="🔥 Danh mục chi nhiều nhất: Chưa có"
+                        android:textColor="#EF4444"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvAverageExpense"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="10dp"
+                        android:background="@drawable/bg_stat_green"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:text="📊 Trung bình/ngày: 0 đ"
+                        android:textColor="#16A34A"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                </LinearLayout>
+
+
+
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
@@ -186,7 +284,6 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <include layout="@layout/bottom_nav" />
-
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
