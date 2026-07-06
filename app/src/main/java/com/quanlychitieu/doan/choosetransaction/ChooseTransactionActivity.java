@@ -3,6 +3,7 @@ package com.quanlychitieu.doan.choosetransaction;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -25,9 +26,10 @@ import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.database.DatabaseHelper;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Calendar;
 
 public class ChooseTransactionActivity extends AppCompatActivity {
 
@@ -39,7 +41,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     private Button btnSave;
 
     private DatabaseHelper databaseHelper;
+
     private String transactionType = "EXPENSE";
+    private String selectedWallet = "Ví mặc định";
 
     private String selectedIcon = "ic_food";
     private String selectedColor = "#FF3131";
@@ -66,6 +70,8 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         edtOtherCategory = findViewById(R.id.edtOtherCategory);
 
         tvWallet = findViewById(R.id.tvWallet);
+        tvWallet.setText(selectedWallet);
+
         btnSave = findViewById(R.id.btnSave);
 
         ImageView imgback = findViewById(R.id.imgback);
@@ -184,7 +190,11 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     }
 
     private void setCurrentDate() {
-        String currentDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
+        String currentDate = new SimpleDateFormat(
+                "dd/MM/yyyy",
+                Locale.getDefault()
+        ).format(new Date());
+
         edtDate.setText(currentDate);
     }
 
@@ -201,6 +211,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                             month + 1,
                             year
                     );
+
                     edtDate.setText(selectedDate);
                 },
                 calendar.get(Calendar.YEAR),
@@ -212,17 +223,29 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     }
 
     private void showWalletDialog() {
-        String[] wallets = {
-                "Ví mặc định",
-                "Tiết kiệm",
-                "Ngân hàng",
-                "Momo"
-        };
+        Cursor cursor = databaseHelper.getAllWallets();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Chọn ví");
-        builder.setItems(wallets, (dialog, which) -> tvWallet.setText(wallets[which]));
-        builder.show();
+        ArrayList<String> walletList = new ArrayList<>();
+
+        while (cursor.moveToNext()) {
+            walletList.add(cursor.getString(0));
+        }
+
+        cursor.close();
+
+        if (walletList.isEmpty()) {
+            walletList.add("Ví mặc định");
+        }
+
+        String[] wallets = walletList.toArray(new String[0]);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Chọn ví")
+                .setItems(wallets, (dialog, which) -> {
+                    selectedWallet = wallets[which];
+                    tvWallet.setText(selectedWallet);
+                })
+                .show();
     }
 
     private void showCategoryDialog() {
@@ -312,7 +335,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                 selectedIcon = "ic_heart";
                 selectedColor = "#FFB3C6";
                 break;
-            case 6:
+            default:
                 imgCategoryIcon.setImageResource(R.drawable.ic_dot);
                 setIconBackgroundColor("#ADB5BD");
                 selectedIcon = "ic_dot";
@@ -359,7 +382,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                 selectedIcon = "ic_donate";
                 selectedColor = "#9D6B53";
                 break;
-            case 6:
+            default:
                 imgCategoryIcon.setImageResource(R.drawable.ic_dot);
                 setIconBackgroundColor("#ADB5BD");
                 selectedIcon = "ic_dot";
@@ -372,7 +395,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         String amountText = edtAmount.getText().toString().trim();
         String category = tvCategoryName.getText().toString();
         String date = edtDate.getText().toString();
-        String wallet = tvWallet.getText().toString();
+        String wallet = selectedWallet;
 
         if (amountText.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập số tiền", Toast.LENGTH_SHORT).show();
@@ -392,7 +415,19 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             selectedColor = "#ADB5BD";
         }
 
-        int amount = Integer.parseInt(amountText);
+        int amount;
+
+        try {
+            amount = Integer.parseInt(amountText);
+        } catch (Exception e) {
+            Toast.makeText(this, "Số tiền không hợp lệ", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (amount <= 0) {
+            Toast.makeText(this, "Số tiền phải lớn hơn 0", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         databaseHelper.insertTransaction(
                 category,

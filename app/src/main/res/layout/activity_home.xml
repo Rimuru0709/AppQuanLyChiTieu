@@ -70,7 +70,7 @@
                         android:id="@+id/tvBalance"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="******"
+                        android:text="*********"
                         android:textColor="#FFFFFF"
                         android:textSize="28sp"
                         android:textStyle="bold" />

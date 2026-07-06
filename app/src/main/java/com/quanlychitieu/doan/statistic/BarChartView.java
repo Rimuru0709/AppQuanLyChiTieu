@@ -31,7 +31,7 @@ public class BarChartView extends View {
 
         int maxValue = 0;
         for (int value : values) {
-            if (value > maxValue) maxValue = value;
+            if (Math.abs(value) > maxValue) maxValue = Math.abs(value);
         }
 
         if (maxValue == 0) maxValue = 1;
@@ -47,10 +47,10 @@ public class BarChartView extends View {
         paint.setColor(Color.parseColor("#2563EB"));
 
         int barWidth = 10;
-        int gap = (getWidth() - paddingLeft - 30) / 31;
+        int gap = Math.max(1, (getWidth() - paddingLeft - 30) / 31);
 
         for (int i = 0; i < 31; i++) {
-            int barHeight = values[i] * chartHeight / maxValue;
+            int barHeight = Math.abs(values[i]) * chartHeight / maxValue;
             int x = paddingLeft + i * gap;
 
             RectF rect = new RectF(x, baseY - barHeight, x + barWidth, baseY);
