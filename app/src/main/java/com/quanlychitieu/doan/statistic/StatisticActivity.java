@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,14 +26,14 @@ import java.util.Calendar;
 public class StatisticActivity extends AppCompatActivity {
 
     TextView tvMonth, tvIncome, tvExpense, tvSaving;
-    ImageView imgBack;
+    TextView tvIncomeCount, tvExpenseCount, tvTopCategory, tvAverageExpense;
 
+    ImageView imgBack;
     DonutChartView donutChart;
     BarChartView barChart;
     LinearLayout layoutLegend;
 
     DatabaseHelper dbHelper;
-
     int selectedMonth, selectedYear;
 
     int[] colors = {
@@ -57,9 +58,15 @@ public class StatisticActivity extends AppCompatActivity {
         tvIncome = findViewById(R.id.tvIncome);
         tvExpense = findViewById(R.id.tvExpense);
         tvSaving = findViewById(R.id.tvSaving);
+
         donutChart = findViewById(R.id.donutChart);
         barChart = findViewById(R.id.barChart);
         layoutLegend = findViewById(R.id.layoutLegend);
+
+        tvIncomeCount = findViewById(R.id.tvIncomeCount);
+        tvExpenseCount = findViewById(R.id.tvExpenseCount);
+        tvTopCategory = findViewById(R.id.tvTopCategory);
+        tvAverageExpense = findViewById(R.id.tvAverageExpense);
 
         imgBack.setOnClickListener(v -> finish());
 
@@ -83,13 +90,7 @@ public class StatisticActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-            v.setPadding(
-                    dp(16),
-                    bars.top + dp(12),
-                    dp(16),
-                    dp(20)
-            );
-
+            v.setPadding(dp(16), bars.top + dp(12), dp(16), dp(20));
             return insets;
         });
     }
@@ -125,9 +126,8 @@ public class StatisticActivity extends AppCompatActivity {
         int totalExpense = 0;
 
         Cursor c1 = db.rawQuery(
-                "SELECT type, SUM(amount) FROM transactions " +
-                        "WHERE date LIKE ? " +
-                        "GROUP BY type",
+                "SELECT type, SUM(ABS(amount)) FROM transactions " +
+                        "WHERE date LIKE ? GROUP BY type",
                 new String[]{"%" + monthText}
         );
 
@@ -150,6 +150,7 @@ public class StatisticActivity extends AppCompatActivity {
 
         loadCategoryChart(db, monthText, totalExpense);
         loadBarChart(db, monthText);
+        loadQuickStats(db, monthText, totalExpense);
     }
 
     private void loadCategoryChart(SQLiteDatabase db, String monthText, int totalExpense) {
@@ -162,10 +163,10 @@ public class StatisticActivity extends AppCompatActivity {
         }
 
         Cursor c = db.rawQuery(
-                "SELECT title, SUM(amount) FROM transactions " +
+                "SELECT title, SUM(ABS(amount)) FROM transactions " +
                         "WHERE type='EXPENSE' AND date LIKE ? " +
                         "GROUP BY title " +
-                        "ORDER BY SUM(amount) DESC",
+                        "ORDER BY SUM(ABS(amount)) DESC",
                 new String[]{"%" + monthText}
         );
 
@@ -185,7 +186,6 @@ public class StatisticActivity extends AppCompatActivity {
             chartColors[index] = color;
 
             addLegend(title, percent, color);
-
             index++;
         }
 
@@ -206,7 +206,7 @@ public class StatisticActivity extends AppCompatActivity {
         int[] dailyExpense = new int[31];
 
         Cursor c = db.rawQuery(
-                "SELECT date, SUM(amount) FROM transactions " +
+                "SELECT date, SUM(ABS(amount)) FROM transactions " +
                         "WHERE type='EXPENSE' AND date LIKE ? " +
                         "GROUP BY date",
                 new String[]{"%" + monthText}
@@ -226,10 +226,59 @@ public class StatisticActivity extends AppCompatActivity {
         }
 
         c.close();
-
         barChart.setData(dailyExpense);
     }
 
+    private void loadQuickStats(SQLiteDatabase db, String monthText, int totalExpense) {
+        int incomeCount = 0;
+        int expenseCount = 0;
+        String topCategory = "Chưa có";
+
+        Cursor c1 = db.rawQuery(
+                "SELECT COUNT(*) FROM transactions " +
+                        "WHERE type='INCOME' AND date LIKE ?",
+                new String[]{"%" + monthText}
+        );
+
+        if (c1.moveToFirst()) {
+            incomeCount = c1.getInt(0);
+        }
+
+        c1.close();
+
+        Cursor c2 = db.rawQuery(
+                "SELECT COUNT(*) FROM transactions " +
+                        "WHERE type='EXPENSE' AND date LIKE ?",
+                new String[]{"%" + monthText}
+        );
+
+        if (c2.moveToFirst()) {
+            expenseCount = c2.getInt(0);
+        }
+
+        c2.close();
+
+        Cursor c3 = db.rawQuery(
+                "SELECT title, SUM(ABS(amount)) FROM transactions " +
+                        "WHERE type='EXPENSE' AND date LIKE ? " +
+                        "GROUP BY title " +
+                        "ORDER BY SUM(ABS(amount)) DESC LIMIT 1",
+                new String[]{"%" + monthText}
+        );
+
+        if (c3.moveToFirst()) {
+            topCategory = c3.getString(0);
+        }
+
+        c3.close();
+
+        int average = totalExpense / 31;
+
+        tvIncomeCount.setText("⬇ Thu: " + incomeCount);
+        tvExpenseCount.setText("⬆ Chi: " + expenseCount);
+        tvTopCategory.setText("🔥 Danh mục chi nhiều nhất: " + topCategory);
+        tvAverageExpense.setText("📊 Trung bình/ngày: " + formatMoney(average));
+    }
     private void addLegend(String name, float percent, int color) {
         TextView tv = new TextView(this);
         tv.setText("●  " + name + "   " + Math.round(percent) + "%");
