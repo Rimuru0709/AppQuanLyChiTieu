@@ -1,13 +1,18 @@
 package com.quanlychitieu.doan.goal;
 
+import java.util.ArrayList;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -69,6 +74,8 @@ public class AddGoalActivity extends AppCompatActivity {
         btnSave = findViewById(R.id.btnSave);
         btnDelete = findViewById(R.id.btnDelete);
 
+        setupKeyboardDone();
+
         goalId = getIntent().getIntExtra("goalId", -1);
 
         imgBack.setOnClickListener(v -> finish());
@@ -94,6 +101,39 @@ public class AddGoalActivity extends AppCompatActivity {
         });
     }
 
+    private void setupKeyboardDone() {
+        edtName.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        edtTargetAmount.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        edtSavedAmount.setImeOptions(EditorInfo.IME_ACTION_DONE);
+
+        edtName.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                hideKeyboard();
+                edtName.clearFocus();
+                return true;
+            }
+            return false;
+        });
+
+        edtTargetAmount.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                hideKeyboard();
+                edtTargetAmount.clearFocus();
+                return true;
+            }
+            return false;
+        });
+
+        edtSavedAmount.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                hideKeyboard();
+                edtSavedAmount.clearFocus();
+                return true;
+            }
+            return false;
+        });
+    }
+
     private void setupSafeArea() {
         View content = findViewById(R.id.contentLayout);
 
@@ -111,9 +151,7 @@ public class AddGoalActivity extends AppCompatActivity {
 
             return insets;
         });
-    }
-
-    private void setupLivePreview() {
+    }    private void setupLivePreview() {
         TextWatcher watcher = new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -238,9 +276,7 @@ public class AddGoalActivity extends AppCompatActivity {
                 "ic_target",
                 "#FF9800"
         );
-    }
-
-    private String getToday() {
+    }    private String getToday() {
         Calendar calendar = Calendar.getInstance();
 
         return String.format(
@@ -276,12 +312,21 @@ public class AddGoalActivity extends AppCompatActivity {
     }
 
     private void showWalletDialog() {
-        String[] wallets = {
-                "Ví mặc định",
-                "Tiết kiệm",
-                "Ngân hàng",
-                "Momo"
-        };
+        ArrayList<String> walletList = new ArrayList<>();
+
+        Cursor cursor = dbHelper.getAllWallets();
+
+        while (cursor.moveToNext()) {
+            walletList.add(cursor.getString(0));
+        }
+
+        cursor.close();
+
+        if (walletList.isEmpty()) {
+            walletList.add("Ví mặc định");
+        }
+
+        String[] wallets = walletList.toArray(new String[0]);
 
         new AlertDialog.Builder(this)
                 .setTitle("Chọn ví")
@@ -306,6 +351,31 @@ public class AddGoalActivity extends AppCompatActivity {
     private String formatMoney(int money) {
         DecimalFormat formatter = new DecimalFormat("#,###");
         return formatter.format(money).replace(",", ".") + " đ";
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
+            View view = getCurrentFocus();
+
+            if (view != null) {
+                hideKeyboard();
+                view.clearFocus();
+            }
+        }
+
+        return super.dispatchTouchEvent(ev);
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager imm =
+                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        View view = getCurrentFocus();
+
+        if (view != null && imm != null) {
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     private int dp(int value) {
