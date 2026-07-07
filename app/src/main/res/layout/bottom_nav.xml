@@ -38,14 +38,15 @@
         android:background="@drawable/bg_circle_blue" />
 
     <TextView
-        android:id="@+id/navCategory"
+        android:id="@+id/navAlert"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:gravity="center"
-        android:text="▣\nDanh mục"
-        android:textColor="#777777"
-        android:textSize="14sp" />
+        android:text="Cảnh báo"
+        android:textColor="#64748B"
+        android:textSize="12sp"
+        android:drawableTop="@drawable/ic_warning"/>
 
     <TextView
         android:id="@+id/navSetting"
