@@ -9,11 +9,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "ExpenseDB.db";
-    private static final int DATABASE_VERSION = 7;
+    private static final int DATABASE_VERSION = 9;
 
     public static final String TABLE_TRANSACTION = "transactions";
     public static final String TABLE_GOAL = "goals";
     public static final String TABLE_WALLET = "wallets";
+    public static final String TABLE_ALERT_SETTING = "alert_settings";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -49,9 +50,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "isDefault INTEGER" +
                 ")";
 
+        String CREATE_ALERT_SETTING_TABLE = "CREATE TABLE " + TABLE_ALERT_SETTING + " (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "category TEXT UNIQUE," +
+                "warningPercent INTEGER," +
+                "settingValue INTEGER," +
+                "enable INTEGER" +
+                ")";
+
         db.execSQL(CREATE_TRANSACTION_TABLE);
         db.execSQL(CREATE_GOAL_TABLE);
         db.execSQL(CREATE_WALLET_TABLE);
+        db.execSQL(CREATE_ALERT_SETTING_TABLE);
 
         insertDefaultWallets(db);
     }
@@ -65,10 +75,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_TRANSACTION);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_GOAL);
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_WALLET);
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ALERT_SETTING);
 
         onCreate(db);
     }
@@ -89,6 +99,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public boolean walletHasTransaction(String wallet) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM transactions WHERE wallet=?",
+                new String[]{wallet}
+        );
+
+        boolean hasData = false;
+
+        if (cursor.moveToFirst()) {
+            hasData = cursor.getInt(0) > 0;
+        }
+
+        cursor.close();
+        return hasData;
+    }
+
+    public void deleteWallet(String name) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_WALLET, "name=?", new String[]{name});
+        db.close();
+    }
+
     public void insertTransaction(String title,
                                   String date,
                                   int amount,
@@ -100,7 +134,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-
         values.put("title", title);
         values.put("date", date);
         values.put("amount", amount);
@@ -110,57 +143,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("color", color);
 
         db.insert(TABLE_TRANSACTION, null, values);
-        db.close();
-    }
-
-    public void insertGoal(String name,
-                           int targetAmount,
-                           int savedAmount,
-                           String deadline,
-                           String wallet,
-                           int autoSave) {
-
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-
-        values.put("name", name);
-        values.put("targetAmount", targetAmount);
-        values.put("savedAmount", savedAmount);
-        values.put("deadline", deadline);
-        values.put("wallet", wallet);
-        values.put("autoSave", autoSave);
-
-        db.insert(TABLE_GOAL, null, values);
-        db.close();
-    }
-
-    public void updateGoal(int id,
-                           String name,
-                           int targetAmount,
-                           int savedAmount,
-                           String deadline,
-                           String wallet,
-                           int autoSave) {
-
-        SQLiteDatabase db = this.getWritableDatabase();
-
-        ContentValues values = new ContentValues();
-
-        values.put("name", name);
-        values.put("targetAmount", targetAmount);
-        values.put("savedAmount", savedAmount);
-        values.put("deadline", deadline);
-        values.put("wallet", wallet);
-        values.put("autoSave", autoSave);
-
-        db.update(TABLE_GOAL, values, "id=?", new String[]{String.valueOf(id)});
-        db.close();
-    }
-
-    public void deleteGoal(int id) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_GOAL, "id=?", new String[]{String.valueOf(id)});
         db.close();
     }
 
@@ -194,27 +176,122 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
-    public boolean walletHasTransaction(String wallet) {
+    public void insertGoal(String name,
+                           int targetAmount,
+                           int savedAmount,
+                           String deadline,
+                           String wallet,
+                           int autoSave) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("name", name);
+        values.put("targetAmount", targetAmount);
+        values.put("savedAmount", savedAmount);
+        values.put("deadline", deadline);
+        values.put("wallet", wallet);
+        values.put("autoSave", autoSave);
+
+        db.insert(TABLE_GOAL, null, values);
+        db.close();
+    }
+
+    public void updateGoal(int id,
+                           String name,
+                           int targetAmount,
+                           int savedAmount,
+                           String deadline,
+                           String wallet,
+                           int autoSave) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("name", name);
+        values.put("targetAmount", targetAmount);
+        values.put("savedAmount", savedAmount);
+        values.put("deadline", deadline);
+        values.put("wallet", wallet);
+        values.put("autoSave", autoSave);
+
+        db.update(TABLE_GOAL, values, "id=?", new String[]{String.valueOf(id)});
+        db.close();
+    }
+
+    public void deleteGoal(int id) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_GOAL, "id=?", new String[]{String.valueOf(id)});
+        db.close();
+    }
+
+    public int getWarningPercent(String category) {
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = db.rawQuery(
-                "SELECT COUNT(*) FROM transactions WHERE wallet=?",
-                new String[]{wallet}
+                "SELECT warningPercent FROM " + TABLE_ALERT_SETTING + " WHERE category=?",
+                new String[]{category}
         );
 
-        boolean hasData = false;
+        int percent = 80;
 
         if (cursor.moveToFirst()) {
-            hasData = cursor.getInt(0) > 0;
+            percent = cursor.getInt(0);
         }
 
         cursor.close();
-        return hasData;
+        return percent;
     }
 
-    public void deleteWallet(String name) {
+    public void saveWarningPercent(String category, int percent) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_WALLET, "name=?", new String[]{name});
-        db.close();
+
+        ContentValues values = new ContentValues();
+        values.put("category", category);
+        values.put("warningPercent", percent);
+        values.put("settingValue", 0);
+        values.put("enable", 1);
+
+        db.insertWithOnConflict(
+                TABLE_ALERT_SETTING,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_REPLACE
+        );
+    }
+
+    public int getAlertSettingValue(String category, int defaultValue) {
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        Cursor cursor = db.rawQuery(
+                "SELECT settingValue FROM " + TABLE_ALERT_SETTING + " WHERE category=?",
+                new String[]{category}
+        );
+
+        int value = defaultValue;
+
+        if (cursor.moveToFirst()) {
+            value = cursor.getInt(0);
+        }
+
+        cursor.close();
+        return value;
+    }
+
+    public void saveAlertSettingValue(String category, int value) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("category", category);
+        values.put("settingValue", value);
+        values.put("warningPercent", 80);
+        values.put("enable", 1);
+
+        db.insertWithOnConflict(
+                TABLE_ALERT_SETTING,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_REPLACE
+        );
     }
 }
