@@ -36,7 +36,7 @@ public class EditTransactionActivity extends AppCompatActivity {
     private ImageView imgBack, imgCategory;
     private TextView tabExpense, tabIncome, tvWallet, tvCategory;
     private LinearLayout layoutCategory;
-    private EditText edtAmount, edtDate;
+    private EditText edtAmount, edtDate, edtOtherCategory;
     private Button btnSave, btnDelete;
 
     private DatabaseHelper dbHelper;
@@ -74,9 +74,12 @@ public class EditTransactionActivity extends AppCompatActivity {
 
         edtAmount = findViewById(R.id.edtAmount);
         edtDate = findViewById(R.id.edtDate);
+        edtOtherCategory = findViewById(R.id.edtOtherCategory);
 
         btnSave = findViewById(R.id.btnSave);
         btnDelete = findViewById(R.id.btnDelete);
+
+        edtOtherCategory.setVisibility(View.GONE);
 
         edtAmount.setImeOptions(EditorInfo.IME_ACTION_DONE);
         edtAmount.setOnEditorActionListener((v, actionId, event) -> {
@@ -96,6 +99,8 @@ public class EditTransactionActivity extends AppCompatActivity {
         tabExpense.setOnClickListener(v -> {
             transactionType = "EXPENSE";
             setDefaultCategoryByType();
+            edtOtherCategory.setVisibility(View.GONE);
+            edtOtherCategory.setText("");
             updateTabUI();
             updateCategoryUI();
         });
@@ -103,6 +108,8 @@ public class EditTransactionActivity extends AppCompatActivity {
         tabIncome.setOnClickListener(v -> {
             transactionType = "INCOME";
             setDefaultCategoryByType();
+            edtOtherCategory.setVisibility(View.GONE);
+            edtOtherCategory.setText("");
             updateTabUI();
             updateCategoryUI();
         });
@@ -126,12 +133,7 @@ public class EditTransactionActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-            v.setPadding(
-                    dp(24),
-                    bars.top + dp(12),
-                    dp(24),
-                    dp(30)
-            );
+            v.setPadding(dp(24), bars.top + dp(12), dp(24), dp(30));
 
             return insets;
         });
@@ -171,9 +173,22 @@ public class EditTransactionActivity extends AppCompatActivity {
         String amountText = edtAmount.getText().toString().trim();
         String date = edtDate.getText().toString().trim();
 
-        if (categoryName.isEmpty() || amountText.isEmpty() || date.isEmpty()) {
+        if (amountText.isEmpty() || date.isEmpty()) {
             Toast.makeText(this, "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
             return;
+        }
+
+        if (categoryName.equals("Khác")) {
+            String otherCategory = edtOtherCategory.getText().toString().trim();
+
+            if (otherCategory.isEmpty()) {
+                edtOtherCategory.setError("Nhập tên danh mục khác");
+                return;
+            }
+
+            categoryName = otherCategory;
+            iconName = "ic_dot";
+            colorCode = "#ADB5BD";
         }
 
         int amount;
@@ -222,20 +237,22 @@ public class EditTransactionActivity extends AppCompatActivity {
         if ("EXPENSE".equals(transactionType)) {
             tabExpense.setBackgroundResource(R.drawable.bg_tab_selected);
             tabIncome.setBackgroundResource(R.drawable.bg_tab_unselected);
+
+            tabExpense.setTextColor(Color.WHITE);
+            tabIncome.setTextColor(Color.parseColor("#111827"));
         } else {
             tabIncome.setBackgroundResource(R.drawable.bg_tab_selected);
             tabExpense.setBackgroundResource(R.drawable.bg_tab_unselected);
+
+            tabIncome.setTextColor(Color.WHITE);
+            tabExpense.setTextColor(Color.parseColor("#111827"));
         }
     }
 
     private void updateCategoryUI() {
         tvCategory.setText(categoryName);
 
-        int iconRes = getResources().getIdentifier(
-                iconName,
-                "drawable",
-                getPackageName()
-        );
+        int iconRes = getResources().getIdentifier(iconName, "drawable", getPackageName());
 
         if (iconRes == 0) {
             iconRes = R.drawable.ic_dot;
@@ -277,13 +294,7 @@ public class EditTransactionActivity extends AppCompatActivity {
 
     private void showExpenseCategoryDialog() {
         String[] categories = {
-                "Ăn uống",
-                "Đi lại",
-                "Mua sắm",
-                "Giải trí",
-                "Hóa đơn",
-                "Sức khỏe",
-                "Khác"
+                "Ăn uống", "Đi lại", "Mua sắm", "Giải trí", "Hóa đơn", "Sức khỏe", "Khác"
         };
 
         new AlertDialog.Builder(this)
@@ -291,27 +302,34 @@ public class EditTransactionActivity extends AppCompatActivity {
                 .setItems(categories, (dialog, which) -> {
                     categoryName = categories[which];
 
-                    if (categoryName.equals("Ăn uống")) {
-                        iconName = "ic_food";
-                        colorCode = "#FF3131";
-                    } else if (categoryName.equals("Đi lại")) {
-                        iconName = "ic_bus";
-                        colorCode = "#2196F3";
-                    } else if (categoryName.equals("Mua sắm")) {
-                        iconName = "ic_shopping";
-                        colorCode = "#FF9800";
-                    } else if (categoryName.equals("Giải trí")) {
-                        iconName = "ic_default";
-                        colorCode = "#9C27B0";
-                    } else if (categoryName.equals("Hóa đơn")) {
-                        iconName = "ic_bill";
-                        colorCode = "#FF9800";
-                    } else if (categoryName.equals("Sức khỏe")) {
-                        iconName = "ic_heart";
-                        colorCode = "#FFB3C6";
-                    } else {
+                    if (categoryName.equals("Khác")) {
                         iconName = "ic_dot";
                         colorCode = "#ADB5BD";
+                        edtOtherCategory.setVisibility(View.VISIBLE);
+                        edtOtherCategory.requestFocus();
+                    } else {
+                        edtOtherCategory.setVisibility(View.GONE);
+                        edtOtherCategory.setText("");
+
+                        if (categoryName.equals("Ăn uống")) {
+                            iconName = "ic_food";
+                            colorCode = "#FF3131";
+                        } else if (categoryName.equals("Đi lại")) {
+                            iconName = "ic_bus";
+                            colorCode = "#2196F3";
+                        } else if (categoryName.equals("Mua sắm")) {
+                            iconName = "ic_shopping";
+                            colorCode = "#FF9800";
+                        } else if (categoryName.equals("Giải trí")) {
+                            iconName = "ic_default";
+                            colorCode = "#9C27B0";
+                        } else if (categoryName.equals("Hóa đơn")) {
+                            iconName = "ic_bill";
+                            colorCode = "#FF9800";
+                        } else if (categoryName.equals("Sức khỏe")) {
+                            iconName = "ic_heart";
+                            colorCode = "#FFB3C6";
+                        }
                     }
 
                     updateCategoryUI();
@@ -321,13 +339,7 @@ public class EditTransactionActivity extends AppCompatActivity {
 
     private void showIncomeCategoryDialog() {
         String[] categories = {
-                "Lương",
-                "Thưởng",
-                "Làm thêm",
-                "Đầu tư",
-                "Bán hàng",
-                "Được tặng",
-                "Khác"
+                "Lương", "Thưởng", "Làm thêm", "Đầu tư", "Bán hàng", "Được tặng", "Khác"
         };
 
         new AlertDialog.Builder(this)
@@ -335,27 +347,34 @@ public class EditTransactionActivity extends AppCompatActivity {
                 .setItems(categories, (dialog, which) -> {
                     categoryName = categories[which];
 
-                    if (categoryName.equals("Lương")) {
-                        iconName = "ic_salary";
-                        colorCode = "#2ECC71";
-                    } else if (categoryName.equals("Thưởng")) {
-                        iconName = "ic_reward";
-                        colorCode = "#FB8500";
-                    } else if (categoryName.equals("Làm thêm")) {
-                        iconName = "ic_work";
-                        colorCode = "#A2D2FF";
-                    } else if (categoryName.equals("Đầu tư")) {
-                        iconName = "ic_invest";
-                        colorCode = "#2A9D8F";
-                    } else if (categoryName.equals("Bán hàng")) {
-                        iconName = "ic_sell";
-                        colorCode = "#9D4EDD";
-                    } else if (categoryName.equals("Được tặng")) {
-                        iconName = "ic_donate";
-                        colorCode = "#9D6B53";
-                    } else {
+                    if (categoryName.equals("Khác")) {
                         iconName = "ic_dot";
                         colorCode = "#ADB5BD";
+                        edtOtherCategory.setVisibility(View.VISIBLE);
+                        edtOtherCategory.requestFocus();
+                    } else {
+                        edtOtherCategory.setVisibility(View.GONE);
+                        edtOtherCategory.setText("");
+
+                        if (categoryName.equals("Lương")) {
+                            iconName = "ic_salary";
+                            colorCode = "#2ECC71";
+                        } else if (categoryName.equals("Thưởng")) {
+                            iconName = "ic_reward";
+                            colorCode = "#FB8500";
+                        } else if (categoryName.equals("Làm thêm")) {
+                            iconName = "ic_work";
+                            colorCode = "#A2D2FF";
+                        } else if (categoryName.equals("Đầu tư")) {
+                            iconName = "ic_invest";
+                            colorCode = "#2A9D8F";
+                        } else if (categoryName.equals("Bán hàng")) {
+                            iconName = "ic_sell";
+                            colorCode = "#9D4EDD";
+                        } else if (categoryName.equals("Được tặng")) {
+                            iconName = "ic_donate";
+                            colorCode = "#9D6B53";
+                        }
                     }
 
                     updateCategoryUI();
@@ -433,10 +452,7 @@ public class EditTransactionActivity extends AppCompatActivity {
         View view = getCurrentFocus();
 
         if (view != null && imm != null) {
-            imm.hideSoftInputFromWindow(
-                    view.getWindowToken(),
-                    0
-            );
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
 
