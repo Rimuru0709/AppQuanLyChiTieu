@@ -32,7 +32,7 @@
                 <ImageView
                     android:id="@+id/imgBack"
                     android:layout_width="36dp"
-                    android:layout_height="36dp"
+                    android:layout_height="29dp"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_back" />
 
