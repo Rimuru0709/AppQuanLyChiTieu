@@ -1,10 +1,12 @@
 package com.quanlychitieu.doan.setting;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,40 +20,49 @@ import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
 
 public class SettingActivity extends AppCompatActivity {
 
+    private static final String PREF_SETTING = "AppSetting";
+    private static final String KEY_THEME = "theme";
+    private static final String KEY_LANGUAGE = "language";
+
     private ImageView imgBack;
 
-    private LinearLayout itemBudget, itemReminder, itemBackup, itemSecurity;
-    private LinearLayout itemTheme, itemLanguage, itemLogout;
+    private LinearLayout itemBudget;
+    private LinearLayout itemReminder;
+    private LinearLayout itemBackup;
+    private LinearLayout itemSecurity;
+    private LinearLayout itemTheme;
+    private LinearLayout itemLanguage;
+    private LinearLayout itemLogout;
+
+    private TextView tvThemeValue;
+    private TextView tvLanguageValue;
+
+    private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
 
+        preferences = getSharedPreferences(
+                PREF_SETTING,
+                MODE_PRIVATE
+        );
+
+        initViews();
         setupHeaderInsets();
         BottomNavHelper.setup(this);
-        initViews();
         setupEvents();
+        updateSettingValues();
     }
 
-    private void setupHeaderInsets() {
-        View header = findViewById(R.id.headerSetting);
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-        ViewCompat.setOnApplyWindowInsetsListener(header, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-            v.setPadding(
-                    v.getPaddingLeft(),
-                    systemBars.top + dpToPx(8),
-                    v.getPaddingRight(),
-                    dpToPx(10)
-            );
-
-            v.getLayoutParams().height = dpToPx(72) + systemBars.top;
-            v.requestLayout();
-
-            return insets;
-        });
+        if (preferences != null) {
+            updateSettingValues();
+        }
     }
 
     private void initViews() {
@@ -64,47 +75,186 @@ public class SettingActivity extends AppCompatActivity {
         itemTheme = findViewById(R.id.itemTheme);
         itemLanguage = findViewById(R.id.itemLanguage);
         itemLogout = findViewById(R.id.itemLogout);
+
+        tvThemeValue = findViewById(R.id.tvThemeValue);
+        tvLanguageValue = findViewById(R.id.tvLanguageValue);
+    }
+
+    private void setupHeaderInsets() {
+        View header = findViewById(R.id.headerSetting);
+
+        if (header == null) {
+            return;
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(
+                header,
+                (view, insets) -> {
+
+                    Insets systemBars = insets.getInsets(
+                            WindowInsetsCompat.Type.systemBars()
+                    );
+
+                    view.setPadding(
+                            dpToPx(16),
+                            systemBars.top + dpToPx(8),
+                            dpToPx(16),
+                            dpToPx(8)
+                    );
+
+                    view.getLayoutParams().height =
+                            dpToPx(64) + systemBars.top;
+
+                    view.requestLayout();
+
+                    return insets;
+                }
+        );
+
+        ViewCompat.requestApplyInsets(header);
     }
 
     private void setupEvents() {
-        imgBack.setOnClickListener(v -> finish());
 
-        itemBudget.setOnClickListener(v -> {
-            Intent intent = new Intent(SettingActivity.this, BudgetActivity.class);
-            startActivity(intent);
-        });
+        if (imgBack != null) {
+            imgBack.setOnClickListener(v -> finish());
+        }
 
-        itemReminder.setOnClickListener(v ->
-                Toast.makeText(this, "Mở Nhắc nhở", Toast.LENGTH_SHORT).show()
+        if (itemBudget != null) {
+            itemBudget.setOnClickListener(v -> {
+                Intent intent = new Intent(
+                        SettingActivity.this,
+                        BudgetActivity.class
+                );
+
+                startActivity(intent);
+            });
+        }
+
+        if (itemReminder != null) {
+            itemReminder.setOnClickListener(v ->
+                    Toast.makeText(
+                            SettingActivity.this,
+                            "Mở Nhắc nhở",
+                            Toast.LENGTH_SHORT
+                    ).show()
+            );
+        }
+
+        if (itemBackup != null) {
+            itemBackup.setOnClickListener(v ->
+                    Toast.makeText(
+                            SettingActivity.this,
+                            "Mở Sao lưu và khôi phục",
+                            Toast.LENGTH_SHORT
+                    ).show()
+            );
+        }
+
+        if (itemSecurity != null) {
+            itemSecurity.setOnClickListener(v ->
+                    Toast.makeText(
+                            SettingActivity.this,
+                            "Mở thông tin tài khoản",
+                            Toast.LENGTH_SHORT
+                    ).show()
+            );
+        }
+
+        if (itemTheme != null) {
+            itemTheme.setOnClickListener(v -> {
+                Intent intent = new Intent(
+                        SettingActivity.this,
+                        ThemeActivity.class
+                );
+
+                startActivity(intent);
+            });
+        }
+
+        if (itemLanguage != null) {
+            itemLanguage.setOnClickListener(v -> {
+                Intent intent = new Intent(
+                        SettingActivity.this,
+                        LanguageActivity.class
+                );
+
+                startActivity(intent);
+            });
+        }
+
+        if (itemLogout != null) {
+            itemLogout.setOnClickListener(v -> logout());
+        }
+    }
+
+    private void updateSettingValues() {
+        updateThemeValue();
+        updateLanguageValue();
+    }
+
+    private void updateThemeValue() {
+        if (tvThemeValue == null) {
+            return;
+        }
+
+        String currentTheme = preferences.getString(
+                KEY_THEME,
+                "light"
         );
 
-        itemBackup.setOnClickListener(v ->
-                Toast.makeText(this, "Mở Sao lưu & khôi phục", Toast.LENGTH_SHORT).show()
+        if ("dark".equals(currentTheme)) {
+            tvThemeValue.setText("Tối");
+        } else if ("system".equals(currentTheme)) {
+            tvThemeValue.setText("Theo hệ thống");
+        } else {
+            tvThemeValue.setText("Sáng");
+        }
+    }
+
+    private void updateLanguageValue() {
+        if (tvLanguageValue == null) {
+            return;
+        }
+
+        String currentLanguage = preferences.getString(
+                KEY_LANGUAGE,
+                "vi"
         );
 
-        itemSecurity.setOnClickListener(v ->
-                Toast.makeText(this, "Mở Thông tin tài khoản", Toast.LENGTH_SHORT).show()
+        if ("en".equals(currentLanguage)) {
+            tvLanguageValue.setText("English");
+        } else {
+            tvLanguageValue.setText("Tiếng Việt");
+        }
+    }
+
+    private void logout() {
+        Toast.makeText(
+                this,
+                "Đăng xuất thành công",
+                Toast.LENGTH_SHORT
+        ).show();
+
+        Intent intent = new Intent(
+                SettingActivity.this,
+                LoginActivity.class
         );
 
-        itemTheme.setOnClickListener(v ->
-                Toast.makeText(this, "Đổi giao diện", Toast.LENGTH_SHORT).show()
+        intent.setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK |
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK
         );
 
-        itemLanguage.setOnClickListener(v ->
-                Toast.makeText(this, "Chọn ngôn ngữ", Toast.LENGTH_SHORT).show()
-        );
-
-        itemLogout.setOnClickListener(v -> {
-            Toast.makeText(this, "Đăng xuất thành công", Toast.LENGTH_SHORT).show();
-
-            Intent intent = new Intent(SettingActivity.this, LoginActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            startActivity(intent);
-            finish();
-        });
+        startActivity(intent);
+        finish();
     }
 
     private int dpToPx(int dp) {
-        return (int) (dp * getResources().getDisplayMetrics().density);
+        return Math.round(
+                dp * getResources()
+                        .getDisplayMetrics()
+                        .density
+        );
     }
 }
