@@ -21,4 +21,5 @@
     <color name="switch_thumb_color">#2563EB</color>
     <color name="switch_track_color">#93C5FD</color>
 
+    <color name="tab_unselected_text">#111827</color>
 </resources>

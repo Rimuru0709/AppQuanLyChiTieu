@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F9FC">
+    android:background="@color/app_background">
 
     <ScrollView
         android:id="@+id/scrollStatistic"
@@ -46,7 +46,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="Thống kê"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="24sp"
                     android:textStyle="bold" />
 
@@ -65,7 +65,7 @@
                 android:paddingStart="18dp"
                 android:paddingEnd="18dp"
                 android:text="Tháng 7/2026 ▼"
-                android:textColor="#111827"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -129,7 +129,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Chi tiêu theo danh mục"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -170,7 +170,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Chi tiêu theo ngày"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 
@@ -194,7 +194,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Thống kê nhanh"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
 

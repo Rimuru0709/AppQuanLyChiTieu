@@ -5,41 +5,51 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F9FC">
+    android:background="@color/app_background">
 
+    <!-- Nội dung cuộn -->
     <ScrollView
         android:id="@+id/scrollAlert"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@color/app_background"
         android:fillViewport="true"
+        android:overScrollMode="never"
         android:scrollbars="none"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavContainer"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:id="@+id/contentLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/app_background"
             android:orientation="vertical"
             android:paddingStart="18dp"
             android:paddingEnd="18dp"
             android:paddingBottom="24dp">
 
+            <!-- Header -->
             <LinearLayout
+                android:id="@+id/headerAlert"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="56dp"
                 android:gravity="center_vertical"
+                android:minHeight="56dp"
                 android:orientation="horizontal">
 
                 <ImageView
                     android:id="@+id/imgBack"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
+                    android:clickable="true"
+                    android:contentDescription="Quay lại"
+                    android:focusable="true"
                     android:padding="6dp"
-                    android:src="@drawable/ic_back" />
+                    android:src="@drawable/ic_back"
+                    app:tint="@color/text_secondary" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -47,23 +57,25 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="Cảnh báo chi tiêu"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
                 <View
                     android:layout_width="36dp"
                     android:layout_height="36dp" />
+
             </LinearLayout>
 
+            <!-- Card giới thiệu -->
             <LinearLayout
                 android:id="@+id/cardAlertHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:minHeight="92dp"
                 android:layout_marginTop="10dp"
                 android:background="@drawable/bg_expense_gradient"
                 android:gravity="center_vertical"
+                android:minHeight="92dp"
                 android:orientation="horizontal"
                 android:padding="16dp">
 
@@ -85,7 +97,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Kiểm soát chi tiêu"
-                        android:textColor="#FFFFFF"
+                        android:textColor="@color/white"
                         android:textSize="18sp"
                         android:textStyle="bold" />
 
@@ -96,26 +108,30 @@
                         android:text="Theo dõi cảnh báo để quản lý tài chính hiệu quả"
                         android:textColor="#FFECEC"
                         android:textSize="13sp" />
+
                 </LinearLayout>
+
             </LinearLayout>
 
+            <!-- Cảnh báo ngân sách -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="Cảnh báo theo ngân sách danh mục"
-                android:textColor="#111827"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:id="@+id/cardBudgetAlert"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="0dp">
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="false">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rvBudgetAlerts"
@@ -123,135 +139,161 @@
                     android:layout_height="wrap_content"
                     android:nestedScrollingEnabled="false" />
 
-            </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
+            <!-- Cảnh báo giao dịch -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="Cảnh báo giao dịch"
-                android:textColor="#111827"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:id="@+id/cardTransactionAlert"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="16dp">
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="false">
 
                 <LinearLayout
-                    android:id="@+id/layoutLargeTransactionAlert"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:gravity="center"
-                        android:text="💳"
-                        android:textSize="28sp" />
-
+                    <!-- Giao dịch lớn -->
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:id="@+id/layoutLargeTransactionAlert"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <TextView
-                            android:layout_width="match_parent"
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:gravity="center"
+                            android:text="💳"
+                            android:textSize="28sp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:text="Cảnh báo giao dịch lớn"
-                            android:textColor="#111827"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
-                    </LinearLayout>
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textSize="26sp"
-                        android:textColor="#999999"/>
-                </LinearLayout>
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Cảnh báo giao dịch lớn"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
 
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="14dp"
-                    android:layout_marginBottom="14dp"
-                    android:background="#E5E7EB" />
-
-                <LinearLayout
-                    android:id="@+id/layoutLowWalletAlert"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:gravity="center"
-                        android:text="👛"
-                        android:textSize="28sp" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        </LinearLayout>
 
                         <TextView
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Cảnh báo số dư ví thấp"
-                            android:textColor="#111827"
-                            android:textSize="15sp"
-                            android:textStyle="bold" />
+                            android:text="›"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="26sp" />
 
                     </LinearLayout>
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <!-- Đường phân cách -->
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="14dp"
+                        android:layout_marginBottom="14dp"
+                        android:background="@color/divider_color" />
+
+                    <!-- Số dư ví thấp -->
+                    <LinearLayout
+                        android:id="@+id/layoutLowWalletAlert"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="›"
-                        android:textSize="26sp"
-                        android:textColor="#999999"/>
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="44dp"
+                            android:layout_height="44dp"
+                            android:gravity="center"
+                            android:text="👛"
+                            android:textSize="28sp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Cảnh báo số dư ví thấp"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp"
+                                android:textStyle="bold" />
+
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="›"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="26sp" />
+
+                    </LinearLayout>
+
                 </LinearLayout>
 
-            </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
+            <!-- Cảnh báo mục tiêu -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="Cảnh báo mục tiêu tiết kiệm"
-                android:textColor="#111827"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
+            <androidx.cardview.widget.CardView
                 android:id="@+id/cardGoalAlert"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_card"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginBottom="8dp"
+                app:cardBackgroundColor="@color/card_background"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardUseCompatPadding="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
-                    android:orientation="horizontal">
+                    android:orientation="horizontal"
+                    android:padding="16dp">
 
                     <TextView
                         android:layout_width="44dp"
@@ -271,7 +313,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:text="Cảnh báo mục tiêu"
-                            android:textColor="#111827"
+                            android:textColor="@color/text_primary"
                             android:textSize="15sp"
                             android:textStyle="bold" />
 
@@ -281,32 +323,35 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="3dp"
                             android:text="Theo dõi mục tiêu tiết kiệm chưa hoàn thành"
-                            android:textColor="#6B7280"
+                            android:textColor="@color/text_secondary"
                             android:textSize="13sp" />
+
                     </LinearLayout>
 
                     <androidx.appcompat.widget.SwitchCompat
                         android:id="@+id/swGoalAlert"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:checked="true" />
+                        android:checked="true"
+                        app:thumbTint="@color/switch_thumb_color"
+                        app:trackTint="@color/switch_track_color" />
+
                 </LinearLayout>
 
-            </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
         </LinearLayout>
+
     </ScrollView>
 
-    <FrameLayout
-        android:id="@+id/bottomNavContainer"
+    <!-- Bottom Navigation -->
+    <include
+        android:id="@+id/bottomNav"
+        layout="@layout/bottom_nav"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <include layout="@layout/bottom_nav" />
-
-    </FrameLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

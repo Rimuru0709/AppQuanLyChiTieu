@@ -16,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -29,7 +30,12 @@ import java.text.DecimalFormat;
 public class WalletActivity extends AppCompatActivity {
 
     private ImageView imgBack;
-    private TextView btnAddWallet, tvTotalWalletBalance, tvWalletIncome, tvWalletExpense;
+
+    private TextView btnAddWallet;
+    private TextView tvTotalWalletBalance;
+    private TextView tvWalletIncome;
+    private TextView tvWalletExpense;
+
     private LinearLayout layoutWallets;
 
     private DatabaseHelper dbHelper;
@@ -40,251 +46,488 @@ public class WalletActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wallet);
 
+        initViews();
         setupSafeArea();
         BottomNavHelper.setup(this);
-
-        imgBack = findViewById(R.id.imgBack);
-        btnAddWallet = findViewById(R.id.btnAddWallet);
-        layoutWallets = findViewById(R.id.layoutWallets);
-        tvTotalWalletBalance = findViewById(R.id.tvTotalWalletBalance);
-        tvWalletIncome = findViewById(R.id.tvWalletIncome);
-        tvWalletExpense = findViewById(R.id.tvWalletExpense);
-
-        dbHelper = new DatabaseHelper(this);
-        database = dbHelper.getReadableDatabase();
-
-        imgBack.setOnClickListener(v -> finish());
-        btnAddWallet.setOnClickListener(v -> showAddWalletDialog());
+        setupDatabase();
+        setupEvents();
 
         loadWalletData();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    private void initViews() {
+        imgBack = findViewById(R.id.imgBack);
+
+        btnAddWallet = findViewById(R.id.btnAddWallet);
+
+        layoutWallets = findViewById(R.id.layoutWallets);
+
+        tvTotalWalletBalance =
+                findViewById(R.id.tvTotalWalletBalance);
+
+        tvWalletIncome =
+                findViewById(R.id.tvWalletIncome);
+
+        tvWalletExpense =
+                findViewById(R.id.tvWalletExpense);
+    }
+
+    private void setupDatabase() {
+        dbHelper = new DatabaseHelper(this);
         database = dbHelper.getReadableDatabase();
-        loadWalletData();
+    }
+
+    private void setupEvents() {
+        imgBack.setOnClickListener(v -> finish());
+
+        btnAddWallet.setOnClickListener(v ->
+                showAddWalletDialog()
+        );
     }
 
     private void setupSafeArea() {
         View content = findViewById(R.id.contentLayout);
 
-        if (content == null) return;
+        if (content == null) {
+            return;
+        }
 
-        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
-            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+        ViewCompat.setOnApplyWindowInsetsListener(
+                content,
+                (view, insets) -> {
 
-            v.setPadding(
-                    dp(20),
-                    bars.top + dp(12),
-                    dp(20),
-                    dp(24)
-            );
+                    Insets bars = insets.getInsets(
+                            WindowInsetsCompat.Type.systemBars()
+                    );
 
-            return insets;
-        });
+                    view.setPadding(
+                            dp(20),
+                            bars.top + dp(12),
+                            dp(20),
+                            dp(24)
+                    );
+
+                    return insets;
+                }
+        );
+
+        ViewCompat.requestApplyInsets(content);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (dbHelper == null) {
+            dbHelper = new DatabaseHelper(this);
+        }
+
+        database = dbHelper.getReadableDatabase();
+        loadWalletData();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (database != null && database.isOpen()) {
+            database.close();
+        }
+
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 
     private void loadWalletData() {
+        if (layoutWallets == null ||
+                database == null ||
+                !database.isOpen()) {
+            return;
+        }
+
         layoutWallets.removeAllViews();
 
         int totalIncome = getTotalIncomeAllWallets();
         int totalExpense = getTotalExpenseAllWallets();
         int totalBalance = totalIncome - totalExpense;
 
-        tvTotalWalletBalance.setText(formatMoney(totalBalance));
-        tvWalletIncome.setText("Thu\n" + formatMoney(totalIncome));
-        tvWalletExpense.setText("Chi\n" + formatMoney(totalExpense));
+        tvTotalWalletBalance.setText(
+                formatMoney(totalBalance)
+        );
 
-        Cursor cursor = dbHelper.getAllWallets();
+        tvWalletIncome.setText(
+                "Thu\n" + formatMoney(totalIncome)
+        );
 
-        if (cursor.getCount() == 0) {
-            TextView empty = new TextView(this);
-            empty.setText("Chưa có ví nào");
-            empty.setTextColor(Color.parseColor("#6B7280"));
-            empty.setTextSize(15);
-            empty.setGravity(Gravity.CENTER);
-            empty.setPadding(0, dp(30), 0, dp(30));
-            layoutWallets.addView(empty);
-            cursor.close();
-            return;
+        tvWalletExpense.setText(
+                "Chi\n" + formatMoney(totalExpense)
+        );
+
+        Cursor cursor = null;
+
+        try {
+            cursor = dbHelper.getAllWallets();
+
+            if (cursor.getCount() == 0) {
+                showEmptyWalletMessage();
+                return;
+            }
+
+            while (cursor.moveToNext()) {
+                String walletName =
+                        cursor.getString(0);
+
+                int income =
+                        getWalletIncome(walletName);
+
+                int expense =
+                        getWalletExpense(walletName);
+
+                int balance =
+                        income - expense;
+
+                addWalletCard(
+                        walletName,
+                        income,
+                        expense,
+                        balance
+                );
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
+    }
 
-        while (cursor.moveToNext()) {
-            String walletName = cursor.getString(0);
+    private void showEmptyWalletMessage() {
+        TextView empty = new TextView(this);
 
-            int income = getWalletIncome(walletName);
-            int expense = getWalletExpense(walletName);
-            int balance = income - expense;
+        empty.setText("Chưa có ví nào");
+        empty.setTextSize(15);
+        empty.setGravity(Gravity.CENTER);
 
-            addWalletCard(walletName, income, expense, balance);
-        }
+        empty.setPadding(
+                0,
+                dp(30),
+                0,
+                dp(30)
+        );
 
-        cursor.close();
+        empty.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_secondary
+                )
+        );
+
+        layoutWallets.addView(empty);
     }
 
     private int getTotalIncomeAllWallets() {
-        int total = 0;
-
-        Cursor cursor = database.rawQuery(
-                "SELECT SUM(ABS(amount)) FROM transactions WHERE type='INCOME'",
+        return getTotalByType(
+                "INCOME",
                 null
         );
-
-        if (cursor.moveToFirst()) {
-            total = cursor.getInt(0);
-        }
-
-        cursor.close();
-        return total;
     }
 
     private int getTotalExpenseAllWallets() {
-        int total = 0;
-
-        Cursor cursor = database.rawQuery(
-                "SELECT SUM(ABS(amount)) FROM transactions WHERE type='EXPENSE'",
+        return getTotalByType(
+                "EXPENSE",
                 null
         );
-
-        if (cursor.moveToFirst()) {
-            total = cursor.getInt(0);
-        }
-
-        cursor.close();
-        return total;
     }
 
     private int getWalletIncome(String walletName) {
-        int total = 0;
-
-        Cursor cursor = database.rawQuery(
-                "SELECT SUM(ABS(amount)) FROM transactions " +
-                        "WHERE type='INCOME' AND wallet=?",
-                new String[]{walletName}
+        return getTotalByType(
+                "INCOME",
+                walletName
         );
-
-        if (cursor.moveToFirst()) {
-            total = cursor.getInt(0);
-        }
-
-        cursor.close();
-        return total;
     }
 
     private int getWalletExpense(String walletName) {
-        int total = 0;
-
-        Cursor cursor = database.rawQuery(
-                "SELECT SUM(ABS(amount)) FROM transactions " +
-                        "WHERE type='EXPENSE' AND wallet=?",
-                new String[]{walletName}
+        return getTotalByType(
+                "EXPENSE",
+                walletName
         );
+    }
 
-        if (cursor.moveToFirst()) {
-            total = cursor.getInt(0);
+    private int getTotalByType(
+            String type,
+            String walletName
+    ) {
+        int total = 0;
+        Cursor cursor = null;
+
+        try {
+            if (walletName == null) {
+                cursor = database.rawQuery(
+                        "SELECT COALESCE(SUM(ABS(amount)), 0) " +
+                                "FROM transactions " +
+                                "WHERE type = ?",
+                        new String[]{type}
+                );
+            } else {
+                cursor = database.rawQuery(
+                        "SELECT COALESCE(SUM(ABS(amount)), 0) " +
+                                "FROM transactions " +
+                                "WHERE type = ? AND wallet = ?",
+                        new String[]{
+                                type,
+                                walletName
+                        }
+                );
+            }
+
+            if (cursor.moveToFirst() &&
+                    !cursor.isNull(0)) {
+                total = cursor.getInt(0);
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
 
-        cursor.close();
         return total;
     }
 
-    private void addWalletCard(String walletName, int income, int expense, int balance) {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(dp(16), dp(16), dp(16), dp(16));
+    private void addWalletCard(
+            String walletName,
+            int income,
+            int expense,
+            int balance
+    ) {
+        LinearLayout card =
+                new LinearLayout(this);
+
+        card.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        card.setPadding(
+                dp(16),
+                dp(16),
+                dp(16),
+                dp(16)
+        );
+
+        card.setClickable(true);
+        card.setFocusable(true);
 
         LinearLayout.LayoutParams cardParams =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
-        cardParams.setMargins(0, 0, 0, dp(14));
+
+        cardParams.setMargins(
+                0,
+                0,
+                0,
+                dp(14)
+        );
+
         card.setLayoutParams(cardParams);
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(20));
+        GradientDrawable cardBackground =
+                createWalletBackground(walletName);
 
-        if (walletName.equals("Ví mặc định")) {
-            bg.setColor(Color.parseColor("#EAF1FF"));
-        } else if (walletName.equals("Tiết kiệm")) {
-            bg.setColor(Color.parseColor("#ECFDF5"));
-        } else if (walletName.equals("Ngân hàng")) {
-            bg.setColor(Color.parseColor("#FFF7ED"));
-        } else if (walletName.equals("Momo")) {
-            bg.setColor(Color.parseColor("#F5E8FF"));
-        } else {
-            bg.setColor(Color.WHITE);
-        }
-
-        bg.setStroke(dp(1), Color.parseColor("#E5E7EB"));
-        card.setBackground(bg);
+        card.setBackground(cardBackground);
         card.setElevation(dp(2));
 
-        LinearLayout topRow = new LinearLayout(this);
-        topRow.setOrientation(LinearLayout.HORIZONTAL);
-        topRow.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout topRow =
+                new LinearLayout(this);
+
+        topRow.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        topRow.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
 
         TextView icon = new TextView(this);
-        icon.setText(getWalletIcon(walletName));
+
+        icon.setText(
+                getWalletIcon(walletName)
+        );
+
         icon.setTextSize(28);
         icon.setGravity(Gravity.CENTER);
 
         LinearLayout.LayoutParams iconParams =
-                new LinearLayout.LayoutParams(dp(48), dp(48));
-        iconParams.setMargins(0, 0, dp(12), 0);
+                new LinearLayout.LayoutParams(
+                        dp(48),
+                        dp(48)
+                );
+
+        iconParams.setMargins(
+                0,
+                0,
+                dp(12),
+                0
+        );
+
         icon.setLayoutParams(iconParams);
 
-        LinearLayout titleBox = new LinearLayout(this);
-        titleBox.setOrientation(LinearLayout.VERTICAL);
-        titleBox.setLayoutParams(new LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                1
-        ));
+        LinearLayout titleBox =
+                new LinearLayout(this);
 
-        TextView tvName = new TextView(this);
+        titleBox.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        titleBox.setLayoutParams(
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1
+                )
+        );
+
+        TextView tvName =
+                new TextView(this);
+
         tvName.setText(walletName);
-        tvName.setTextColor(Color.parseColor("#111827"));
         tvName.setTextSize(16);
-        tvName.setTypeface(null, Typeface.BOLD);
+        tvName.setTypeface(
+                null,
+                Typeface.BOLD
+        );
 
-        TextView tvBalanceLabel = new TextView(this);
+        tvName.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
+        TextView tvBalanceLabel =
+                new TextView(this);
+
         tvBalanceLabel.setText("Số dư ví");
-        tvBalanceLabel.setTextColor(Color.parseColor("#6B7280"));
         tvBalanceLabel.setTextSize(13);
-        tvBalanceLabel.setPadding(0, dp(3), 0, 0);
+
+        tvBalanceLabel.setPadding(
+                0,
+                dp(3),
+                0,
+                0
+        );
+
+        tvBalanceLabel.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_secondary
+                )
+        );
 
         titleBox.addView(tvName);
         titleBox.addView(tvBalanceLabel);
 
-        TextView tvBalance = new TextView(this);
-        tvBalance.setText(formatMoney(balance));
-        tvBalance.setTextColor(balance >= 0 ? Color.parseColor("#111827") : Color.parseColor("#EF4444"));
+        TextView tvBalance =
+                new TextView(this);
+
+        tvBalance.setText(
+                formatMoney(balance)
+        );
+
         tvBalance.setTextSize(17);
-        tvBalance.setTypeface(null, Typeface.BOLD);
-        tvBalance.setGravity(Gravity.END);
+
+        tvBalance.setTypeface(
+                null,
+                Typeface.BOLD
+        );
+
+        tvBalance.setGravity(
+                Gravity.END
+        );
+
+        if (balance >= 0) {
+            tvBalance.setTextColor(
+                    ContextCompat.getColor(
+                            this,
+                            R.color.text_primary
+                    )
+            );
+        } else {
+            tvBalance.setTextColor(
+                    ContextCompat.getColor(
+                            this,
+                            R.color.delete_color
+                    )
+            );
+        }
 
         topRow.addView(icon);
         topRow.addView(titleBox);
         topRow.addView(tvBalance);
 
-        LinearLayout moneyRow = new LinearLayout(this);
-        moneyRow.setOrientation(LinearLayout.HORIZONTAL);
-        moneyRow.setGravity(Gravity.CENTER_VERTICAL);
-        moneyRow.setPadding(0, dp(14), 0, 0);
+        LinearLayout moneyRow =
+                new LinearLayout(this);
 
-        TextView tvIncome = makeMoneyBox("Thu\n" + formatMoney(income), "#16A34A");
-        TextView tvExpense = makeMoneyBox("Chi\n" + formatMoney(expense), "#EF4444");
+        moneyRow.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        moneyRow.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        moneyRow.setPadding(
+                0,
+                dp(14),
+                0,
+                0
+        );
+
+        TextView tvIncome =
+                makeMoneyBox(
+                        "Thu\n" + formatMoney(income),
+                        Color.parseColor("#16A34A")
+                );
+
+        TextView tvExpense =
+                makeMoneyBox(
+                        "Chi\n" + formatMoney(expense),
+                        ContextCompat.getColor(
+                                this,
+                                R.color.delete_color
+                        )
+                );
 
         LinearLayout.LayoutParams leftParams =
-                new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
-        leftParams.setMargins(0, 0, dp(6), 0);
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1
+                );
+
+        leftParams.setMargins(
+                0,
+                0,
+                dp(6),
+                0
+        );
+
         tvIncome.setLayoutParams(leftParams);
 
         LinearLayout.LayoutParams rightParams =
-                new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
-        rightParams.setMargins(dp(6), 0, 0, 0);
+                new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1
+                );
+
+        rightParams.setMargins(
+                dp(6),
+                0,
+                0,
+                0
+        );
+
         tvExpense.setLayoutParams(rightParams);
 
         moneyRow.addView(tvIncome);
@@ -293,37 +536,108 @@ public class WalletActivity extends AppCompatActivity {
         card.addView(topRow);
         card.addView(moneyRow);
 
-        card.setOnClickListener(v -> showWalletOptions(walletName));
+        card.setOnClickListener(v ->
+                showWalletOptions(walletName)
+        );
 
         layoutWallets.addView(card);
     }
 
-    private TextView makeMoneyBox(String text, String color) {
-        TextView tv = new TextView(this);
-        tv.setText(text);
-        tv.setTextSize(14);
-        tv.setTypeface(null, Typeface.BOLD);
-        tv.setTextColor(Color.parseColor(color));
-        tv.setGravity(Gravity.CENTER);
-        tv.setPadding(dp(10), dp(10), dp(10), dp(10));
+    private GradientDrawable createWalletBackground(
+            String walletName
+    ) {
+        GradientDrawable background =
+                new GradientDrawable();
 
-        GradientDrawable bg = new GradientDrawable();
-        bg.setColor(Color.WHITE);
-        bg.setCornerRadius(dp(14));
-        bg.setStroke(dp(1), Color.parseColor("#E5E7EB"));
+        background.setCornerRadius(
+                dp(20)
+        );
 
-        tv.setBackground(bg);
-        return tv;
+        /*
+         * Dùng nền chung theo Light/Dark Mode.
+         * Không dùng các màu pastel cố định vì trong
+         * Dark Mode chữ sáng có thể bị chìm.
+         */
+        background.setColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.card_background
+                )
+        );
+
+        background.setStroke(
+                dp(1),
+                ContextCompat.getColor(
+                        this,
+                        R.color.divider_color
+                )
+        );
+
+        return background;
     }
 
-    private String getWalletIcon(String walletName) {
-        if (walletName.equals("Ví mặc định")) {
+    private TextView makeMoneyBox(
+            String text,
+            int textColor
+    ) {
+        TextView textView =
+                new TextView(this);
+
+        textView.setText(text);
+        textView.setTextSize(14);
+
+        textView.setTypeface(
+                null,
+                Typeface.BOLD
+        );
+
+        textView.setTextColor(textColor);
+        textView.setGravity(Gravity.CENTER);
+
+        textView.setPadding(
+                dp(10),
+                dp(10),
+                dp(10),
+                dp(10)
+        );
+
+        GradientDrawable background =
+                new GradientDrawable();
+
+        background.setColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.input_background
+                )
+        );
+
+        background.setCornerRadius(
+                dp(14)
+        );
+
+        background.setStroke(
+                dp(1),
+                ContextCompat.getColor(
+                        this,
+                        R.color.input_stroke
+                )
+        );
+
+        textView.setBackground(background);
+
+        return textView;
+    }
+
+    private String getWalletIcon(
+            String walletName
+    ) {
+        if ("Ví mặc định".equals(walletName)) {
             return "💳";
-        } else if (walletName.equals("Tiết kiệm")) {
+        } else if ("Tiết kiệm".equals(walletName)) {
             return "🐷";
-        } else if (walletName.equals("Ngân hàng")) {
+        } else if ("Ngân hàng".equals(walletName)) {
             return "🏦";
-        } else if (walletName.equals("Momo")) {
+        } else if ("Momo".equals(walletName)) {
             return "📱";
         } else {
             return "💼";
@@ -331,92 +645,242 @@ public class WalletActivity extends AppCompatActivity {
     }
 
     private void showAddWalletDialog() {
-        EditText edtWallet = new EditText(this);
-        edtWallet.setHint("Nhập tên ví mới");
-        edtWallet.setSingleLine(true);
-        edtWallet.setPadding(dp(16), dp(12), dp(16), dp(12));
+        EditText edtWallet =
+                new EditText(this);
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Thêm ví mới")
-                .setView(edtWallet)
-                .setPositiveButton("Thêm", null)
-                .setNegativeButton("Hủy", null)
-                .create();
+        edtWallet.setHint(
+                "Nhập tên ví mới"
+        );
+
+        edtWallet.setSingleLine(true);
+
+        edtWallet.setPadding(
+                dp(16),
+                dp(12),
+                dp(16),
+                dp(12)
+        );
+
+        edtWallet.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
+        edtWallet.setHintTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_hint
+                )
+        );
+
+        GradientDrawable inputBackground =
+                new GradientDrawable();
+
+        inputBackground.setColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.input_background
+                )
+        );
+
+        inputBackground.setCornerRadius(
+                dp(12)
+        );
+
+        inputBackground.setStroke(
+                dp(1),
+                ContextCompat.getColor(
+                        this,
+                        R.color.input_stroke
+                )
+        );
+
+        edtWallet.setBackground(
+                inputBackground
+        );
+
+        LinearLayout container =
+                new LinearLayout(this);
+
+        container.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        container.setPadding(
+                dp(22),
+                dp(6),
+                dp(22),
+                0
+        );
+
+        container.addView(
+                edtWallet,
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        dp(54)
+                )
+        );
+
+        AlertDialog dialog =
+                new AlertDialog.Builder(this)
+                        .setTitle("Thêm ví mới")
+                        .setView(container)
+                        .setPositiveButton(
+                                "Thêm",
+                                null
+                        )
+                        .setNegativeButton(
+                                "Hủy",
+                                null
+                        )
+                        .create();
 
         dialog.setOnShowListener(d -> {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-                String walletName = edtWallet.getText().toString().trim();
+            dialog.getButton(
+                    AlertDialog.BUTTON_POSITIVE
+            ).setOnClickListener(v -> {
+
+                String walletName =
+                        edtWallet.getText()
+                                .toString()
+                                .trim();
 
                 if (walletName.isEmpty()) {
-                    Toast.makeText(this, "Vui lòng nhập tên ví", Toast.LENGTH_SHORT).show();
+                    edtWallet.setError(
+                            "Vui lòng nhập tên ví"
+                    );
+
+                    edtWallet.requestFocus();
                     return;
                 }
 
-                dbHelper.insertWallet(walletName);
+                dbHelper.insertWallet(
+                        walletName
+                );
 
-                Toast.makeText(this, "Đã thêm ví mới", Toast.LENGTH_SHORT).show();
+                Toast.makeText(
+                        this,
+                        "Đã thêm ví mới",
+                        Toast.LENGTH_SHORT
+                ).show();
 
                 dialog.dismiss();
 
-                database = dbHelper.getReadableDatabase();
+                database =
+                        dbHelper.getReadableDatabase();
+
                 loadWalletData();
             });
         });
 
         dialog.show();
     }
-    private int dp(int value) {
-        return (int) (value * getResources().getDisplayMetrics().density);
-    }
 
-    private String formatMoney(int money) {
-        DecimalFormat formatter = new DecimalFormat("#,###");
-        return formatter.format(money).replace(",", ".") + " đ";
-    }
-
-    private void showWalletOptions(String walletName) {
+    private void showWalletOptions(
+            String walletName
+    ) {
         if (isDefaultWallet(walletName)) {
-            Toast.makeText(this, "Không thể xóa ví mặc định", Toast.LENGTH_SHORT).show();
+            Toast.makeText(
+                    this,
+                    "Không thể xóa ví mặc định",
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
 
-        String[] options = {"Xóa ví"};
+        String[] options = {
+                "Xóa ví"
+        };
 
         new AlertDialog.Builder(this)
                 .setTitle(walletName)
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) {
-                        confirmDeleteWallet(walletName);
+                        confirmDeleteWallet(
+                                walletName
+                        );
                     }
                 })
                 .show();
     }
 
-    private void confirmDeleteWallet(String walletName) {
-        if (dbHelper.walletHasTransaction(walletName)) {
-            Toast.makeText(this, "Không thể xóa vì ví này đang có giao dịch", Toast.LENGTH_SHORT).show();
+    private void confirmDeleteWallet(
+            String walletName
+    ) {
+        if (dbHelper.walletHasTransaction(
+                walletName
+        )) {
+            Toast.makeText(
+                    this,
+                    "Không thể xóa vì ví này đang có giao dịch",
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
 
         new AlertDialog.Builder(this)
                 .setTitle("Xóa ví")
-                .setMessage("Bạn có chắc muốn xóa ví \"" + walletName + "\" không?")
-                .setPositiveButton("Xóa", (dialog, which) -> {
-                    dbHelper.deleteWallet(walletName);
+                .setMessage(
+                        "Bạn có chắc muốn xóa ví \"" +
+                                walletName +
+                                "\" không?"
+                )
+                .setPositiveButton(
+                        "Xóa",
+                        (dialog, which) -> {
 
-                    Toast.makeText(this, "Đã xóa ví", Toast.LENGTH_SHORT).show();
+                            dbHelper.deleteWallet(
+                                    walletName
+                            );
 
-                    database = dbHelper.getReadableDatabase();
-                    loadWalletData();
-                })
-                .setNegativeButton("Hủy", null)
+                            Toast.makeText(
+                                    this,
+                                    "Đã xóa ví",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+
+                            database =
+                                    dbHelper.getReadableDatabase();
+
+                            loadWalletData();
+                        }
+                )
+                .setNegativeButton(
+                        "Hủy",
+                        null
+                )
                 .show();
     }
 
-    private boolean isDefaultWallet(String walletName) {
-        return walletName.equals("Ví mặc định")
-                || walletName.equals("Tiết kiệm")
-                || walletName.equals("Ngân hàng")
-                || walletName.equals("Momo");
+    private boolean isDefaultWallet(
+            String walletName
+    ) {
+        return "Ví mặc định".equals(walletName)
+                || "Tiết kiệm".equals(walletName)
+                || "Ngân hàng".equals(walletName)
+                || "Momo".equals(walletName);
+    }
+
+    private int dp(int value) {
+        return Math.round(
+                value *
+                        getResources()
+                                .getDisplayMetrics()
+                                .density
+        );
+    }
+
+    private String formatMoney(int money) {
+        DecimalFormat formatter =
+                new DecimalFormat("#,###");
+
+        return formatter
+                .format(money)
+                .replace(",", ".") +
+                " đ";
     }
 }
