@@ -8,10 +8,10 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -22,21 +22,36 @@ import com.quanlychitieu.doan.database.DatabaseHelper;
 
 import java.text.DecimalFormat;
 import java.util.Calendar;
+import java.util.Locale;
 
 public class StatisticActivity extends AppCompatActivity {
 
-    TextView tvMonth, tvIncome, tvExpense, tvSaving;
-    TextView tvIncomeCount, tvExpenseCount, tvTopCategory, tvAverageExpense;
+    private TextView tvMonth;
+    private TextView tvIncome;
+    private TextView tvExpense;
+    private TextView tvSaving;
 
-    ImageView imgBack;
-    DonutChartView donutChart;
-    BarChartView barChart;
-    LinearLayout layoutLegend;
+    private TextView tvIncomeCount;
+    private TextView tvExpenseCount;
+    private TextView tvTopCategory;
+    private TextView tvAverageExpense;
 
-    DatabaseHelper dbHelper;
-    int selectedMonth, selectedYear;
+    private ImageView imgBack;
 
-    int[] colors = {
+    private DonutChartView donutChart;
+    private BarChartView barChart;
+    private LinearLayout layoutLegend;
+
+    private DatabaseHelper dbHelper;
+
+    private int selectedMonth;
+    private int selectedYear;
+
+    /*
+     * Đây là màu dữ liệu biểu đồ nên có thể giữ cố định.
+     * Không cần đổi theo chế độ sáng/tối.
+     */
+    private final int[] chartColors = {
             Color.parseColor("#FF3131"),
             Color.parseColor("#FF9800"),
             Color.parseColor("#4285F4"),
@@ -50,10 +65,20 @@ public class StatisticActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_statistic);
 
+        initViews();
         setupSafeArea();
         BottomNavHelper.setup(this);
+        setupDatabase();
+        setupCurrentMonth();
+        setupEvents();
 
+        updateMonthText();
+        loadData();
+    }
+
+    private void initViews() {
         imgBack = findViewById(R.id.imgBack);
+
         tvMonth = findViewById(R.id.tvMonth);
         tvIncome = findViewById(R.id.tvIncome);
         tvExpense = findViewById(R.id.tvExpense);
@@ -67,234 +92,538 @@ public class StatisticActivity extends AppCompatActivity {
         tvExpenseCount = findViewById(R.id.tvExpenseCount);
         tvTopCategory = findViewById(R.id.tvTopCategory);
         tvAverageExpense = findViewById(R.id.tvAverageExpense);
+    }
 
+    private void setupDatabase() {
+        dbHelper = new DatabaseHelper(this);
+    }
+
+    private void setupCurrentMonth() {
+        Calendar calendar = Calendar.getInstance();
+
+        selectedMonth =
+                calendar.get(Calendar.MONTH) + 1;
+
+        selectedYear =
+                calendar.get(Calendar.YEAR);
+    }
+
+    private void setupEvents() {
         imgBack.setOnClickListener(v -> finish());
 
-        dbHelper = new DatabaseHelper(this);
-
-        Calendar calendar = Calendar.getInstance();
-        selectedMonth = calendar.get(Calendar.MONTH) + 1;
-        selectedYear = calendar.get(Calendar.YEAR);
-
-        updateMonthText();
-        loadData();
-
-        tvMonth.setOnClickListener(v -> showMonthPicker());
+        tvMonth.setOnClickListener(v ->
+                showMonthPicker()
+        );
     }
 
     private void setupSafeArea() {
         View content = findViewById(R.id.contentLayout);
 
-        if (content == null) return;
+        if (content == null) {
+            return;
+        }
 
-        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
-            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+        ViewCompat.setOnApplyWindowInsetsListener(
+                content,
+                (view, insets) -> {
 
-            v.setPadding(dp(16), bars.top + dp(12), dp(16), dp(20));
-            return insets;
-        });
+                    Insets bars = insets.getInsets(
+                            WindowInsetsCompat.Type.systemBars()
+                    );
+
+                    view.setPadding(
+                            dp(16),
+                            bars.top + dp(12),
+                            dp(16),
+                            dp(20)
+                    );
+
+                    return insets;
+                }
+        );
+
+        ViewCompat.requestApplyInsets(content);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (dbHelper != null) {
+            loadData();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 
     private void showMonthPicker() {
-        DatePickerDialog dialog = new DatePickerDialog(
-                this,
-                (view, year, month, dayOfMonth) -> {
-                    selectedMonth = month + 1;
-                    selectedYear = year;
+        DatePickerDialog dialog =
+                new DatePickerDialog(
+                        this,
+                        (view, year, month, dayOfMonth) -> {
+                            selectedMonth = month + 1;
+                            selectedYear = year;
 
-                    updateMonthText();
-                    loadData();
-                },
-                selectedYear,
-                selectedMonth - 1,
-                1
-        );
+                            updateMonthText();
+                            loadData();
+                        },
+                        selectedYear,
+                        selectedMonth - 1,
+                        1
+                );
 
         dialog.show();
     }
 
     private void updateMonthText() {
-        tvMonth.setText("Tháng " + selectedMonth + "/" + selectedYear + " ▼");
+        tvMonth.setText(
+                "Tháng " +
+                        selectedMonth +
+                        "/" +
+                        selectedYear +
+                        " ▼"
+        );
     }
 
     private void loadData() {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        SQLiteDatabase database =
+                dbHelper.getReadableDatabase();
 
-        String monthText = String.format("/%02d/%d", selectedMonth, selectedYear);
+        String monthText =
+                String.format(
+                        Locale.getDefault(),
+                        "/%02d/%d",
+                        selectedMonth,
+                        selectedYear
+                );
 
         int totalIncome = 0;
         int totalExpense = 0;
 
-        Cursor c1 = db.rawQuery(
-                "SELECT type, SUM(ABS(amount)) FROM transactions " +
-                        "WHERE date LIKE ? GROUP BY type",
-                new String[]{"%" + monthText}
-        );
+        Cursor cursor = null;
 
-        while (c1.moveToNext()) {
-            String type = c1.getString(0);
-            int amount = c1.getInt(1);
+        try {
+            cursor = database.rawQuery(
+                    "SELECT type, SUM(ABS(amount)) " +
+                            "FROM transactions " +
+                            "WHERE date LIKE ? " +
+                            "GROUP BY type",
+                    new String[]{
+                            "%" + monthText
+                    }
+            );
 
-            if ("INCOME".equals(type)) {
-                totalIncome = amount;
-            } else if ("EXPENSE".equals(type)) {
-                totalExpense = amount;
+            while (cursor.moveToNext()) {
+                String type = cursor.getString(0);
+                int amount = cursor.getInt(1);
+
+                if ("INCOME".equals(type)) {
+                    totalIncome = amount;
+                } else if ("EXPENSE".equals(type)) {
+                    totalExpense = amount;
+                }
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
             }
         }
 
-        c1.close();
+        tvIncome.setText(
+                "Tổng thu\n" +
+                        formatMoney(totalIncome)
+        );
 
-        tvIncome.setText("Tổng thu\n" + formatMoney(totalIncome));
-        tvExpense.setText("Tổng chi\n" + formatMoney(totalExpense));
-        tvSaving.setText("Tiết kiệm\n" + formatMoney(totalIncome - totalExpense));
+        tvExpense.setText(
+                "Tổng chi\n" +
+                        formatMoney(totalExpense)
+        );
 
-        loadCategoryChart(db, monthText, totalExpense);
-        loadBarChart(db, monthText);
-        loadQuickStats(db, monthText, totalExpense);
+        tvSaving.setText(
+                "Tiết kiệm\n" +
+                        formatMoney(
+                                totalIncome - totalExpense
+                        )
+        );
+
+        loadCategoryChart(
+                database,
+                monthText,
+                totalExpense
+        );
+
+        loadBarChart(
+                database,
+                monthText
+        );
+
+        loadQuickStats(
+                database,
+                monthText,
+                totalExpense
+        );
     }
 
-    private void loadCategoryChart(SQLiteDatabase db, String monthText, int totalExpense) {
+    private void loadCategoryChart(
+            SQLiteDatabase database,
+            String monthText,
+            int totalExpense
+    ) {
         layoutLegend.removeAllViews();
 
         if (totalExpense == 0) {
-            donutChart.setData(new float[]{100}, new int[]{Color.parseColor("#D1D5DB")}, 0);
-            addLegend("Chưa có dữ liệu", 100, Color.parseColor("#D1D5DB"));
+            int emptyColor =
+                    ContextCompat.getColor(
+                            this,
+                            R.color.text_secondary
+                    );
+
+            donutChart.setData(
+                    new float[]{100f},
+                    new int[]{emptyColor},
+                    0
+            );
+
+            addLegend(
+                    "Chưa có dữ liệu",
+                    100f,
+                    emptyColor
+            );
+
             return;
         }
 
-        Cursor c = db.rawQuery(
-                "SELECT title, SUM(ABS(amount)) FROM transactions " +
-                        "WHERE type='EXPENSE' AND date LIKE ? " +
-                        "GROUP BY title " +
-                        "ORDER BY SUM(ABS(amount)) DESC",
-                new String[]{"%" + monthText}
-        );
+        Cursor cursor = null;
 
-        float[] values = new float[10];
-        int[] chartColors = new int[10];
+        try {
+            cursor = database.rawQuery(
+                    "SELECT title, SUM(ABS(amount)) " +
+                            "FROM transactions " +
+                            "WHERE type = 'EXPENSE' " +
+                            "AND date LIKE ? " +
+                            "GROUP BY title " +
+                            "ORDER BY SUM(ABS(amount)) DESC",
+                    new String[]{
+                            "%" + monthText
+                    }
+            );
 
-        int index = 0;
+            float[] values = new float[10];
+            int[] colors = new int[10];
 
-        while (c.moveToNext() && index < 10) {
-            String title = c.getString(0);
-            int amount = c.getInt(1);
+            int index = 0;
 
-            float percent = amount * 100f / totalExpense;
-            int color = colors[index % colors.length];
+            while (cursor.moveToNext() &&
+                    index < 10) {
 
-            values[index] = percent;
-            chartColors[index] = color;
+                String title =
+                        cursor.getString(0);
 
-            addLegend(title, percent, color);
-            index++;
+                int amount =
+                        cursor.getInt(1);
+
+                float percent =
+                        amount * 100f / totalExpense;
+
+                int color =
+                        chartColors[
+                                index % chartColors.length
+                                ];
+
+                values[index] = percent;
+                colors[index] = color;
+
+                addLegend(
+                        title,
+                        percent,
+                        color
+                );
+
+                index++;
+            }
+
+            float[] finalValues =
+                    new float[index];
+
+            int[] finalColors =
+                    new int[index];
+
+            System.arraycopy(
+                    values,
+                    0,
+                    finalValues,
+                    0,
+                    index
+            );
+
+            System.arraycopy(
+                    colors,
+                    0,
+                    finalColors,
+                    0,
+                    index
+            );
+
+            donutChart.setData(
+                    finalValues,
+                    finalColors,
+                    totalExpense
+            );
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
-
-        c.close();
-
-        float[] finalValues = new float[index];
-        int[] finalColors = new int[index];
-
-        for (int i = 0; i < index; i++) {
-            finalValues[i] = values[i];
-            finalColors[i] = chartColors[i];
-        }
-
-        donutChart.setData(finalValues, finalColors, totalExpense);
     }
 
-    private void loadBarChart(SQLiteDatabase db, String monthText) {
-        int[] dailyExpense = new int[31];
+    private void loadBarChart(
+            SQLiteDatabase database,
+            String monthText
+    ) {
+        int[] dailyExpense =
+                new int[31];
 
-        Cursor c = db.rawQuery(
-                "SELECT date, SUM(ABS(amount)) FROM transactions " +
-                        "WHERE type='EXPENSE' AND date LIKE ? " +
-                        "GROUP BY date",
-                new String[]{"%" + monthText}
-        );
+        Cursor cursor = null;
 
-        while (c.moveToNext()) {
-            String date = c.getString(0);
-            int amount = c.getInt(1);
+        try {
+            cursor = database.rawQuery(
+                    "SELECT date, SUM(ABS(amount)) " +
+                            "FROM transactions " +
+                            "WHERE type = 'EXPENSE' " +
+                            "AND date LIKE ? " +
+                            "GROUP BY date",
+                    new String[]{
+                            "%" + monthText
+                    }
+            );
 
-            try {
-                int day = Integer.parseInt(date.substring(0, 2));
-                if (day >= 1 && day <= 31) {
-                    dailyExpense[day - 1] = amount;
+            while (cursor.moveToNext()) {
+                String date =
+                        cursor.getString(0);
+
+                int amount =
+                        cursor.getInt(1);
+
+                try {
+                    int day =
+                            Integer.parseInt(
+                                    date.substring(0, 2)
+                            );
+
+                    if (day >= 1 && day <= 31) {
+                        dailyExpense[day - 1] =
+                                amount;
+                    }
+                } catch (Exception ignored) {
                 }
-            } catch (Exception ignored) {
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
             }
         }
 
-        c.close();
         barChart.setData(dailyExpense);
     }
 
-    private void loadQuickStats(SQLiteDatabase db, String monthText, int totalExpense) {
-        int incomeCount = 0;
-        int expenseCount = 0;
-        String topCategory = "Chưa có";
+    private void loadQuickStats(
+            SQLiteDatabase database,
+            String monthText,
+            int totalExpense
+    ) {
+        int incomeCount =
+                getTransactionCount(
+                        database,
+                        "INCOME",
+                        monthText
+                );
 
-        Cursor c1 = db.rawQuery(
-                "SELECT COUNT(*) FROM transactions " +
-                        "WHERE type='INCOME' AND date LIKE ?",
-                new String[]{"%" + monthText}
+        int expenseCount =
+                getTransactionCount(
+                        database,
+                        "EXPENSE",
+                        monthText
+                );
+
+        String topCategory =
+                getTopExpenseCategory(
+                        database,
+                        monthText
+                );
+
+        int average =
+                totalExpense / 31;
+
+        tvIncomeCount.setText(
+                "⬇ Thu: " + incomeCount
         );
 
-        if (c1.moveToFirst()) {
-            incomeCount = c1.getInt(0);
-        }
-
-        c1.close();
-
-        Cursor c2 = db.rawQuery(
-                "SELECT COUNT(*) FROM transactions " +
-                        "WHERE type='EXPENSE' AND date LIKE ?",
-                new String[]{"%" + monthText}
+        tvExpenseCount.setText(
+                "⬆ Chi: " + expenseCount
         );
 
-        if (c2.moveToFirst()) {
-            expenseCount = c2.getInt(0);
-        }
-
-        c2.close();
-
-        Cursor c3 = db.rawQuery(
-                "SELECT title, SUM(ABS(amount)) FROM transactions " +
-                        "WHERE type='EXPENSE' AND date LIKE ? " +
-                        "GROUP BY title " +
-                        "ORDER BY SUM(ABS(amount)) DESC LIMIT 1",
-                new String[]{"%" + monthText}
+        tvTopCategory.setText(
+                "🔥 Danh mục chi nhiều nhất: " +
+                        topCategory
         );
 
-        if (c3.moveToFirst()) {
-            topCategory = c3.getString(0);
-        }
-
-        c3.close();
-
-        int average = totalExpense / 31;
-
-        tvIncomeCount.setText("⬇ Thu: " + incomeCount);
-        tvExpenseCount.setText("⬆ Chi: " + expenseCount);
-        tvTopCategory.setText("🔥 Danh mục chi nhiều nhất: " + topCategory);
-        tvAverageExpense.setText("📊 Trung bình/ngày: " + formatMoney(average));
+        tvAverageExpense.setText(
+                "📊 Trung bình/ngày: " +
+                        formatMoney(average)
+        );
     }
-    private void addLegend(String name, float percent, int color) {
-        TextView tv = new TextView(this);
-        tv.setText("●  " + name + "   " + Math.round(percent) + "%");
-        tv.setTextSize(14);
-        tv.setTextColor(color);
-        tv.setPadding(0, 8, 0, 8);
 
-        layoutLegend.addView(tv);
+    private int getTransactionCount(
+            SQLiteDatabase database,
+            String type,
+            String monthText
+    ) {
+        int count = 0;
+        Cursor cursor = null;
+
+        try {
+            cursor = database.rawQuery(
+                    "SELECT COUNT(*) " +
+                            "FROM transactions " +
+                            "WHERE type = ? " +
+                            "AND date LIKE ?",
+                    new String[]{
+                            type,
+                            "%" + monthText
+                    }
+            );
+
+            if (cursor.moveToFirst()) {
+                count = cursor.getInt(0);
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return count;
+    }
+
+    private String getTopExpenseCategory(
+            SQLiteDatabase database,
+            String monthText
+    ) {
+        String topCategory =
+                "Chưa có";
+
+        Cursor cursor = null;
+
+        try {
+            cursor = database.rawQuery(
+                    "SELECT title, SUM(ABS(amount)) " +
+                            "FROM transactions " +
+                            "WHERE type = 'EXPENSE' " +
+                            "AND date LIKE ? " +
+                            "GROUP BY title " +
+                            "ORDER BY SUM(ABS(amount)) DESC " +
+                            "LIMIT 1",
+                    new String[]{
+                            "%" + monthText
+                    }
+            );
+
+            if (cursor.moveToFirst()) {
+                topCategory =
+                        cursor.getString(0);
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return topCategory;
+    }
+
+    private void addLegend(
+            String name,
+            float percent,
+            int color
+    ) {
+        LinearLayout row =
+                new LinearLayout(this);
+
+        row.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        row.setGravity(
+                android.view.Gravity.CENTER_VERTICAL
+        );
+
+        row.setPadding(
+                0,
+                dp(4),
+                0,
+                dp(4)
+        );
+
+        TextView bullet =
+                new TextView(this);
+
+        bullet.setText("●");
+        bullet.setTextSize(15);
+        bullet.setTextColor(color);
+
+        TextView content =
+                new TextView(this);
+
+        content.setText(
+                "  " +
+                        name +
+                        "   " +
+                        Math.round(percent) +
+                        "%"
+        );
+
+        content.setTextSize(14);
+
+        /*
+         * Màu chữ lấy từ colors.xml nên tự đổi
+         * theo Light Mode và Dark Mode.
+         */
+        content.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
+        row.addView(bullet);
+        row.addView(content);
+
+        layoutLegend.addView(row);
     }
 
     private int dp(int value) {
-        return (int) (value * getResources().getDisplayMetrics().density);
+        return Math.round(
+                value *
+                        getResources()
+                                .getDisplayMetrics()
+                                .density
+        );
     }
 
     private String formatMoney(int money) {
-        DecimalFormat formatter = new DecimalFormat("#,###");
-        return formatter.format(money).replace(",", ".") + " đ";
+        DecimalFormat formatter =
+                new DecimalFormat("#,###");
+
+        return formatter
+                .format(money)
+                .replace(",", ".") +
+                " đ";
     }
 }
