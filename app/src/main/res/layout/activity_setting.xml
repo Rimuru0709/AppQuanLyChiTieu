@@ -22,11 +22,12 @@
         <ImageView
             android:id="@+id/imgBack"
             android:layout_width="36dp"
-            android:layout_height="29dp"
+            android:layout_height="36dp"
             android:clickable="true"
             android:contentDescription="Quay lại"
             android:focusable="true"
-            android:padding="4dp"
+            android:padding="6dp"
+            android:scaleType="centerInside"
             android:src="@drawable/ic_back"
             app:tint="@color/text_secondary" />
 
@@ -40,10 +41,9 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
-        <!-- Cân đối với nút quay lại -->
         <View
             android:layout_width="36dp"
-            android:layout_height="29dp" />
+            android:layout_height="36dp" />
 
     </LinearLayout>
 
@@ -64,7 +64,8 @@
         android:layout_below="@id/headerSetting"
         android:background="@color/app_background"
         android:fillViewport="true"
-        android:overScrollMode="never">
+        android:overScrollMode="never"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -74,6 +75,52 @@
             android:paddingTop="12dp"
             android:paddingEnd="22dp"
             android:paddingBottom="24dp">
+
+            <!-- Tài khoản -->
+            <LinearLayout
+                android:id="@+id/itemAccount"
+                android:layout_width="match_parent"
+                android:layout_height="58dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Tài khoản"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_user"
+                        app:tint="@color/color_primary" />
+
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:text="Tài khoản"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="28dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="›"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="24sp" />
+
+            </LinearLayout>
 
             <!-- Ngân sách -->
             <LinearLayout
@@ -86,12 +133,20 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:contentDescription="Ngân sách"
-                    android:src="@android:drawable/ic_menu_agenda"
-                    app:tint="#34C38F" />
+                <FrameLayout
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Ngân sách"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_menu_agenda"
+                        app:tint="#34C38F" />
+
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="0dp"
@@ -104,8 +159,9 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="28dp"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:text="›"
                     android:textColor="@color/text_secondary"
                     android:textSize="24sp" />
@@ -123,12 +179,20 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:contentDescription="Nhắc nhở"
-                    android:src="@android:drawable/ic_menu_my_calendar"
-                    app:tint="#34C38F" />
+                <FrameLayout
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Nhắc nhở"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_menu_my_calendar"
+                        app:tint="#34C38F" />
+
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="0dp"
@@ -141,8 +205,9 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="28dp"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:text="›"
                     android:textColor="@color/text_secondary"
                     android:textSize="24sp" />
@@ -160,12 +225,20 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:contentDescription="Sao lưu và khôi phục"
-                    android:src="@android:drawable/ic_popup_sync"
-                    app:tint="#34C38F" />
+                <FrameLayout
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Sao lưu và khôi phục"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_popup_sync"
+                        app:tint="#34C38F" />
+
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="0dp"
@@ -178,45 +251,9 @@
                     android:textStyle="bold" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="28dp"
                     android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="24sp" />
-
-            </LinearLayout>
-
-            <!-- Bảo mật -->
-            <LinearLayout
-                android:id="@+id/itemSecurity"
-                android:layout_width="match_parent"
-                android:layout_height="58dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:contentDescription="Bảo mật"
-                    android:src="@android:drawable/ic_lock_lock"
-                    app:tint="#FF7A00" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_weight="1"
-                    android:text="Bảo mật"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:text="›"
                     android:textColor="@color/text_secondary"
                     android:textSize="24sp" />
@@ -234,12 +271,20 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:contentDescription="Đổi giao diện"
-                    android:src="@android:drawable/ic_menu_edit"
-                    app:tint="#008CFF" />
+                <FrameLayout
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Đổi giao diện"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_menu_edit"
+                        app:tint="#008CFF" />
+
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="0dp"
@@ -261,54 +306,9 @@
                     android:textSize="13sp" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="28dp"
                     android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="24sp" />
-
-            </LinearLayout>
-
-            <!-- Ngôn ngữ -->
-            <LinearLayout
-                android:id="@+id/itemLanguage"
-                android:layout_width="match_parent"
-                android:layout_height="58dp"
-                android:clickable="true"
-                android:focusable="true"
-                android:foreground="?attr/selectableItemBackground"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    android:contentDescription="Ngôn ngữ"
-                    android:src="@android:drawable/ic_menu_compass"
-                    app:tint="#7C3AED" />
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_weight="1"
-                    android:text="Ngôn ngữ"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/tvLanguageValue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="10dp"
-                    android:text="Tiếng Việt"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:text="›"
                     android:textColor="@color/text_secondary"
                     android:textSize="24sp" />
@@ -327,12 +327,20 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:contentDescription="Đăng xuất"
-                    android:src="@android:drawable/ic_lock_power_off"
-                    app:tint="#FF1F1F" />
+                <FrameLayout
+                    android:layout_width="28dp"
+                    android:layout_height="28dp">
+
+                    <ImageView
+                        android:layout_width="25dp"
+                        android:layout_height="25dp"
+                        android:layout_gravity="center"
+                        android:contentDescription="Đăng xuất"
+                        android:scaleType="centerInside"
+                        android:src="@android:drawable/ic_lock_power_off"
+                        app:tint="#FF1F1F" />
+
+                </FrameLayout>
 
                 <TextView
                     android:layout_width="wrap_content"

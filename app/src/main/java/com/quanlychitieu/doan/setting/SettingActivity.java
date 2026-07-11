@@ -22,20 +22,17 @@ public class SettingActivity extends AppCompatActivity {
 
     private static final String PREF_SETTING = "AppSetting";
     private static final String KEY_THEME = "theme";
-    private static final String KEY_LANGUAGE = "language";
 
     private ImageView imgBack;
 
+    private LinearLayout itemAccount;
     private LinearLayout itemBudget;
     private LinearLayout itemReminder;
     private LinearLayout itemBackup;
-    private LinearLayout itemSecurity;
     private LinearLayout itemTheme;
-    private LinearLayout itemLanguage;
     private LinearLayout itemLogout;
 
     private TextView tvThemeValue;
-    private TextView tvLanguageValue;
 
     private SharedPreferences preferences;
 
@@ -68,16 +65,14 @@ public class SettingActivity extends AppCompatActivity {
     private void initViews() {
         imgBack = findViewById(R.id.imgBack);
 
+        itemAccount = findViewById(R.id.itemAccount);
         itemBudget = findViewById(R.id.itemBudget);
         itemReminder = findViewById(R.id.itemReminder);
         itemBackup = findViewById(R.id.itemBackup);
-        itemSecurity = findViewById(R.id.itemSecurity);
         itemTheme = findViewById(R.id.itemTheme);
-        itemLanguage = findViewById(R.id.itemLanguage);
         itemLogout = findViewById(R.id.itemLogout);
 
         tvThemeValue = findViewById(R.id.tvThemeValue);
-        tvLanguageValue = findViewById(R.id.tvLanguageValue);
     }
 
     private void setupHeaderInsets() {
@@ -115,9 +110,19 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private void setupEvents() {
-
         if (imgBack != null) {
             imgBack.setOnClickListener(v -> finish());
+        }
+
+        if (itemAccount != null) {
+            itemAccount.setOnClickListener(v -> {
+                Intent intent = new Intent(
+                        SettingActivity.this,
+                        AccountActivity.class
+                );
+
+                startActivity(intent);
+            });
         }
 
         if (itemBudget != null) {
@@ -151,32 +156,11 @@ public class SettingActivity extends AppCompatActivity {
             );
         }
 
-        if (itemSecurity != null) {
-            itemSecurity.setOnClickListener(v ->
-                    Toast.makeText(
-                            SettingActivity.this,
-                            "Mở thông tin tài khoản",
-                            Toast.LENGTH_SHORT
-                    ).show()
-            );
-        }
-
         if (itemTheme != null) {
             itemTheme.setOnClickListener(v -> {
                 Intent intent = new Intent(
                         SettingActivity.this,
                         ThemeActivity.class
-                );
-
-                startActivity(intent);
-            });
-        }
-
-        if (itemLanguage != null) {
-            itemLanguage.setOnClickListener(v -> {
-                Intent intent = new Intent(
-                        SettingActivity.this,
-                        LanguageActivity.class
                 );
 
                 startActivity(intent);
@@ -190,7 +174,6 @@ public class SettingActivity extends AppCompatActivity {
 
     private void updateSettingValues() {
         updateThemeValue();
-        updateLanguageValue();
     }
 
     private void updateThemeValue() {
@@ -205,27 +188,12 @@ public class SettingActivity extends AppCompatActivity {
 
         if ("dark".equals(currentTheme)) {
             tvThemeValue.setText("Tối");
+
         } else if ("system".equals(currentTheme)) {
             tvThemeValue.setText("Theo hệ thống");
+
         } else {
             tvThemeValue.setText("Sáng");
-        }
-    }
-
-    private void updateLanguageValue() {
-        if (tvLanguageValue == null) {
-            return;
-        }
-
-        String currentLanguage = preferences.getString(
-                KEY_LANGUAGE,
-                "vi"
-        );
-
-        if ("en".equals(currentLanguage)) {
-            tvLanguageValue.setText("English");
-        } else {
-            tvLanguageValue.setText("Tiếng Việt");
         }
     }
 
@@ -252,7 +220,8 @@ public class SettingActivity extends AppCompatActivity {
 
     private int dpToPx(int dp) {
         return Math.round(
-                dp * getResources()
+                dp
+                        * getResources()
                         .getDisplayMetrics()
                         .density
         );
