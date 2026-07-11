@@ -5,16 +5,19 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F9FC">
+    android:background="@color/app_background">
 
+    <!-- Nội dung -->
     <ScrollView
         android:id="@+id/scrollWallet"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@color/app_background"
         android:fillViewport="true"
+        android:overScrollMode="never"
         android:scrollbars="none"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavContainer"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -22,12 +25,15 @@
             android:id="@+id/contentLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/app_background"
             android:orientation="vertical"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:paddingBottom="24dp">
 
+            <!-- Header -->
             <LinearLayout
+                android:id="@+id/headerWallet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:minHeight="56dp"
@@ -38,8 +44,12 @@
                     android:id="@+id/imgBack"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
+                    android:clickable="true"
+                    android:contentDescription="Quay lại"
+                    android:focusable="true"
                     android:padding="6dp"
-                    android:src="@drawable/ic_back" />
+                    android:src="@drawable/ic_back"
+                    app:tint="@color/text_secondary" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -47,15 +57,17 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="Ví của tôi"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
                 <View
                     android:layout_width="36dp"
                     android:layout_height="36dp" />
+
             </LinearLayout>
 
+            <!-- Card tổng số dư -->
             <LinearLayout
                 android:id="@+id/cardTotalWallet"
                 android:layout_width="match_parent"
@@ -80,7 +92,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="0 đ"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/white"
                     android:textSize="30sp"
                     android:textStyle="bold" />
 
@@ -96,7 +108,7 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Thu\n0 đ"
-                        android:textColor="#FFFFFF"
+                        android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
 
@@ -107,13 +119,15 @@
                         android:layout_weight="1"
                         android:gravity="end"
                         android:text="Chi\n0 đ"
-                        android:textColor="#FFFFFF"
+                        android:textColor="@color/white"
                         android:textSize="14sp"
                         android:textStyle="bold" />
+
                 </LinearLayout>
 
             </LinearLayout>
 
+            <!-- Thêm ví -->
             <TextView
                 android:id="@+id/btnAddWallet"
                 android:layout_width="match_parent"
@@ -121,23 +135,28 @@
                 android:minHeight="54dp"
                 android:layout_marginTop="16dp"
                 android:background="@drawable/bg_input"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 android:gravity="center"
                 android:paddingTop="12dp"
                 android:paddingBottom="12dp"
                 android:text="+ Thêm ví mới"
-                android:textColor="#0057FF"
+                android:textColor="@color/color_primary"
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
+            <!-- Tiêu đề danh sách -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="22dp"
                 android:text="Danh sách ví"
-                android:textColor="#111827"
+                android:textColor="@color/text_primary"
                 android:textSize="18sp"
                 android:textStyle="bold" />
 
+            <!-- Danh sách ví được tạo bằng Java -->
             <LinearLayout
                 android:id="@+id/layoutWallets"
                 android:layout_width="match_parent"
@@ -146,17 +165,17 @@
                 android:orientation="vertical" />
 
         </LinearLayout>
+
     </ScrollView>
 
-    <FrameLayout
-        android:id="@+id/bottomNavContainer"
+    <!-- Bottom Navigation -->
+    <include
+        android:id="@+id/bottomNav"
+        layout="@layout/bottom_nav"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <include layout="@layout/bottom_nav" />
-    </FrameLayout>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

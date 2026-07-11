@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.content.ContextCompat;
 
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.database.DatabaseHelper;
@@ -151,9 +152,23 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         tabThuNhap.setBackgroundResource(R.drawable.bg_tab_unselected);
 
         tabChiTieu.setTextColor(Color.WHITE);
-        tabThuNhap.setTextColor(Color.parseColor("#111827"));
+
+        tabThuNhap.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
 
         tvCategoryName.setText("Ăn uống");
+
+        tvCategoryName.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
         imgCategoryIcon.setImageResource(R.drawable.ic_food);
         setIconBackgroundColor("#FF3131");
 
@@ -171,9 +186,23 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         tabChiTieu.setBackgroundResource(R.drawable.bg_tab_unselected);
 
         tabThuNhap.setTextColor(Color.WHITE);
-        tabChiTieu.setTextColor(Color.parseColor("#111827"));
+
+        tabChiTieu.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
 
         tvCategoryName.setText("Lương");
+
+        tvCategoryName.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
         imgCategoryIcon.setImageResource(R.drawable.ic_salary);
         setIconBackgroundColor("#2ECC71");
 
@@ -279,6 +308,13 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         builder.setItems(categories, (dialog, which) -> {
             String selectedCategory = categories[which];
             tvCategoryName.setText(selectedCategory);
+
+            tvCategoryName.setTextColor(
+                    ContextCompat.getColor(
+                            this,
+                            R.color.text_primary
+                    )
+            );
 
             if (selectedCategory.equals("Khác")) {
                 edtOtherCategory.setVisibility(View.VISIBLE);

@@ -5,23 +5,27 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F7F9FC">
+    android:background="@color/app_background">
 
+    <!-- Nội dung -->
     <ScrollView
         android:id="@+id/scrollTransfer"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@color/app_background"
         android:fillViewport="true"
+        android:overScrollMode="never"
         android:scrollbars="none"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomNavContainer"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:id="@+id/contentLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/app_background"
             android:orientation="vertical"
             android:paddingStart="22dp"
             android:paddingEnd="22dp"
@@ -29,6 +33,7 @@
 
             <!-- Thanh tiêu đề -->
             <LinearLayout
+                android:id="@+id/headerTransfer"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:gravity="center_vertical"
@@ -38,9 +43,12 @@
                     android:id="@+id/imgBack"
                     android:layout_width="36dp"
                     android:layout_height="36dp"
+                    android:clickable="true"
                     android:contentDescription="Quay lại"
+                    android:focusable="true"
                     android:padding="6dp"
-                    android:src="@drawable/ic_back" />
+                    android:src="@drawable/ic_back"
+                    app:tint="@color/text_secondary" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -48,13 +56,14 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="Chuyển khoản"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_primary"
                     android:textSize="22sp"
                     android:textStyle="bold" />
 
                 <View
                     android:layout_width="36dp"
                     android:layout_height="36dp" />
+
             </LinearLayout>
 
             <!-- Ví nguồn -->
@@ -63,7 +72,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="Từ ví"
-                android:textColor="#374151"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -73,6 +82,9 @@
                 android:layout_height="70dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingStart="14dp"
@@ -98,7 +110,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Ví mặc định"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -108,17 +120,19 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
                         android:text="Số dư: 0 đ"
-                        android:textColor="#6B7280"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
+
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_secondary"
                     android:textSize="30sp"
                     android:textStyle="bold" />
+
             </LinearLayout>
 
             <!-- Ví đích -->
@@ -127,7 +141,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="Đến ví"
-                android:textColor="#374151"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -137,6 +151,9 @@
                 android:layout_height="70dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingStart="14dp"
@@ -162,7 +179,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Chọn ví nhận"
-                        android:textColor="#111827"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
                         android:textStyle="bold" />
 
@@ -172,17 +189,19 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="3dp"
                         android:text="Số dư: 0 đ"
-                        android:textColor="#6B7280"
+                        android:textColor="@color/text_secondary"
                         android:textSize="13sp" />
+
                 </LinearLayout>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
-                    android:textColor="#111827"
+                    android:textColor="@color/text_secondary"
                     android:textSize="30sp"
                     android:textStyle="bold" />
+
             </LinearLayout>
 
             <!-- Số tiền -->
@@ -191,7 +210,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="Số tiền"
-                android:textColor="#374151"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -207,8 +226,8 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:singleLine="true"
-                android:textColor="#111827"
-                android:textColorHint="#9CA3AF"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
                 android:textSize="16sp" />
 
             <!-- Ngày -->
@@ -217,7 +236,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="Ngày chuyển khoản"
-                android:textColor="#374151"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -227,13 +246,15 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_input"
+                android:clickable="true"
+                android:drawableEnd="@android:drawable/ic_menu_my_calendar"
                 android:focusable="false"
                 android:hint="Chọn ngày"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:singleLine="true"
-                android:textColor="#111827"
-                android:textColorHint="#9CA3AF"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
                 android:textSize="16sp" />
 
             <!-- Nội dung -->
@@ -242,7 +263,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="18dp"
                 android:text="Nội dung (tùy chọn)"
-                android:textColor="#374151"
+                android:textColor="@color/text_primary"
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
@@ -258,8 +279,8 @@
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:singleLine="true"
-                android:textColor="#111827"
-                android:textColorHint="#9CA3AF"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
                 android:textSize="16sp" />
 
             <!-- Nút chuyển khoản -->
@@ -268,26 +289,26 @@
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:layout_marginTop="26dp"
-                android:backgroundTint="#0057FF"
+                android:layout_marginBottom="14dp"
+                android:backgroundTint="@color/color_primary"
                 android:text="Chuyển khoản"
                 android:textAllCaps="false"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
         </LinearLayout>
+
     </ScrollView>
 
-    <FrameLayout
-        android:id="@+id/bottomNavContainer"
+    <!-- Bottom Navigation -->
+    <include
+        android:id="@+id/bottomNav"
+        layout="@layout/bottom_nav"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <include layout="@layout/bottom_nav" />
-
-    </FrameLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
