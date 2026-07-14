@@ -137,13 +137,14 @@ public class SettingActivity extends AppCompatActivity {
         }
 
         if (itemReminder != null) {
-            itemReminder.setOnClickListener(v ->
-                    Toast.makeText(
-                            SettingActivity.this,
-                            "Mở Nhắc nhở",
-                            Toast.LENGTH_SHORT
-                    ).show()
-            );
+            itemReminder.setOnClickListener(v -> {
+                Intent intent = new Intent(
+                        SettingActivity.this,
+                        ReminderActivity.class
+                );
+
+                startActivity(intent);
+            });
         }
 
         if (itemBackup != null) {
@@ -170,6 +171,7 @@ public class SettingActivity extends AppCompatActivity {
         if (itemLogout != null) {
             itemLogout.setOnClickListener(v -> logout());
         }
+
     }
 
     private void updateSettingValues() {

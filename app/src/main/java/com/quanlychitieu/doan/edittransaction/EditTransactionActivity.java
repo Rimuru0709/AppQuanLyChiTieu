@@ -59,7 +59,18 @@ public class EditTransactionActivity extends AppCompatActivity {
     private String transactionType = "EXPENSE";
     private String selectedWallet = "Ví mặc định";
 
+    /*
+     * Tên/nội dung giao dịch được giữ nguyên.
+     * Ví dụ: Ăn sáng Highland.
+     */
+    private String transactionTitle = "Giao dịch";
+
+    /*
+     * Danh mục riêng.
+     * Ví dụ: Ăn uống.
+     */
     private String categoryName = "Ăn uống";
+
     private String iconName = "ic_food";
     private String colorCode = "#FF3131";
 
@@ -136,21 +147,23 @@ public class EditTransactionActivity extends AppCompatActivity {
                 }
         );
 
-        imgBack.setOnClickListener(v -> finish());
-
-        edtDate.setOnClickListener(v ->
-                showDatePicker()
+        imgBack.setOnClickListener(
+                view -> finish()
         );
 
-        tvWallet.setOnClickListener(v ->
-                showWalletDialog()
+        edtDate.setOnClickListener(
+                view -> showDatePicker()
         );
 
-        layoutCategory.setOnClickListener(v ->
-                showCategoryDialog()
+        tvWallet.setOnClickListener(
+                view -> showWalletDialog()
         );
 
-        tabExpense.setOnClickListener(v -> {
+        layoutCategory.setOnClickListener(
+                view -> showCategoryDialog()
+        );
+
+        tabExpense.setOnClickListener(view -> {
             transactionType = "EXPENSE";
 
             setDefaultCategoryByType();
@@ -162,7 +175,7 @@ public class EditTransactionActivity extends AppCompatActivity {
             updateCategoryUI();
         });
 
-        tabIncome.setOnClickListener(v -> {
+        tabIncome.setOnClickListener(view -> {
             transactionType = "INCOME";
 
             setDefaultCategoryByType();
@@ -174,12 +187,12 @@ public class EditTransactionActivity extends AppCompatActivity {
             updateCategoryUI();
         });
 
-        btnSave.setOnClickListener(v ->
-                updateTransaction()
+        btnSave.setOnClickListener(
+                view -> updateTransaction()
         );
 
-        btnDelete.setOnClickListener(v ->
-                confirmDelete()
+        btnDelete.setOnClickListener(
+                view -> confirmDelete()
         );
     }
 
@@ -217,32 +230,16 @@ public class EditTransactionActivity extends AppCompatActivity {
 
         try {
             cursor = database.rawQuery(
-                    "SELECT title, date, amount, wallet, type, icon, color " +
-                            "FROM transactions WHERE id = ?",
+                    "SELECT title, category, date, amount, " +
+                            "wallet, type, icon, color " +
+                            "FROM transactions " +
+                            "WHERE id = ?",
                     new String[]{
                             String.valueOf(transactionId)
                     }
             );
 
-            if (cursor.moveToFirst()) {
-                categoryName = cursor.getString(0);
-                String date = cursor.getString(1);
-                int amount = cursor.getInt(2);
-                selectedWallet = cursor.getString(3);
-                transactionType = cursor.getString(4);
-                iconName = cursor.getString(5);
-                colorCode = cursor.getString(6);
-
-                tvCategory.setText(categoryName);
-                edtDate.setText(date);
-                edtAmount.setText(
-                        String.valueOf(Math.abs(amount))
-                );
-                tvWallet.setText(selectedWallet);
-
-                updateTabUI();
-                updateCategoryUI();
-            } else {
+            if (!cursor.moveToFirst()) {
                 Toast.makeText(
                         this,
                         "Không tìm thấy giao dịch",
@@ -250,7 +247,68 @@ public class EditTransactionActivity extends AppCompatActivity {
                 ).show();
 
                 finish();
+                return;
             }
+
+            transactionTitle = cursor.getString(0);
+            categoryName = cursor.getString(1);
+
+            String date = cursor.getString(2);
+            int amount = cursor.getInt(3);
+
+            selectedWallet = cursor.getString(4);
+            transactionType = cursor.getString(5);
+            iconName = cursor.getString(6);
+            colorCode = cursor.getString(7);
+
+            if (transactionTitle == null
+                    || transactionTitle.trim().isEmpty()) {
+
+                transactionTitle = "Giao dịch";
+            }
+
+            if (categoryName == null
+                    || categoryName.trim().isEmpty()) {
+
+                categoryName = "Khác";
+            }
+
+            /*
+             * Tương thích với dữ liệu cũ:
+             * nếu category đang là Khác nhưng title là danh mục chuẩn,
+             * dùng title làm category.
+             */
+            if ("Khác".equals(categoryName)
+                    && isStandardCategory(transactionTitle)) {
+
+                categoryName = transactionTitle;
+            }
+
+            tvCategory.setText(categoryName);
+            edtDate.setText(date);
+
+            edtAmount.setText(
+                    String.valueOf(
+                            Math.abs(amount)
+                    )
+            );
+
+            tvWallet.setText(selectedWallet);
+
+            /*
+             * Nếu đây là danh mục tự nhập thì hiện ô nhập.
+             */
+            if (!isStandardCategory(categoryName)) {
+                edtOtherCategory.setVisibility(View.VISIBLE);
+                edtOtherCategory.setText(categoryName);
+            } else {
+                edtOtherCategory.setVisibility(View.GONE);
+                edtOtherCategory.setText("");
+            }
+
+            updateTabUI();
+            updateCategoryUI();
+
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -275,7 +333,10 @@ public class EditTransactionActivity extends AppCompatActivity {
             return;
         }
 
-        if ("Khác".equals(categoryName)) {
+        if ("Khác".equals(categoryName)
+                || edtOtherCategory.getVisibility()
+                == View.VISIBLE) {
+
             String otherCategory =
                     edtOtherCategory
                             .getText()
@@ -286,6 +347,7 @@ public class EditTransactionActivity extends AppCompatActivity {
                 edtOtherCategory.setError(
                         "Nhập tên danh mục khác"
                 );
+
                 return;
             }
 
@@ -298,7 +360,8 @@ public class EditTransactionActivity extends AppCompatActivity {
 
         try {
             amount = Integer.parseInt(amountText);
-        } catch (Exception exception) {
+
+        } catch (NumberFormatException exception) {
             Toast.makeText(
                     this,
                     "Số tiền không hợp lệ",
@@ -318,8 +381,23 @@ public class EditTransactionActivity extends AppCompatActivity {
             return;
         }
 
-        dbHelper.updateTransaction(
+        /*
+         * Nếu dữ liệu cũ dùng tên danh mục làm title,
+         * cập nhật title theo danh mục mới.
+         *
+         * Nếu title là nội dung riêng như "Ăn sáng Highland",
+         * title vẫn được giữ nguyên.
+         */
+        if (transactionTitle == null
+                || transactionTitle.trim().isEmpty()
+                || isStandardCategory(transactionTitle)) {
+
+            transactionTitle = categoryName;
+        }
+
+        int updatedRows = dbHelper.updateTransaction(
                 transactionId,
+                transactionTitle,
                 categoryName,
                 date,
                 amount,
@@ -329,13 +407,22 @@ public class EditTransactionActivity extends AppCompatActivity {
                 colorCode
         );
 
-        Toast.makeText(
-                this,
-                "Đã cập nhật giao dịch",
-                Toast.LENGTH_SHORT
-        ).show();
+        if (updatedRows > 0) {
+            Toast.makeText(
+                    this,
+                    "Đã cập nhật giao dịch",
+                    Toast.LENGTH_SHORT
+            ).show();
 
-        finish();
+            finish();
+
+        } else {
+            Toast.makeText(
+                    this,
+                    "Không thể cập nhật giao dịch",
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
     }
 
     private void confirmDelete() {
@@ -348,17 +435,27 @@ public class EditTransactionActivity extends AppCompatActivity {
                         "Xóa",
                         (dialog, which) -> {
 
-                            dbHelper.deleteTransaction(
-                                    transactionId
-                            );
+                            int deletedRows =
+                                    dbHelper.deleteTransaction(
+                                            transactionId
+                                    );
 
-                            Toast.makeText(
-                                    this,
-                                    "Đã xóa giao dịch",
-                                    Toast.LENGTH_SHORT
-                            ).show();
+                            if (deletedRows > 0) {
+                                Toast.makeText(
+                                        this,
+                                        "Đã xóa giao dịch",
+                                        Toast.LENGTH_SHORT
+                                ).show();
 
-                            finish();
+                                finish();
+
+                            } else {
+                                Toast.makeText(
+                                        this,
+                                        "Không thể xóa giao dịch",
+                                        Toast.LENGTH_SHORT
+                                ).show();
+                            }
                         }
                 )
                 .setNegativeButton(
@@ -436,7 +533,8 @@ public class EditTransactionActivity extends AppCompatActivity {
             background.setColor(
                     Color.parseColor(colorCode)
             );
-        } catch (Exception exception) {
+
+        } catch (IllegalArgumentException exception) {
             background.setColor(
                     Color.parseColor("#ADB5BD")
             );
@@ -450,6 +548,7 @@ public class EditTransactionActivity extends AppCompatActivity {
             categoryName = "Ăn uống";
             iconName = "ic_food";
             colorCode = "#FF3131";
+
         } else {
             categoryName = "Lương";
             iconName = "ic_salary";
@@ -489,7 +588,9 @@ public class EditTransactionActivity extends AppCompatActivity {
                                 View.VISIBLE
                         );
 
+                        edtOtherCategory.setText("");
                         edtOtherCategory.requestFocus();
+
                     } else {
                         edtOtherCategory.setVisibility(
                                 View.GONE
@@ -559,7 +660,9 @@ public class EditTransactionActivity extends AppCompatActivity {
                                 View.VISIBLE
                         );
 
+                        edtOtherCategory.setText("");
                         edtOtherCategory.requestFocus();
+
                     } else {
                         edtOtherCategory.setVisibility(
                                 View.GONE
@@ -605,6 +708,28 @@ public class EditTransactionActivity extends AppCompatActivity {
                 .show();
     }
 
+    private boolean isStandardCategory(
+            String category
+    ) {
+        if (category == null) {
+            return false;
+        }
+
+        return "Ăn uống".equals(category)
+                || "Đi lại".equals(category)
+                || "Mua sắm".equals(category)
+                || "Giải trí".equals(category)
+                || "Hóa đơn".equals(category)
+                || "Sức khỏe".equals(category)
+                || "Lương".equals(category)
+                || "Thưởng".equals(category)
+                || "Làm thêm".equals(category)
+                || "Đầu tư".equals(category)
+                || "Bán hàng".equals(category)
+                || "Được tặng".equals(category)
+                || "Khác".equals(category);
+    }
+
     private void showWalletDialog() {
         ArrayList<String> walletList =
                 new ArrayList<>();
@@ -619,6 +744,7 @@ public class EditTransactionActivity extends AppCompatActivity {
                         cursor.getString(0)
                 );
             }
+
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -630,21 +756,31 @@ public class EditTransactionActivity extends AppCompatActivity {
         }
 
         String[] wallets =
-                walletList.toArray(new String[0]);
+                walletList.toArray(
+                        new String[0]
+                );
 
         new AlertDialog.Builder(this)
                 .setTitle("Chọn ví")
-                .setItems(wallets, (dialog, which) -> {
-                    selectedWallet = wallets[which];
-                    tvWallet.setText(selectedWallet);
+                .setItems(
+                        wallets,
+                        (dialog, which) -> {
 
-                    tvWallet.setTextColor(
-                            ContextCompat.getColor(
-                                    this,
-                                    R.color.text_primary
-                            )
-                    );
-                })
+                            selectedWallet =
+                                    wallets[which];
+
+                            tvWallet.setText(
+                                    selectedWallet
+                            );
+
+                            tvWallet.setTextColor(
+                                    ContextCompat.getColor(
+                                            this,
+                                            R.color.text_primary
+                                    )
+                            );
+                        }
+                )
                 .show();
     }
 
@@ -655,7 +791,10 @@ public class EditTransactionActivity extends AppCompatActivity {
         DatePickerDialog dialog =
                 new DatePickerDialog(
                         this,
-                        (view, year, month, dayOfMonth) -> {
+                        (view,
+                         year,
+                         month,
+                         dayOfMonth) -> {
 
                             String selectedDate =
                                     String.format(
@@ -666,7 +805,9 @@ public class EditTransactionActivity extends AppCompatActivity {
                                             year
                                     );
 
-                            edtDate.setText(selectedDate);
+                            edtDate.setText(
+                                    selectedDate
+                            );
                         },
                         calendar.get(Calendar.YEAR),
                         calendar.get(Calendar.MONTH),
@@ -677,9 +818,14 @@ public class EditTransactionActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            View currentView = getCurrentFocus();
+    public boolean dispatchTouchEvent(
+            MotionEvent event
+    ) {
+        if (event.getAction()
+                == MotionEvent.ACTION_DOWN) {
+
+            View currentView =
+                    getCurrentFocus();
 
             if (currentView != null) {
                 hideKeyboard();
@@ -696,10 +842,11 @@ public class EditTransactionActivity extends AppCompatActivity {
                         Context.INPUT_METHOD_SERVICE
                 );
 
-        View currentView = getCurrentFocus();
+        View currentView =
+                getCurrentFocus();
 
-        if (currentView != null &&
-                inputMethodManager != null) {
+        if (currentView != null
+                && inputMethodManager != null) {
 
             inputMethodManager.hideSoftInputFromWindow(
                     currentView.getWindowToken(),
@@ -712,7 +859,9 @@ public class EditTransactionActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if (database != null && database.isOpen()) {
+        if (database != null
+                && database.isOpen()) {
+
             database.close();
         }
 
