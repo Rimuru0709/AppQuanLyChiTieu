@@ -429,20 +429,37 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
     private void saveTransaction() {
         String amountText = edtAmount.getText().toString().trim();
-        String category = tvCategoryName.getText().toString();
-        String date = edtDate.getText().toString();
+
+        String category = tvCategoryName.getText().toString().trim();
+
+        String date = edtDate.getText().toString().trim();
+
         String wallet = selectedWallet;
 
+        String note = edtNote.getText().toString().trim();
+
         if (amountText.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập số tiền", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "Vui lòng nhập số tiền",
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
 
-        if (category.equals("Khác")) {
+        /*
+         * Nếu người dùng chọn Khác thì lấy tên danh mục
+         * được nhập trong edtOtherCategory.
+         */
+        if ("Khác".equals(category)) {
             String otherCategory = edtOtherCategory.getText().toString().trim();
 
             if (otherCategory.isEmpty()) {
-                edtOtherCategory.setError("Nhập tên danh mục khác");
+                edtOtherCategory.setError(
+                        "Nhập tên danh mục khác"
+                );
+
+                edtOtherCategory.requestFocus();
                 return;
             }
 
@@ -454,28 +471,71 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         int amount;
 
         try {
-            amount = Integer.parseInt(amountText);
-        } catch (Exception e) {
-            Toast.makeText(this, "Số tiền không hợp lệ", Toast.LENGTH_SHORT).show();
+            amount = Integer.parseInt(
+                            amountText
+                    );
+
+        } catch (NumberFormatException exception) {
+            Toast.makeText(this,
+                    "Số tiền không hợp lệ",
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
 
         if (amount <= 0) {
-            Toast.makeText(this, "Số tiền phải lớn hơn 0", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "Số tiền phải lớn hơn 0",
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
 
-        databaseHelper.insertTransaction(
-                category,
-                date,
-                amount,
-                wallet,
-                transactionType,
-                selectedIcon,
-                selectedColor
-        );
+        /*
+         * title là tên giao dịch.
+         *
+         * Nếu người dùng nhập ghi chú:
+         * title = nội dung ghi chú.
+         *
+         * Nếu không nhập:
+         * title = tên danh mục.
+         */
+        String title;
 
-        Toast.makeText(this, "Lưu giao dịch thành công", Toast.LENGTH_SHORT).show();
+        if (note.isEmpty()) {
+            title = category;
+        } else {
+            title = note;
+        }
+
+        long result =
+                databaseHelper.insertTransaction(
+                        title,
+                        category,
+                        date,
+                        amount,
+                        wallet,
+                        transactionType,
+                        selectedIcon,
+                        selectedColor
+                );
+
+        if (result == -1) {
+            Toast.makeText(this,
+                    "Lưu giao dịch thất bại",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        Toast.makeText(this,
+                "Lưu giao dịch thành công",
+                Toast.LENGTH_SHORT
+        ).show();
+
         finish();
     }
 

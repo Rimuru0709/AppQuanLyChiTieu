@@ -12,70 +12,178 @@ import androidx.core.content.ContextCompat;
 
 import com.quanlychitieu.doan.R;
 
+import java.text.DecimalFormat;
+
 public class BarChartView extends View {
 
     private final Paint paint =
             new Paint(Paint.ANTI_ALIAS_FLAG);
 
-    private int[] values = new int[31];
+    private int[] values =
+            new int[31];
 
     public BarChartView(Context context) {
         super(context);
         init();
     }
 
-    public BarChartView(Context context, @Nullable AttributeSet attrs) {
+    public BarChartView(
+            Context context,
+            @Nullable AttributeSet attrs
+    ) {
         super(context, attrs);
         init();
     }
 
-    public BarChartView(Context context,
-                        @Nullable AttributeSet attrs,
-                        int defStyleAttr) {
+    public BarChartView(
+            Context context,
+            @Nullable AttributeSet attrs,
+            int defStyleAttr
+    ) {
         super(context, attrs, defStyleAttr);
         init();
     }
 
     private void init() {
         paint.setAntiAlias(true);
+
+        setLayerType(
+                View.LAYER_TYPE_SOFTWARE,
+                null
+        );
     }
 
-    public void setData(int[] values) {
-        if (values != null && values.length == 31) {
-            this.values = values;
+    public void setData(
+            int[] values
+    ) {
+        if (values != null
+                && values.length == 31) {
+
+            this.values =
+                    values.clone();
+
+        } else {
+            this.values =
+                    new int[31];
         }
 
         invalidate();
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(
+            Canvas canvas
+    ) {
         super.onDraw(canvas);
 
-        int paddingLeft = dp(40);
-        int paddingBottom = dp(30);
+        if (getWidth() <= 0
+                || getHeight() <= 0) {
 
-        int baseY = getHeight() - paddingBottom;
+            return;
+        }
 
-        int chartHeight =
-                getHeight() - paddingBottom - dp(20);
+        int paddingLeft =
+                dp(38);
 
+        int paddingRight =
+                dp(12);
+
+        int paddingTop =
+                dp(28);
+
+        int paddingBottom =
+                dp(32);
+
+        float chartLeft =
+                paddingLeft;
+
+        float chartRight =
+                getWidth() - paddingRight;
+
+        float chartTop =
+                paddingTop;
+
+        float baseY =
+                getHeight() - paddingBottom;
+
+        float chartHeight =
+                baseY - chartTop;
+
+        float chartWidth =
+                chartRight - chartLeft;
+
+        if (chartWidth <= 0
+                || chartHeight <= 0) {
+
+            return;
+        }
+
+        int maxValue =
+                findMaxValue();
+
+        drawHorizontalGrid(
+                canvas,
+                chartLeft,
+                chartRight,
+                chartTop,
+                baseY,
+                maxValue
+        );
+
+        drawBars(
+                canvas,
+                chartLeft,
+                chartWidth,
+                chartTop,
+                baseY,
+                chartHeight,
+                maxValue
+        );
+
+        drawDayLabels(
+                canvas,
+                chartLeft,
+                chartWidth,
+                baseY
+        );
+    }
+
+    private int findMaxValue() {
         int maxValue = 0;
 
         for (int value : values) {
-            if (Math.abs(value) > maxValue) {
-                maxValue = Math.abs(value);
+            int absoluteValue =
+                    Math.abs(value);
+
+            if (absoluteValue > maxValue) {
+                maxValue =
+                        absoluteValue;
             }
         }
 
-        if (maxValue == 0) {
-            maxValue = 1;
-        }
+        return Math.max(
+                maxValue,
+                1
+        );
+    }
 
-        // Trục X
+    private void drawHorizontalGrid(
+            Canvas canvas,
+            float chartLeft,
+            float chartRight,
+            float chartTop,
+            float baseY,
+            int maxValue
+    ) {
         paint.reset();
         paint.setAntiAlias(true);
-        paint.setStrokeWidth(dp(1));
+        paint.setStyle(
+                Paint.Style.STROKE
+        );
+
+        paint.setStrokeWidth(
+                dpFloat(1)
+        );
 
         paint.setColor(
                 ContextCompat.getColor(
@@ -84,17 +192,59 @@ public class BarChartView extends View {
                 )
         );
 
-        canvas.drawLine(
-                paddingLeft,
-                baseY,
-                getWidth() - dp(10),
-                baseY,
-                paint
+        int lineCount = 4;
+
+        for (int index = 0;
+             index <= lineCount;
+             index++) {
+
+            float ratio =
+                    index / (float) lineCount;
+
+            float y =
+                    baseY
+                            - ratio
+                            * (baseY - chartTop);
+
+            canvas.drawLine(
+                    chartLeft,
+                    y,
+                    chartRight,
+                    y,
+                    paint
+            );
+
+            int labelValue =
+                    Math.round(
+                            maxValue * ratio
+                    );
+
+            drawValueLabel(
+                    canvas,
+                    labelValue,
+                    y
+            );
+        }
+    }
+
+    private void drawValueLabel(
+            Canvas canvas,
+            int value,
+            float y
+    ) {
+        paint.reset();
+        paint.setAntiAlias(true);
+        paint.setStyle(
+                Paint.Style.FILL
         );
 
-        // Số 0
-        paint.setStyle(Paint.Style.FILL);
-        paint.setTextSize(sp(12));
+        paint.setTextAlign(
+                Paint.Align.RIGHT
+        );
+
+        paint.setTextSize(
+                sp(9)
+        );
 
         paint.setColor(
                 ContextCompat.getColor(
@@ -104,13 +254,40 @@ public class BarChartView extends View {
         );
 
         canvas.drawText(
-                "0",
-                dp(18),
-                baseY + dp(4),
+                formatCompactMoney(value),
+                dp(33),
+                y + dp(3),
                 paint
         );
+    }
 
-        // Màu cột
+    private void drawBars(
+            Canvas canvas,
+            float chartLeft,
+            float chartWidth,
+            float chartTop,
+            float baseY,
+            float chartHeight,
+            int maxValue
+    ) {
+        float slotWidth =
+                chartWidth / 31f;
+
+        float barWidth =
+                Math.max(
+                        dp(3),
+                        Math.min(
+                                dp(8),
+                                slotWidth * 0.65f
+                        )
+                );
+
+        paint.reset();
+        paint.setAntiAlias(true);
+        paint.setStyle(
+                Paint.Style.FILL
+        );
+
         paint.setColor(
                 ContextCompat.getColor(
                         getContext(),
@@ -118,41 +295,100 @@ public class BarChartView extends View {
                 )
         );
 
-        int barWidth = dp(8);
+        for (int index = 0;
+             index < 31;
+             index++) {
 
-        int gap =
-                Math.max(
-                        1,
-                        (getWidth() - paddingLeft - dp(30)) / 31
-                );
+            int value =
+                    Math.abs(
+                            values[index]
+                    );
 
-        for (int i = 0; i < 31; i++) {
+            if (value <= 0) {
+                continue;
+            }
 
-            int barHeight =
-                    Math.abs(values[i])
-                            * chartHeight
-                            / maxValue;
+            float normalized =
+                    value / (float) maxValue;
 
-            int x =
-                    paddingLeft + i * gap;
+            /*
+             * Dùng căn bậc hai để các khoản nhỏ
+             * vẫn nhìn thấy khi có một khoản rất lớn.
+             */
+            float visualRatio =
+                    (float) Math.sqrt(
+                            normalized
+                    );
 
-            RectF rect =
+            float barHeight =
+                    visualRatio
+                            * chartHeight;
+
+            /*
+             * Cột có dữ liệu luôn cao tối thiểu 4dp.
+             */
+            barHeight =
+                    Math.max(
+                            barHeight,
+                            dp(4)
+                    );
+
+            float centerX =
+                    chartLeft
+                            + index * slotWidth
+                            + slotWidth / 2f;
+
+            float left =
+                    centerX
+                            - barWidth / 2f;
+
+            float right =
+                    centerX
+                            + barWidth / 2f;
+
+            float top =
+                    Math.max(
+                            chartTop,
+                            baseY - barHeight
+                    );
+
+            RectF barRect =
                     new RectF(
-                            x,
-                            baseY - barHeight,
-                            x + barWidth,
+                            left,
+                            top,
+                            right,
                             baseY
                     );
 
             canvas.drawRoundRect(
-                    rect,
-                    dp(4),
-                    dp(4),
+                    barRect,
+                    dp(3),
+                    dp(3),
                     paint
             );
         }
+    }
 
-        // Chữ ngày
+    private void drawDayLabels(
+            Canvas canvas,
+            float chartLeft,
+            float chartWidth,
+            float baseY
+    ) {
+        paint.reset();
+        paint.setAntiAlias(true);
+        paint.setStyle(
+                Paint.Style.FILL
+        );
+
+        paint.setTextAlign(
+                Paint.Align.CENTER
+        );
+
+        paint.setTextSize(
+                sp(10)
+        );
+
         paint.setColor(
                 ContextCompat.getColor(
                         getContext(),
@@ -160,57 +396,94 @@ public class BarChartView extends View {
                 )
         );
 
-        paint.setTextSize(sp(12));
+        int[] days = {
+                1,
+                5,
+                10,
+                15,
+                20,
+                25,
+                30
+        };
 
-        canvas.drawText("1",
-                paddingLeft,
-                baseY + dp(22),
-                paint);
+        float slotWidth =
+                chartWidth / 31f;
 
-        canvas.drawText("5",
-                paddingLeft + gap * 4,
-                baseY + dp(22),
-                paint);
+        for (int day : days) {
+            int index =
+                    day - 1;
 
-        canvas.drawText("10",
-                paddingLeft + gap * 9,
-                baseY + dp(22),
-                paint);
+            float centerX =
+                    chartLeft
+                            + index * slotWidth
+                            + slotWidth / 2f;
 
-        canvas.drawText("15",
-                paddingLeft + gap * 14,
-                baseY + dp(22),
-                paint);
-
-        canvas.drawText("20",
-                paddingLeft + gap * 19,
-                baseY + dp(22),
-                paint);
-
-        canvas.drawText("25",
-                paddingLeft + gap * 24,
-                baseY + dp(22),
-                paint);
-
-        canvas.drawText("30",
-                paddingLeft + gap * 29,
-                baseY + dp(22),
-                paint);
+            canvas.drawText(
+                    String.valueOf(day),
+                    centerX,
+                    baseY + dp(20),
+                    paint
+            );
+        }
     }
 
-    private int dp(int value) {
+    private String formatCompactMoney(
+            int value
+    ) {
+        if (value >= 1_000_000) {
+            float million =
+                    value / 1_000_000f;
+
+            DecimalFormat formatter =
+                    new DecimalFormat(
+                            million >= 10
+                                    ? "#"
+                                    : "#.#"
+                    );
+
+            return formatter.format(
+                    million
+            ) + "tr";
+        }
+
+        if (value >= 1_000) {
+            int thousand =
+                    Math.round(
+                            value / 1_000f
+                    );
+
+            return thousand + "k";
+        }
+
+        return String.valueOf(value);
+    }
+
+    private int dp(
+            int value
+    ) {
         return Math.round(
-                value *
-                        getResources()
-                                .getDisplayMetrics()
-                                .density
+                value
+                        * getResources()
+                        .getDisplayMetrics()
+                        .density
         );
     }
 
-    private float sp(int value) {
-        return value *
-                getResources()
-                        .getDisplayMetrics()
-                        .scaledDensity;
+    private float dpFloat(
+            int value
+    ) {
+        return value
+                * getResources()
+                .getDisplayMetrics()
+                .density;
+    }
+
+    private float sp(
+            int value
+    ) {
+        return value
+                * getResources()
+                .getDisplayMetrics()
+                .scaledDensity;
     }
 }

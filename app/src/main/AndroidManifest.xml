@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:name=".app.MyApplication"
@@ -19,7 +21,6 @@
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
-
         <meta-data
             android:name="com.facebook.sdk.ClientToken"
             android:value="@string/facebook_client_token" />
@@ -30,11 +31,9 @@
             android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
-
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
-
         </provider>
 
         <!-- Facebook Activity -->
@@ -43,11 +42,9 @@
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:exported="false"
             android:label="@string/app_name" />
-
         <activity
             android:name="com.facebook.CustomTabActivity"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -56,7 +53,6 @@
 
                 <data android:scheme="@string/fb_login_protocol_scheme" />
             </intent-filter>
-
         </activity>
 
         <!-- Trang chủ -->
@@ -64,13 +60,11 @@
             android:name=".home.HomeActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
         <!-- Đăng ký -->
@@ -169,7 +163,24 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Nhắc nhở -->
+        <activity
+            android:name=".setting.ReminderActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
+        <receiver
+            android:name=".alert.ReminderReceiver"
+            android:exported="false" />
+
+        <activity
+            android:name=".notification.NotificationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".notification.NotificationDetailActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
