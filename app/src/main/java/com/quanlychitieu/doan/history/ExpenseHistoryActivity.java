@@ -327,9 +327,10 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
     }
 
     private void loadExpenseHistory() {
-        if (layoutTransactions == null ||
-                database == null ||
-                !database.isOpen()) {
+        if (layoutTransactions == null
+                || database == null
+                || !database.isOpen()) {
+
             return;
         }
 
@@ -356,8 +357,10 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
 
         if ("Cũ nhất".equals(sortType)) {
             orderBy = "id ASC";
+
         } else if ("Số tiền cao nhất".equals(sortType)) {
             orderBy = "ABS(amount) DESC";
+
         } else if ("Số tiền thấp nhất".equals(sortType)) {
             orderBy = "ABS(amount) ASC";
         }
@@ -367,21 +370,26 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         try {
             if ("Tất cả ví".equals(selectedWallet)) {
                 cursor = database.rawQuery(
-                        "SELECT id, title, date, amount, icon, color " +
-                                "FROM transactions " +
-                                "WHERE type = 'EXPENSE' " +
-                                "AND substr(date, 4, 7) = ? " +
-                                "ORDER BY " + orderBy,
-                        new String[]{monthText}
+                        "SELECT id, category, date, amount, icon, color "
+                                + "FROM transactions "
+                                + "WHERE type = 'EXPENSE' "
+                                + "AND substr(date, 4, 7) = ? "
+                                + "ORDER BY "
+                                + orderBy,
+                        new String[]{
+                                monthText
+                        }
                 );
+
             } else {
                 cursor = database.rawQuery(
-                        "SELECT id, title, date, amount, icon, color " +
-                                "FROM transactions " +
-                                "WHERE type = 'EXPENSE' " +
-                                "AND substr(date, 4, 7) = ? " +
-                                "AND wallet = ? " +
-                                "ORDER BY " + orderBy,
+                        "SELECT id, category, date, amount, icon, color "
+                                + "FROM transactions "
+                                + "WHERE type = 'EXPENSE' "
+                                + "AND substr(date, 4, 7) = ? "
+                                + "AND wallet = ? "
+                                + "ORDER BY "
+                                + orderBy,
                         new String[]{
                                 monthText,
                                 selectedWallet
@@ -390,17 +398,35 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
             }
 
             while (cursor.moveToNext()) {
-                int id = cursor.getInt(0);
-                String title = cursor.getString(1);
-                String date = cursor.getString(2);
-                int amount = cursor.getInt(3);
-                String iconName = cursor.getString(4);
-                String colorCode = cursor.getString(5);
+                int id =
+                        cursor.getInt(0);
 
-                if (!keyword.isEmpty() &&
-                        !title.toLowerCase(
-                                Locale.getDefault()
-                        ).contains(keyword)) {
+                String category =
+                        cursor.getString(1);
+
+                String date =
+                        cursor.getString(2);
+
+                int amount =
+                        cursor.getInt(3);
+
+                String iconName =
+                        cursor.getString(4);
+
+                String colorCode =
+                        cursor.getString(5);
+
+                if (category == null
+                        || category.trim().isEmpty()) {
+
+                    category = "Khác";
+                }
+
+                if (!keyword.isEmpty()
+                        && !category
+                        .toLowerCase(Locale.getDefault())
+                        .contains(keyword)) {
+
                     continue;
                 }
 
@@ -409,13 +435,14 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
 
                 addItem(
                         id,
-                        title,
+                        category,
                         date,
                         amount,
                         iconName,
                         colorCode
                 );
             }
+
         } finally {
             if (cursor != null) {
                 cursor.close();
