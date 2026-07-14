@@ -29,6 +29,7 @@ import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
 import com.quanlychitieu.doan.history.IncomeHistoryActivity;
 import com.quanlychitieu.doan.transfer.TransferActivity;
 import com.quanlychitieu.doan.wallet.WalletActivity;
+import com.quanlychitieu.doan.notification.NotificationActivity;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -46,6 +47,8 @@ public class HomeActivity extends AppCompatActivity {
 
     private ImageView imgEye;
     private ImageView imgBell;
+
+    private View viewNotificationDot;
 
     private LinearLayout layoutTransactions;
 
@@ -70,15 +73,18 @@ public class HomeActivity extends AppCompatActivity {
         showMoney();
         setupEyeButton();
         setupQuickButtons();
+        updateNotificationDot();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        if (dbHelper != null) {
-            database = dbHelper.getWritableDatabase();
+        if (dbHelper == null) {
+            dbHelper = new DatabaseHelper(this);
         }
+
+        database = dbHelper.getWritableDatabase();
 
         loadRecentTransactions();
 
@@ -87,6 +93,8 @@ public class HomeActivity extends AppCompatActivity {
         } else {
             hideMoney();
         }
+
+        updateNotificationDot();
     }
 
     @Override
@@ -111,6 +119,8 @@ public class HomeActivity extends AppCompatActivity {
 
         imgEye = findViewById(R.id.imgEye);
         imgBell = findViewById(R.id.imgBell);
+
+        viewNotificationDot = findViewById(R.id.viewNotificationDot);
 
         layoutTransactions = findViewById(R.id.layoutTransactions);
 
@@ -233,7 +243,12 @@ public class HomeActivity extends AppCompatActivity {
 
         if (imgBell != null) {
             imgBell.setOnClickListener(v -> {
-                // Có thể mở AlertActivity hoặc NotificationActivity ở đây.
+                Intent intent = new Intent(
+                        HomeActivity.this,
+                        NotificationActivity.class
+                );
+
+                startActivity(intent);
             });
         }
     }
@@ -350,9 +365,9 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void loadRecentTransactions() {
-        if (layoutTransactions == null ||
-                database == null ||
-                !database.isOpen()) {
+        if (layoutTransactions == null
+                || database == null
+                || !database.isOpen()) {
             return;
         }
 
@@ -362,7 +377,7 @@ public class HomeActivity extends AppCompatActivity {
 
         try {
             cursor = database.rawQuery(
-                    "SELECT title, date, amount, type, icon, color " +
+                    "SELECT category, date, amount, type, icon, color " +
                             "FROM transactions " +
                             "ORDER BY id DESC " +
                             "LIMIT 5",
@@ -370,15 +385,27 @@ public class HomeActivity extends AppCompatActivity {
             );
 
             while (cursor.moveToNext()) {
-                String title = cursor.getString(0);
+
+                String category = cursor.getString(0);
+
                 String date = cursor.getString(1);
+
                 int amount = cursor.getInt(2);
+
                 String type = cursor.getString(3);
+
                 String iconName = cursor.getString(4);
+
                 String colorCode = cursor.getString(5);
 
+                if (category == null
+                        || category.trim().isEmpty()) {
+
+                    category = "Khác";
+                }
+
                 addTransaction(
-                        title,
+                        category,
                         date,
                         amount,
                         type,
@@ -386,6 +413,7 @@ public class HomeActivity extends AppCompatActivity {
                         colorCode
                 );
             }
+
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -538,5 +566,29 @@ public class HomeActivity extends AppCompatActivity {
                 "%,d đ",
                 money
         ).replace(",", ".");
+    }
+
+    private void updateNotificationDot() {
+        if (viewNotificationDot == null) {
+            return;
+        }
+
+        if (dbHelper == null) {
+            dbHelper = new DatabaseHelper(this);
+        }
+
+        int unreadCount =
+                dbHelper.getUnreadNotificationCount();
+
+        viewNotificationDot.setVisibility(
+                unreadCount > 0
+                        ? View.VISIBLE
+                        : View.GONE
+        );
+
+        /*
+         * Đảm bảo chấm đỏ luôn nằm trên icon chuông.
+         */
+        viewNotificationDot.bringToFront();
     }
 }

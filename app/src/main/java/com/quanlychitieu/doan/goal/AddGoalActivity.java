@@ -266,17 +266,28 @@ public class AddGoalActivity extends AppCompatActivity {
         finish();
     }
 
-    private void addGoalSavingTransaction(String goalName, int savedAmount) {
+    private void addGoalSavingTransaction(
+            String goalName,
+            int savedAmount
+    ) {
+        String title =
+                "Tiết kiệm mục tiêu - " + goalName;
+
+        String category =
+                "Tiết kiệm mục tiêu";
+
         dbHelper.insertTransaction(
-                "Tiết kiệm mục tiêu - " + goalName,
+                title,
+                category,
                 getToday(),
-                -savedAmount,
+                savedAmount,
                 selectedWallet,
                 "EXPENSE",
                 "ic_target",
                 "#FF9800"
         );
-    }    private String getToday() {
+    }
+    private String getToday() {
         Calendar calendar = Calendar.getInstance();
 
         return String.format(
