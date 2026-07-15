@@ -148,13 +148,14 @@ public class SettingActivity extends AppCompatActivity {
         }
 
         if (itemBackup != null) {
-            itemBackup.setOnClickListener(v ->
-                    Toast.makeText(
-                            SettingActivity.this,
-                            "Mở Sao lưu và khôi phục",
-                            Toast.LENGTH_SHORT
-                    ).show()
-            );
+            itemBackup.setOnClickListener(v -> {
+                Intent intent = new Intent(
+                        SettingActivity.this,
+                        BackupActivity.class
+                );
+
+                startActivity(intent);
+            });
         }
 
         if (itemTheme != null) {
@@ -171,7 +172,6 @@ public class SettingActivity extends AppCompatActivity {
         if (itemLogout != null) {
             itemLogout.setOnClickListener(v -> logout());
         }
-
     }
 
     private void updateSettingValues() {
