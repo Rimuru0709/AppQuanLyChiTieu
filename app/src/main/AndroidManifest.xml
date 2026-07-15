@@ -181,6 +181,10 @@
             android:name=".notification.NotificationDetailActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".setting.BackupActivity"
+            android:exported="false"/>
     </application>
 
 </manifest>
