@@ -8,87 +8,161 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
-    private static final String DATABASE_NAME = "ExpenseDB.db";
-
-    /*
-     * Version 9:
-     * - transactions
-     * - goals
-     * - wallets
-     * - alert_settings
-     *
-     * Version 10:
-     * - thêm bảng notifications
-     *
-     * Version 11:
-     * - thêm cột category vào transactions
-     */
-    private static final int DATABASE_VERSION = 11;
+    private static final String DATABASE_NAME =
+            "ExpenseDB.db";
+    private static final int DATABASE_VERSION = 12;
 
     // =========================================================
     // TÊN BẢNG
     // =========================================================
 
-    public static final String TABLE_TRANSACTION = "transactions";
-    public static final String TABLE_GOAL = "goals";
-    public static final String TABLE_WALLET = "wallets";
-    public static final String TABLE_ALERT_SETTING = "alert_settings";
-    public static final String TABLE_NOTIFICATION = "notifications";
+    public static final String TABLE_TRANSACTION =
+            "transactions";
+
+    public static final String TABLE_GOAL =
+            "goals";
+
+    public static final String TABLE_WALLET =
+            "wallets";
+
+    public static final String TABLE_ALERT_SETTING =
+            "alert_settings";
+
+    public static final String TABLE_NOTIFICATION =
+            "notifications";
+
+    public static final String TABLE_BUDGET =
+            "budgets";
 
     // =========================================================
     // CỘT BẢNG TRANSACTIONS
     // =========================================================
 
-    public static final String TRANSACTION_ID = "id";
-    public static final String TRANSACTION_TITLE = "title";
-    public static final String TRANSACTION_CATEGORY = "category";
-    public static final String TRANSACTION_DATE = "date";
-    public static final String TRANSACTION_AMOUNT = "amount";
-    public static final String TRANSACTION_WALLET = "wallet";
-    public static final String TRANSACTION_TYPE = "type";
-    public static final String TRANSACTION_ICON = "icon";
-    public static final String TRANSACTION_COLOR = "color";
+    public static final String TRANSACTION_ID =
+            "id";
+
+    public static final String TRANSACTION_TITLE =
+            "title";
+
+    public static final String TRANSACTION_CATEGORY =
+            "category";
+
+    public static final String TRANSACTION_DATE =
+            "date";
+
+    public static final String TRANSACTION_AMOUNT =
+            "amount";
+
+    public static final String TRANSACTION_WALLET =
+            "wallet";
+
+    public static final String TRANSACTION_TYPE =
+            "type";
+
+    public static final String TRANSACTION_ICON =
+            "icon";
+
+    public static final String TRANSACTION_COLOR =
+            "color";
 
     // =========================================================
     // CỘT BẢNG GOALS
     // =========================================================
 
-    public static final String GOAL_ID = "id";
-    public static final String GOAL_NAME = "name";
-    public static final String GOAL_TARGET_AMOUNT = "targetAmount";
-    public static final String GOAL_SAVED_AMOUNT = "savedAmount";
-    public static final String GOAL_DEADLINE = "deadline";
-    public static final String GOAL_WALLET = "wallet";
-    public static final String GOAL_AUTO_SAVE = "autoSave";
+    public static final String GOAL_ID =
+            "id";
+
+    public static final String GOAL_NAME =
+            "name";
+
+    public static final String GOAL_TARGET_AMOUNT =
+            "targetAmount";
+
+    public static final String GOAL_SAVED_AMOUNT =
+            "savedAmount";
+
+    public static final String GOAL_DEADLINE =
+            "deadline";
+
+    public static final String GOAL_WALLET =
+            "wallet";
+
+    public static final String GOAL_AUTO_SAVE =
+            "autoSave";
 
     // =========================================================
     // CỘT BẢNG WALLETS
     // =========================================================
 
-    public static final String WALLET_ID = "id";
-    public static final String WALLET_NAME = "name";
-    public static final String WALLET_IS_DEFAULT = "isDefault";
+    public static final String WALLET_ID =
+            "id";
+
+    public static final String WALLET_NAME =
+            "name";
+
+    public static final String WALLET_IS_DEFAULT =
+            "isDefault";
 
     // =========================================================
     // CỘT BẢNG ALERT SETTINGS
     // =========================================================
 
-    public static final String ALERT_SETTING_ID = "id";
-    public static final String ALERT_SETTING_CATEGORY = "category";
-    public static final String ALERT_WARNING_PERCENT = "warningPercent";
-    public static final String ALERT_SETTING_VALUE = "settingValue";
-    public static final String ALERT_ENABLE = "enable";
+    public static final String ALERT_SETTING_ID =
+            "id";
+
+    public static final String ALERT_SETTING_CATEGORY =
+            "category";
+
+    public static final String ALERT_WARNING_PERCENT =
+            "warningPercent";
+
+    public static final String ALERT_SETTING_VALUE =
+            "settingValue";
+
+    public static final String ALERT_ENABLE =
+            "enable";
 
     // =========================================================
     // CỘT BẢNG NOTIFICATIONS
     // =========================================================
 
-    public static final String NOTIFICATION_ID = "id";
-    public static final String NOTIFICATION_TITLE = "title";
-    public static final String NOTIFICATION_MESSAGE = "message";
-    public static final String NOTIFICATION_TYPE = "type";
-    public static final String NOTIFICATION_IS_READ = "is_read";
-    public static final String NOTIFICATION_CREATED_AT = "created_at";
+    public static final String NOTIFICATION_ID =
+            "id";
+
+    public static final String NOTIFICATION_TITLE =
+            "title";
+
+    public static final String NOTIFICATION_MESSAGE =
+            "message";
+
+    public static final String NOTIFICATION_TYPE =
+            "type";
+
+    public static final String NOTIFICATION_IS_READ =
+            "is_read";
+
+    public static final String NOTIFICATION_CREATED_AT =
+            "created_at";
+
+    // =========================================================
+    // CỘT BẢNG BUDGETS
+    // =========================================================
+
+    public static final String BUDGET_ID =
+            "id";
+
+    public static final String BUDGET_CATEGORY =
+            "category";
+
+    public static final String BUDGET_AMOUNT =
+            "amount";
+
+    public static final String BUDGET_MONTH =
+            "month";
+
+    // =========================================================
+    // CONSTRUCTOR
+    // =========================================================
 
     public DatabaseHelper(Context context) {
         super(
@@ -110,15 +184,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         createWalletTable(db);
         createAlertSettingTable(db);
         createNotificationTable(db);
+        createBudgetTable(db);
 
         insertDefaultWallets(db);
     }
 
-    private void createTransactionTable(SQLiteDatabase db) {
+    private void createTransactionTable(
+            SQLiteDatabase db
+    ) {
         String sql =
                 "CREATE TABLE IF NOT EXISTS "
                         + TABLE_TRANSACTION
                         + " ("
+
                         + TRANSACTION_ID
                         + " INTEGER PRIMARY KEY AUTOINCREMENT,"
 
@@ -145,16 +223,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
                         + TRANSACTION_COLOR
                         + " TEXT"
+
                         + ")";
 
         db.execSQL(sql);
     }
 
-    private void createGoalTable(SQLiteDatabase db) {
+    private void createGoalTable(
+            SQLiteDatabase db
+    ) {
         String sql =
                 "CREATE TABLE IF NOT EXISTS "
                         + TABLE_GOAL
                         + " ("
+
                         + GOAL_ID
                         + " INTEGER PRIMARY KEY AUTOINCREMENT,"
 
@@ -175,16 +257,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
                         + GOAL_AUTO_SAVE
                         + " INTEGER NOT NULL DEFAULT 0"
+
                         + ")";
 
         db.execSQL(sql);
     }
 
-    private void createWalletTable(SQLiteDatabase db) {
+    private void createWalletTable(
+            SQLiteDatabase db
+    ) {
         String sql =
                 "CREATE TABLE IF NOT EXISTS "
                         + TABLE_WALLET
                         + " ("
+
                         + WALLET_ID
                         + " INTEGER PRIMARY KEY AUTOINCREMENT,"
 
@@ -193,16 +279,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
                         + WALLET_IS_DEFAULT
                         + " INTEGER NOT NULL DEFAULT 0"
+
                         + ")";
 
         db.execSQL(sql);
     }
 
-    private void createAlertSettingTable(SQLiteDatabase db) {
+    private void createAlertSettingTable(
+            SQLiteDatabase db
+    ) {
         String sql =
                 "CREATE TABLE IF NOT EXISTS "
                         + TABLE_ALERT_SETTING
                         + " ("
+
                         + ALERT_SETTING_ID
                         + " INTEGER PRIMARY KEY AUTOINCREMENT,"
 
@@ -217,16 +307,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
                         + ALERT_ENABLE
                         + " INTEGER NOT NULL DEFAULT 1"
+
                         + ")";
 
         db.execSQL(sql);
     }
 
-    private void createNotificationTable(SQLiteDatabase db) {
+    private void createNotificationTable(
+            SQLiteDatabase db
+    ) {
         String sql =
                 "CREATE TABLE IF NOT EXISTS "
                         + TABLE_NOTIFICATION
                         + " ("
+
                         + NOTIFICATION_ID
                         + " INTEGER PRIMARY KEY AUTOINCREMENT,"
 
@@ -244,6 +338,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
                         + NOTIFICATION_CREATED_AT
                         + " TEXT NOT NULL"
+
+                        + ")";
+
+        db.execSQL(sql);
+    }
+
+    private void createBudgetTable(
+            SQLiteDatabase db
+    ) {
+        String sql =
+                "CREATE TABLE IF NOT EXISTS "
+                        + TABLE_BUDGET
+                        + " ("
+
+                        + BUDGET_ID
+                        + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+
+                        + BUDGET_CATEGORY
+                        + " TEXT NOT NULL,"
+
+                        + BUDGET_AMOUNT
+                        + " INTEGER NOT NULL DEFAULT 0,"
+
+                        + BUDGET_MONTH
+                        + " TEXT NOT NULL,"
+
+                        + "UNIQUE("
+                        + BUDGET_CATEGORY
+                        + ", "
+                        + BUDGET_MONTH
+                        + ")"
+
                         + ")";
 
         db.execSQL(sql);
@@ -271,9 +397,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             addCategoryColumnIfNeeded(db);
             migrateOldTransactionCategories(db);
         }
+
+        if (oldVersion < 12) {
+            createBudgetTable(db);
+        }
     }
 
-    private void addCategoryColumnIfNeeded(SQLiteDatabase db) {
+    private void addCategoryColumnIfNeeded(
+            SQLiteDatabase db
+    ) {
         if (columnExists(
                 db,
                 TABLE_TRANSACTION,
@@ -307,7 +439,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             );
 
             int columnNameIndex =
-                    cursor.getColumnIndex("name");
+                    cursor.getColumnIndex(
+                            "name"
+                    );
+
+            if (columnNameIndex < 0) {
+                return false;
+            }
 
             while (cursor.moveToNext()) {
                 String currentColumnName =
@@ -349,6 +487,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         + " WHERE "
                         + TRANSACTION_TITLE
                         + " IN ("
+
                         + "'Ăn uống',"
                         + "'Đi lại',"
                         + "'Mua sắm',"
@@ -362,6 +501,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                         + "'Bán hàng',"
                         + "'Được tặng',"
                         + "'Khác'"
+
                         + ")"
         );
     }
@@ -370,7 +510,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // VÍ MẶC ĐỊNH
     // =========================================================
 
-    private void insertDefaultWallets(SQLiteDatabase db) {
+    private void insertDefaultWallets(
+            SQLiteDatabase db
+    ) {
         insertDefaultWalletIfNotExists(
                 db,
                 "Ví mặc định"
@@ -405,7 +547,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             + " WHERE "
                             + WALLET_NAME
                             + " = ?",
-                    new String[]{walletName}
+                    new String[]{
+                            walletName
+                    }
             );
 
             boolean exists =
@@ -461,7 +605,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
-    public long insertWallet(String name) {
+    public long insertWallet(
+            String name
+    ) {
         SQLiteDatabase db =
                 getWritableDatabase();
 
@@ -470,7 +616,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         values.put(
                 WALLET_NAME,
-                name
+                normalizeText(
+                        name,
+                        "Ví mới"
+                )
         );
 
         values.put(
@@ -500,7 +649,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                             + " WHERE "
                             + TRANSACTION_WALLET
                             + " = ?",
-                    new String[]{wallet}
+                    new String[]{
+                            wallet
+                    }
             );
 
             return cursor.moveToFirst()
@@ -513,14 +664,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    public int deleteWallet(String name) {
+    public int deleteWallet(
+            String name
+    ) {
         SQLiteDatabase db =
                 getWritableDatabase();
 
         return db.delete(
                 TABLE_WALLET,
                 WALLET_NAME + " = ?",
-                new String[]{name}
+                new String[]{
+                        name
+                }
         );
     }
 
@@ -528,12 +683,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     // TRANSACTIONS
     // =========================================================
 
-    /**
-     * Thêm giao dịch mới.
-     *
-     * category phải là danh mục thật:
-     * Ăn uống, Đi lại, Mua sắm, Lương...
-     */
     public long insertTransaction(
             String title,
             String category,
@@ -676,7 +825,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
-    public int deleteTransaction(int id) {
+    public int deleteTransaction(
+            int id
+    ) {
         SQLiteDatabase db =
                 getWritableDatabase();
 
@@ -714,7 +865,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 TABLE_TRANSACTION,
                 null,
                 TRANSACTION_TYPE + " = ?",
-                new String[]{type},
+                new String[]{
+                        type
+                },
                 null,
                 null,
                 TRANSACTION_ID + " DESC"
@@ -731,7 +884,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 TABLE_TRANSACTION,
                 null,
                 TRANSACTION_CATEGORY + " = ?",
-                new String[]{category},
+                new String[]{
+                        category
+                },
                 null,
                 null,
                 TRANSACTION_ID + " DESC"
@@ -848,7 +1003,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         );
     }
 
-    public int deleteGoal(int id) {
+    public int deleteGoal(
+            int id
+    ) {
         SQLiteDatabase db =
                 getWritableDatabase();
 
@@ -857,6 +1014,241 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 GOAL_ID + " = ?",
                 new String[]{
                         String.valueOf(id)
+                }
+        );
+    }
+
+    // =========================================================
+    // BUDGETS
+    // =========================================================
+
+    /**
+     * Thêm mới hoặc cập nhật ngân sách
+     * của một danh mục trong một tháng.
+     */
+    public long saveBudget(
+            String category,
+            int amount,
+            String month
+    ) {
+        String normalizedCategory =
+                normalizeText(
+                        category,
+                        ""
+                );
+
+        String normalizedMonth =
+                normalizeText(
+                        month,
+                        ""
+                );
+
+        if (normalizedCategory.isEmpty()
+                || normalizedMonth.isEmpty()
+                || amount <= 0) {
+
+            return -1;
+        }
+
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+        ContentValues values =
+                new ContentValues();
+
+        values.put(
+                BUDGET_CATEGORY,
+                normalizedCategory
+        );
+
+        values.put(
+                BUDGET_AMOUNT,
+                amount
+        );
+
+        values.put(
+                BUDGET_MONTH,
+                normalizedMonth
+        );
+
+        return db.insertWithOnConflict(
+                TABLE_BUDGET,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_REPLACE
+        );
+    }
+
+    /**
+     * Lấy số tiền ngân sách theo danh mục và tháng.
+     * Nếu chưa thiết lập thì trả về 0.
+     */
+    public int getBudgetAmount(
+            String category,
+            String month
+    ) {
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+        Cursor cursor = null;
+
+        try {
+            cursor = db.query(
+                    TABLE_BUDGET,
+                    new String[]{
+                            BUDGET_AMOUNT
+                    },
+                    BUDGET_CATEGORY
+                            + " = ? AND "
+                            + BUDGET_MONTH
+                            + " = ?",
+                    new String[]{
+                            category,
+                            month
+                    },
+                    null,
+                    null,
+                    null
+            );
+
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0);
+            }
+
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Lấy toàn bộ ngân sách của tháng.
+     */
+    public Cursor getBudgetsByMonth(
+            String month
+    ) {
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+        return db.query(
+                TABLE_BUDGET,
+                null,
+                BUDGET_MONTH + " = ?",
+                new String[]{
+                        month
+                },
+                null,
+                null,
+                BUDGET_CATEGORY + " ASC"
+        );
+    }
+
+    /**
+     * Lấy một ngân sách theo danh mục và tháng.
+     */
+    public Cursor getBudget(
+            String category,
+            String month
+    ) {
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+        return db.query(
+                TABLE_BUDGET,
+                null,
+                BUDGET_CATEGORY
+                        + " = ? AND "
+                        + BUDGET_MONTH
+                        + " = ?",
+                new String[]{
+                        category,
+                        month
+                },
+                null,
+                null,
+                null
+        );
+    }
+
+    /**
+     * Kiểm tra ngân sách đã tồn tại chưa.
+     */
+    public boolean budgetExists(
+            String category,
+            String month
+    ) {
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+        Cursor cursor = null;
+
+        try {
+            cursor = db.rawQuery(
+                    "SELECT COUNT(*) FROM "
+                            + TABLE_BUDGET
+                            + " WHERE "
+                            + BUDGET_CATEGORY
+                            + " = ? AND "
+                            + BUDGET_MONTH
+                            + " = ?",
+                    new String[]{
+                            category,
+                            month
+                    }
+            );
+
+            return cursor.moveToFirst()
+                    && cursor.getInt(0) > 0;
+
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    /**
+     * Xóa ngân sách theo ID.
+     */
+    public int deleteBudget(
+            int budgetId
+    ) {
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+        return db.delete(
+                TABLE_BUDGET,
+                BUDGET_ID + " = ?",
+                new String[]{
+                        String.valueOf(
+                                budgetId
+                        )
+                }
+        );
+    }
+
+    /**
+     * Xóa ngân sách theo danh mục và tháng.
+     */
+    public int deleteBudget(
+            String category,
+            String month
+    ) {
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+        return db.delete(
+                TABLE_BUDGET,
+                BUDGET_CATEGORY
+                        + " = ? AND "
+                        + BUDGET_MONTH
+                        + " = ?",
+                new String[]{
+                        category,
+                        month
                 }
         );
     }
@@ -880,8 +1272,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     new String[]{
                             ALERT_WARNING_PERCENT
                     },
-                    ALERT_SETTING_CATEGORY + " = ?",
-                    new String[]{category},
+                    ALERT_SETTING_CATEGORY
+                            + " = ?",
+                    new String[]{
+                            category
+                    },
                     null,
                     null,
                     null
@@ -908,6 +1303,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db =
                 getWritableDatabase();
 
+        boolean currentEnabled =
+                isCategoryAlertEnabled(
+                        category
+                );
+
+        int currentSettingValue =
+                getAlertSettingValue(
+                        category,
+                        0
+                );
+
         ContentValues values =
                 new ContentValues();
 
@@ -923,12 +1329,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         values.put(
                 ALERT_SETTING_VALUE,
-                0
+                currentSettingValue
         );
 
         values.put(
                 ALERT_ENABLE,
-                1
+                currentEnabled ? 1 : 0
         );
 
         db.insertWithOnConflict(
@@ -955,15 +1361,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     new String[]{
                             ALERT_SETTING_VALUE
                     },
-                    ALERT_SETTING_CATEGORY + " = ?",
-                    new String[]{category},
+                    ALERT_SETTING_CATEGORY
+                            + " = ?",
+                    new String[]{
+                            category
+                    },
                     null,
                     null,
                     null
             );
 
             if (cursor.moveToFirst()) {
-                value = cursor.getInt(0);
+                value =
+                        cursor.getInt(0);
             }
 
         } finally {
@@ -982,6 +1392,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db =
                 getWritableDatabase();
 
+        int currentWarningPercent =
+                getWarningPercent(
+                        category
+                );
+
+        boolean currentEnabled =
+                isCategoryAlertEnabled(
+                        category
+                );
+
         ContentValues values =
                 new ContentValues();
 
@@ -997,12 +1417,101 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         values.put(
                 ALERT_WARNING_PERCENT,
-                80
+                currentWarningPercent
         );
 
         values.put(
                 ALERT_ENABLE,
-                1
+                currentEnabled ? 1 : 0
+        );
+
+        db.insertWithOnConflict(
+                TABLE_ALERT_SETTING,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_REPLACE
+        );
+    }
+
+    public boolean isCategoryAlertEnabled(
+            String category
+    ) {
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+        Cursor cursor = null;
+
+        try {
+            cursor = db.query(
+                    TABLE_ALERT_SETTING,
+                    new String[]{
+                            ALERT_ENABLE
+                    },
+                    ALERT_SETTING_CATEGORY
+                            + " = ?",
+                    new String[]{
+                            category
+                    },
+                    null,
+                    null,
+                    null
+            );
+
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0) == 1;
+            }
+
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        /*
+         * Chưa có cài đặt thì mặc định bật.
+         */
+        return true;
+    }
+
+    public void saveCategoryAlertEnabled(
+            String category,
+            boolean enabled
+    ) {
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+        int currentWarningPercent =
+                getWarningPercent(
+                        category
+                );
+
+        int currentSettingValue =
+                getAlertSettingValue(
+                        category,
+                        0
+                );
+
+        ContentValues values =
+                new ContentValues();
+
+        values.put(
+                ALERT_SETTING_CATEGORY,
+                category
+        );
+
+        values.put(
+                ALERT_WARNING_PERCENT,
+                currentWarningPercent
+        );
+
+        values.put(
+                ALERT_SETTING_VALUE,
+                currentSettingValue
+        );
+
+        values.put(
+                ALERT_ENABLE,
+                enabled ? 1 : 0
         );
 
         db.insertWithOnConflict(
@@ -1098,7 +1607,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 TABLE_NOTIFICATION,
                 null,
                 NOTIFICATION_TYPE + " = ?",
-                new String[]{type},
+                new String[]{
+                        type
+                },
                 null,
                 null,
                 NOTIFICATION_ID + " DESC"
@@ -1147,7 +1658,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 TABLE_NOTIFICATION,
                 values,
                 NOTIFICATION_IS_READ + " = ?",
-                new String[]{"0"}
+                new String[]{
+                        "0"
+                }
         );
     }
 
