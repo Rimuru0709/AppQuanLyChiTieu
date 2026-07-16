@@ -272,54 +272,89 @@ public class AlertActivity extends AppCompatActivity {
     private void loadCategoryExpenseAlerts() {
         alertList.clear();
 
+        if (database == null
+                || !database.isOpen()) {
+
+            return;
+        }
+
         String monthText =
                 getCurrentMonthText();
 
         Cursor cursor = null;
 
         try {
+            /*
+             * Đọc danh sách từ bảng budgets.
+             *
+             * LEFT JOIN transactions giúp ngân sách vẫn xuất hiện
+             * khi danh mục chưa có giao dịch chi tiêu.
+             */
             cursor = database.rawQuery(
                     "SELECT "
-                            + DatabaseHelper.TRANSACTION_CATEGORY
+                            + "b."
+                            + DatabaseHelper.BUDGET_CATEGORY
                             + ", "
-                            + "MAX("
+
+                            + "b."
+                            + DatabaseHelper.BUDGET_AMOUNT
+                            + ", "
+
+                            + "COALESCE(MAX(t."
                             + DatabaseHelper.TRANSACTION_ICON
-                            + "), "
-                            + "MAX("
+                            + "), ''), "
+
+                            + "COALESCE(MAX(t."
                             + DatabaseHelper.TRANSACTION_COLOR
-                            + "), "
-                            + "SUM(ABS("
+                            + "), ''), "
+
+                            + "COALESCE(SUM(ABS(t."
                             + DatabaseHelper.TRANSACTION_AMOUNT
-                            + ")) "
+                            + ")), 0) "
+
                             + "FROM "
+                            + DatabaseHelper.TABLE_BUDGET
+                            + " b "
+
+                            + "LEFT JOIN "
                             + DatabaseHelper.TABLE_TRANSACTION
+                            + " t "
+
+                            + "ON t."
+                            + DatabaseHelper.TRANSACTION_CATEGORY
+                            + " = b."
+                            + DatabaseHelper.BUDGET_CATEGORY
                             + " "
-                            + "WHERE "
+
+                            + "AND t."
                             + DatabaseHelper.TRANSACTION_TYPE
                             + " = ? "
-                            + "AND "
+
+                            + "AND t."
                             + DatabaseHelper.TRANSACTION_DATE
                             + " LIKE ? "
-                            + "AND "
-                            + DatabaseHelper.TRANSACTION_CATEGORY
-                            + " IN ("
-                            + "'Ăn uống',"
-                            + "'Đi lại',"
-                            + "'Mua sắm',"
-                            + "'Giải trí',"
-                            + "'Hóa đơn',"
-                            + "'Sức khỏe',"
-                            + "'Khác'"
-                            + ") "
+
+                            + "WHERE b."
+                            + DatabaseHelper.BUDGET_MONTH
+                            + " = ? "
+
                             + "GROUP BY "
-                            + DatabaseHelper.TRANSACTION_CATEGORY
+                            + "b."
+                            + DatabaseHelper.BUDGET_CATEGORY
+                            + ", "
+                            + "b."
+                            + DatabaseHelper.BUDGET_AMOUNT
                             + " "
-                            + "ORDER BY SUM(ABS("
+
+                            + "ORDER BY "
+                            + "COALESCE(SUM(ABS(t."
                             + DatabaseHelper.TRANSACTION_AMOUNT
-                            + ")) DESC",
+                            + ")), 0) DESC",
+
                     new String[]{
                             "EXPENSE",
-                            "%" + monthText
+                            "%" + monthText,
+                            monthText
                     }
             );
 
@@ -328,9 +363,9 @@ public class AlertActivity extends AppCompatActivity {
                         new AlertModel(
                                 R.drawable.ic_dot,
                                 "#ADB5BD",
-                                "Chưa có dữ liệu",
-                                "Ngân sách: 0 đ",
-                                "Đã chi: 0 đ",
+                                "Chưa thiết lập ngân sách",
+                                "Vào Cài đặt → Ngân sách",
+                                "Tháng " + monthText,
                                 "0%",
                                 false,
                                 0
@@ -345,14 +380,17 @@ public class AlertActivity extends AppCompatActivity {
                 String category =
                         cursor.getString(0);
 
-                String iconName =
-                        cursor.getString(1);
+                int budgetAmount =
+                        cursor.getInt(1);
 
-                String colorCode =
+                String iconName =
                         cursor.getString(2);
 
+                String colorCode =
+                        cursor.getString(3);
+
                 int usedAmount =
-                        cursor.getInt(3);
+                        cursor.getInt(4);
 
                 if (category == null
                         || category.trim().isEmpty()) {
@@ -363,20 +401,28 @@ public class AlertActivity extends AppCompatActivity {
                 if (iconName == null
                         || iconName.trim().isEmpty()) {
 
-                    iconName = "ic_dot";
+                    iconName =
+                            getDefaultCategoryIcon(
+                                    category
+                            );
                 }
 
                 if (colorCode == null
                         || colorCode.trim().isEmpty()) {
 
-                    colorCode = "#ADB5BD";
+                    colorCode =
+                            getDefaultCategoryColor(
+                                    category
+                            );
                 }
-
-                int budgetAmount =
-                        getDefaultBudget(category);
 
                 int warningPercent =
                         dbHelper.getWarningPercent(
+                                category
+                        );
+
+                boolean alertEnabled =
+                        dbHelper.isCategoryAlertEnabled(
                                 category
                         );
 
@@ -404,15 +450,10 @@ public class AlertActivity extends AppCompatActivity {
                 }
 
                 boolean reachedWarning =
-                        usedPercent >= warningPercent;
+                        budgetAmount > 0
+                                && usedPercent
+                                >= warningPercent;
 
-                /*
-                 * Giao diện hiển thị ngưỡng cảnh báo đã lưu,
-                 * ví dụ 80%.
-                 *
-                 * usedPercent vẫn được dùng để kiểm tra
-                 * khi nào cần tạo thông báo cảnh báo.
-                 */
                 alertList.add(
                         new AlertModel(
                                 iconResource,
@@ -427,12 +468,20 @@ public class AlertActivity extends AppCompatActivity {
                                         usedAmount
                                 ),
                                 warningPercent + "%",
-                                true,
+                                alertEnabled,
                                 warningPercent
                         )
                 );
 
-                if (reachedWarning) {
+                /*
+                 * Chỉ tạo thông báo khi:
+                 * - cảnh báo đang bật;
+                 * - có ngân sách;
+                 * - mức chi đạt ngưỡng.
+                 */
+                if (alertEnabled
+                        && reachedWarning) {
+
                     String notificationTitle =
                             "Cảnh báo ngân sách";
 
@@ -464,13 +513,13 @@ public class AlertActivity extends AppCompatActivity {
             } while (cursor.moveToNext());
 
         } catch (Exception exception) {
+            exception.printStackTrace();
+
             Toast.makeText(
                     this,
                     "Không thể tải cảnh báo ngân sách",
                     Toast.LENGTH_SHORT
             ).show();
-
-            exception.printStackTrace();
 
         } finally {
             if (cursor != null) {
@@ -496,15 +545,20 @@ public class AlertActivity extends AppCompatActivity {
                             + DatabaseHelper.TRANSACTION_AMOUNT
                             + ", "
                             + DatabaseHelper.TRANSACTION_DATE
+
                             + " FROM "
                             + DatabaseHelper.TABLE_TRANSACTION
+
                             + " WHERE ABS("
                             + DatabaseHelper.TRANSACTION_AMOUNT
                             + ") >= ? "
+
                             + "ORDER BY "
                             + DatabaseHelper.TRANSACTION_ID
                             + " DESC "
+
                             + "LIMIT 1",
+
                     new String[]{
                             String.valueOf(
                                     largeTransactionLimit
@@ -544,6 +598,9 @@ public class AlertActivity extends AppCompatActivity {
                     message
             );
 
+        } catch (Exception exception) {
+            exception.printStackTrace();
+
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -565,8 +622,7 @@ public class AlertActivity extends AppCompatActivity {
                         cursor.getString(0);
 
                 /*
-                 * Không cảnh báo các ví chưa từng
-                 * có giao dịch.
+                 * Không cảnh báo ví chưa từng có giao dịch.
                  */
                 if (!dbHelper.walletHasTransaction(
                         walletName
@@ -601,8 +657,13 @@ public class AlertActivity extends AppCompatActivity {
                 }
             }
 
+        } catch (Exception exception) {
+            exception.printStackTrace();
+
         } finally {
-            cursor.close();
+            if (cursor != null) {
+                cursor.close();
+            }
         }
     }
 
@@ -629,9 +690,20 @@ public class AlertActivity extends AppCompatActivity {
 
         try {
             cursor = database.rawQuery(
-                    "SELECT name, targetAmount, savedAmount "
-                            + "FROM goals "
-                            + "ORDER BY id DESC "
+                    "SELECT "
+                            + DatabaseHelper.GOAL_NAME
+                            + ", "
+                            + DatabaseHelper.GOAL_TARGET_AMOUNT
+                            + ", "
+                            + DatabaseHelper.GOAL_SAVED_AMOUNT
+
+                            + " FROM "
+                            + DatabaseHelper.TABLE_GOAL
+
+                            + " ORDER BY "
+                            + DatabaseHelper.GOAL_ID
+                            + " DESC "
+
                             + "LIMIT 1",
                     null
             );
@@ -704,6 +776,9 @@ public class AlertActivity extends AppCompatActivity {
                 );
             }
 
+        } catch (Exception exception) {
+            exception.printStackTrace();
+
         } finally {
             if (cursor != null) {
                 cursor.close();
@@ -757,6 +832,7 @@ public class AlertActivity extends AppCompatActivity {
                             + "AND "
                             + DatabaseHelper.NOTIFICATION_CREATED_AT
                             + " LIKE ?",
+
                     new String[]{
                             title,
                             message,
@@ -819,8 +895,7 @@ public class AlertActivity extends AppCompatActivity {
                         (dialog, which) -> {
 
                             String text =
-                                    input
-                                            .getText()
+                                    input.getText()
                                             .toString()
                                             .trim();
 
@@ -870,10 +945,6 @@ public class AlertActivity extends AppCompatActivity {
                             database =
                                     dbHelper.getReadableDatabase();
 
-                            /*
-                             * Tải lại toàn bộ dữ liệu sau khi
-                             * người dùng thay đổi ngưỡng.
-                             */
                             loadAlertSettings();
                             loadCategoryExpenseAlerts();
                             loadLargeTransactionAlert();
@@ -908,24 +979,32 @@ public class AlertActivity extends AppCompatActivity {
         try {
             cursor = database.rawQuery(
                     "SELECT SUM(CASE "
+
                             + "WHEN "
                             + DatabaseHelper.TRANSACTION_TYPE
                             + " = 'INCOME' "
+
                             + "THEN ABS("
                             + DatabaseHelper.TRANSACTION_AMOUNT
                             + ") "
+
                             + "WHEN "
                             + DatabaseHelper.TRANSACTION_TYPE
                             + " = 'EXPENSE' "
+
                             + "THEN -ABS("
                             + DatabaseHelper.TRANSACTION_AMOUNT
                             + ") "
+
                             + "ELSE 0 END) "
+
                             + "FROM "
                             + DatabaseHelper.TABLE_TRANSACTION
+
                             + " WHERE "
                             + DatabaseHelper.TRANSACTION_WALLET
                             + " = ?",
+
                     new String[]{
                             walletName
                     }
@@ -948,37 +1027,71 @@ public class AlertActivity extends AppCompatActivity {
     }
 
     // =========================================================
-    // NGÂN SÁCH MẶC ĐỊNH
+    // ICON MẶC ĐỊNH THEO DANH MỤC
     // =========================================================
 
-    private int getDefaultBudget(
+    private String getDefaultCategoryIcon(
             String category
     ) {
         if ("Ăn uống".equals(category)) {
-            return 2_000_000;
+            return "ic_food";
         }
 
         if ("Đi lại".equals(category)) {
-            return 1_000_000;
+            return "ic_transport";
         }
 
         if ("Mua sắm".equals(category)) {
-            return 3_000_000;
+            return "ic_shopping";
         }
 
         if ("Giải trí".equals(category)) {
-            return 1_000_000;
+            return "ic_entertainment";
         }
 
         if ("Hóa đơn".equals(category)) {
-            return 1_500_000;
+            return "ic_bill";
         }
 
         if ("Sức khỏe".equals(category)) {
-            return 1_000_000;
+            return "ic_health";
         }
 
-        return 1_000_000;
+        return "ic_dot";
+    }
+
+    // =========================================================
+    // MÀU MẶC ĐỊNH THEO DANH MỤC
+    // =========================================================
+
+    private String getDefaultCategoryColor(
+            String category
+    ) {
+        if ("Ăn uống".equals(category)) {
+            return "#FF3131";
+        }
+
+        if ("Đi lại".equals(category)) {
+            return "#2196F3";
+        }
+
+        if ("Mua sắm".equals(category)) {
+            return "#FF9800";
+        }
+
+        if ("Giải trí".equals(category)) {
+            return "#9C27B0";
+        }
+
+        if ("Hóa đơn".equals(category)) {
+            return "#FF9800";
+        }
+
+        if ("Sức khỏe".equals(category)) {
+            return "#FFB3C6";
+        }
+
+        return "#ADB5BD";
     }
 
     // =========================================================
