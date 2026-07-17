@@ -185,6 +185,10 @@
         <activity
             android:name=".setting.BackupActivity"
             android:exported="false"/>
+
+        <activity
+            android:name=".setting.AccountActivity"
+            android:exported="false" />
     </application>
 
 </manifest>
