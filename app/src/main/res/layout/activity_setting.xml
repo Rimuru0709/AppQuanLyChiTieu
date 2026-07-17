@@ -315,7 +315,7 @@
 
             </LinearLayout>
 
-            <!-- Đăng xuất -->
+            <!-- Đăng nhập / Đăng xuất -->
             <LinearLayout
                 android:id="@+id/itemLogout"
                 android:layout_width="match_parent"
@@ -332,24 +332,26 @@
                     android:layout_height="28dp">
 
                     <ImageView
+                        android:id="@+id/imgLoginLogout"
                         android:layout_width="25dp"
                         android:layout_height="25dp"
                         android:layout_gravity="center"
-                        android:contentDescription="Đăng xuất"
+                        android:contentDescription="Đăng nhập"
                         android:scaleType="centerInside"
                         android:src="@android:drawable/ic_lock_power_off"
-                        app:tint="#FF1F1F" />
+                        app:tint="#FF1F1F"/>
 
                 </FrameLayout>
 
                 <TextView
+                    android:id="@+id/tvLoginLogout"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
                     android:text="Đăng xuất"
                     android:textColor="#FF1F1F"
                     android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:textStyle="bold"/>
 
             </LinearLayout>
 
