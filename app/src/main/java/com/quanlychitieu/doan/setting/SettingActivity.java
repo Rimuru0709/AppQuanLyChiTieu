@@ -18,6 +18,9 @@ import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.activity.LoginActivity;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 public class SettingActivity extends AppCompatActivity {
 
     private static final String PREF_SETTING = "AppSetting";
@@ -36,6 +39,11 @@ public class SettingActivity extends AppCompatActivity {
 
     private SharedPreferences preferences;
 
+    private FirebaseAuth auth;
+
+    private TextView tvLoginLogout;
+    private ImageView imgLoginLogout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,11 +54,13 @@ public class SettingActivity extends AppCompatActivity {
                 MODE_PRIVATE
         );
 
+        auth = FirebaseAuth.getInstance();
         initViews();
         setupHeaderInsets();
         BottomNavHelper.setup(this);
         setupEvents();
         updateSettingValues();
+        updateLoginLogoutUI();
     }
 
     @Override
@@ -60,6 +70,7 @@ public class SettingActivity extends AppCompatActivity {
         if (preferences != null) {
             updateSettingValues();
         }
+        updateLoginLogoutUI();
     }
 
     private void initViews() {
@@ -71,8 +82,11 @@ public class SettingActivity extends AppCompatActivity {
         itemBackup = findViewById(R.id.itemBackup);
         itemTheme = findViewById(R.id.itemTheme);
         itemLogout = findViewById(R.id.itemLogout);
-
         tvThemeValue = findViewById(R.id.tvThemeValue);
+        tvLoginLogout = findViewById(R.id.tvLoginLogout);
+        imgLoginLogout = findViewById(R.id.imgLoginLogout);
+        tvLoginLogout = findViewById(R.id.tvLoginLogout);
+        imgLoginLogout = findViewById(R.id.imgLoginLogout);
     }
 
     private void setupHeaderInsets() {
@@ -170,7 +184,27 @@ public class SettingActivity extends AppCompatActivity {
         }
 
         if (itemLogout != null) {
-            itemLogout.setOnClickListener(v -> logout());
+            itemLogout.setOnClickListener(v -> {
+
+                FirebaseUser user =
+                        auth.getCurrentUser();
+
+                if (user == null) {
+
+                    Intent intent =
+                            new Intent(
+                                    SettingActivity.this,
+                                    LoginActivity.class
+                            );
+
+                    startActivity(intent);
+
+                } else {
+
+                    logout();
+                }
+
+            });
         }
     }
 
@@ -200,23 +234,30 @@ public class SettingActivity extends AppCompatActivity {
     }
 
     private void logout() {
+
+        auth.signOut();
+
         Toast.makeText(
                 this,
                 "Đăng xuất thành công",
                 Toast.LENGTH_SHORT
         ).show();
 
-        Intent intent = new Intent(
-                SettingActivity.this,
-                LoginActivity.class
-        );
+        updateLoginLogoutUI();
+
+        Intent intent =
+                new Intent(
+                        SettingActivity.this,
+                        LoginActivity.class
+                );
 
         intent.setFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK |
-                        Intent.FLAG_ACTIVITY_CLEAR_TASK
+                Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_CLEAR_TASK
         );
 
         startActivity(intent);
+
         finish();
     }
 
@@ -227,5 +268,37 @@ public class SettingActivity extends AppCompatActivity {
                         .getDisplayMetrics()
                         .density
         );
+    }
+
+    private void updateLoginLogoutUI() {
+
+        FirebaseUser user =
+                auth.getCurrentUser();
+
+        if (user == null) {
+
+            if (tvLoginLogout != null) {
+                tvLoginLogout.setText("Đăng nhập");
+            }
+
+            if (imgLoginLogout != null) {
+                imgLoginLogout.setImageResource(
+                        R.drawable.ic_logout
+                );
+            }
+
+        } else {
+
+            if (tvLoginLogout != null) {
+                tvLoginLogout.setText("Đăng xuất");
+            }
+
+            if (imgLoginLogout != null) {
+                imgLoginLogout.setImageResource(
+                        R.drawable.ic_logout
+                );
+            }
+
+        }
     }
 }
