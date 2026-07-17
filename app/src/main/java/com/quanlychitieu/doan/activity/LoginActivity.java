@@ -45,6 +45,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.home.HomeActivity;
+import com.quanlychitieu.doan.setting.AccountStorage;
 
 import java.util.Arrays;
 
@@ -275,15 +276,24 @@ public class LoginActivity extends AppCompatActivity {
                         password
                 )
                 .addOnSuccessListener(authResult -> {
-                    saveLoginInformation(email);
+                    FirebaseUser firebaseUser = authResult.getUser();
 
-                    Toast.makeText(
-                            LoginActivity.this,
-                            "Đăng nhập thành công",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                    if (firebaseUser == null) {
+                        setLoginProcessing(false);
 
-                    goToHome();
+                        Toast.makeText(
+                                LoginActivity.this,
+                                "Không lấy được thông tin người dùng",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        return;
+                    }
+
+                    completeLogin(
+                            firebaseUser,
+                            "Đăng nhập thành công"
+                    );
                 })
                 .addOnFailureListener(exception -> {
                     setLoginProcessing(false);
@@ -396,18 +406,24 @@ public class LoginActivity extends AppCompatActivity {
 
         auth.signInWithCredential(credential)
                 .addOnSuccessListener(authResult -> {
-                    String email =
-                            getCurrentUserEmail();
+                    FirebaseUser firebaseUser = authResult.getUser();
 
-                    saveLoginInformation(email);
+                    if (firebaseUser == null) {
+                        setLoginProcessing(false);
 
-                    Toast.makeText(
-                            LoginActivity.this,
-                            "Đăng nhập Google thành công",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                        Toast.makeText(
+                                LoginActivity.this,
+                                "Không lấy được thông tin tài khoản Google",
+                                Toast.LENGTH_SHORT
+                        ).show();
 
-                    goToHome();
+                        return;
+                    }
+
+                    completeLogin(
+                            firebaseUser,
+                            "Đăng nhập Google thành công"
+                    );
                 })
                 .addOnFailureListener(exception -> {
                     setLoginProcessing(false);
@@ -507,18 +523,24 @@ public class LoginActivity extends AppCompatActivity {
 
         auth.signInWithCredential(credential)
                 .addOnSuccessListener(authResult -> {
-                    String email =
-                            getCurrentUserEmail();
+                    FirebaseUser firebaseUser = authResult.getUser();
 
-                    saveLoginInformation(email);
+                    if (firebaseUser == null) {
+                        setLoginProcessing(false);
 
-                    Toast.makeText(
-                            LoginActivity.this,
-                            "Đăng nhập Facebook thành công",
-                            Toast.LENGTH_SHORT
-                    ).show();
+                        Toast.makeText(
+                                LoginActivity.this,
+                                "Không lấy được thông tin tài khoản Facebook",
+                                Toast.LENGTH_SHORT
+                        ).show();
 
-                    goToHome();
+                        return;
+                    }
+
+                    completeLogin(
+                            firebaseUser,
+                            "Đăng nhập Facebook thành công"
+                    );
                 })
                 .addOnFailureListener(exception -> {
                     setLoginProcessing(false);
@@ -576,6 +598,124 @@ public class LoginActivity extends AppCompatActivity {
                 );
     }
 
+// =========================================================
+// HOÀN TẤT ĐĂNG NHẬP
+// =========================================================
+
+    private void completeLogin(
+            FirebaseUser firebaseUser,
+            String successMessage
+    ) {
+        syncAccountProfile(firebaseUser);
+
+        String email =
+                firebaseUser.getEmail() == null
+                        ? ""
+                        : firebaseUser.getEmail().trim();
+
+        saveLoginInformation(email);
+
+        Toast.makeText(
+                LoginActivity.this,
+                successMessage,
+                Toast.LENGTH_SHORT
+        ).show();
+
+        goToHome();
+    }
+
+// =========================================================
+// ĐỒNG BỘ THÔNG TIN VỚI ACCOUNT STORAGE
+// =========================================================
+
+    private void syncAccountProfile(
+            FirebaseUser firebaseUser
+    ) {
+        if (firebaseUser == null) {
+            return;
+        }
+
+        String userId =
+                firebaseUser.getUid();
+
+        String firebaseName =
+                firebaseUser.getDisplayName() == null
+                        ? ""
+                        : firebaseUser
+                          .getDisplayName()
+                          .trim();
+
+        String firebaseEmail =
+                firebaseUser.getEmail() == null
+                        ? ""
+                        : firebaseUser
+                          .getEmail()
+                          .trim();
+
+        if (!AccountStorage.hasProfile(
+                LoginActivity.this,
+                userId
+        )) {
+            AccountStorage.saveProfile(
+                    LoginActivity.this,
+                    userId,
+                    firebaseName,
+                    firebaseEmail,
+                    "",
+                    ""
+            );
+        } else {
+            String savedName =
+                    AccountStorage.getFullName(
+                            LoginActivity.this,
+                            userId
+                    );
+
+            String savedEmail =
+                    AccountStorage.getEmail(
+                            LoginActivity.this,
+                            userId
+                    );
+
+            if (savedName.isEmpty()
+                    && !firebaseName.isEmpty()) {
+
+                AccountStorage.saveFullName(
+                        LoginActivity.this,
+                        userId,
+                        firebaseName
+                );
+            }
+
+            if (savedEmail.isEmpty()
+                    && !firebaseEmail.isEmpty()) {
+
+                AccountStorage.saveEmail(
+                        LoginActivity.this,
+                        userId,
+                        firebaseEmail
+                );
+            }
+        }
+
+        String savedAvatar =
+                AccountStorage.getAvatarUri(
+                        LoginActivity.this,
+                        userId
+                );
+
+        if (savedAvatar.isEmpty()
+                && firebaseUser.getPhotoUrl() != null) {
+
+            AccountStorage.saveAvatarUri(
+                    LoginActivity.this,
+                    userId,
+                    firebaseUser
+                            .getPhotoUrl()
+                            .toString()
+            );
+        }
+    }
     private void saveLoginInformation(
             String email
     ) {

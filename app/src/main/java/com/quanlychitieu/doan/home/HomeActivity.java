@@ -1,7 +1,6 @@
 package com.quanlychitieu.doan.home;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -20,6 +19,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.alltransaction.AllTransactionActivity;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
@@ -27,9 +28,10 @@ import com.quanlychitieu.doan.database.DatabaseHelper;
 import com.quanlychitieu.doan.goal.GoalActivity;
 import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
 import com.quanlychitieu.doan.history.IncomeHistoryActivity;
+import com.quanlychitieu.doan.notification.NotificationActivity;
+import com.quanlychitieu.doan.setting.AccountStorage;
 import com.quanlychitieu.doan.transfer.TransferActivity;
 import com.quanlychitieu.doan.wallet.WalletActivity;
-import com.quanlychitieu.doan.notification.NotificationActivity;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -55,15 +57,24 @@ public class HomeActivity extends AppCompatActivity {
     private DatabaseHelper dbHelper;
     private SQLiteDatabase database;
 
+    private FirebaseAuth auth;
+
     private boolean isBalanceVisible = true;
+
+    // =========================================================
+    // ON CREATE
+    // =========================================================
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
+        auth = FirebaseAuth.getInstance();
+
         initViews();
         setupSafeArea();
+
         BottomNavHelper.setup(this);
 
         dbHelper = new DatabaseHelper(this);
@@ -76,6 +87,10 @@ public class HomeActivity extends AppCompatActivity {
         updateNotificationDot();
     }
 
+    // =========================================================
+    // ON RESUME
+    // =========================================================
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -85,6 +100,14 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         database = dbHelper.getWritableDatabase();
+
+        /*
+         * Cập nhật lại tên người dùng khi:
+         * - Đăng nhập thành công.
+         * - Đăng xuất.
+         * - Đổi tên trong màn hình tài khoản.
+         */
+        updateGreeting();
 
         loadRecentTransactions();
 
@@ -96,6 +119,10 @@ public class HomeActivity extends AppCompatActivity {
 
         updateNotificationDot();
     }
+
+    // =========================================================
+    // ON DESTROY
+    // =========================================================
 
     @Override
     protected void onDestroy() {
@@ -110,6 +137,10 @@ public class HomeActivity extends AppCompatActivity {
         }
     }
 
+    // =========================================================
+    // ÁNH XẠ VIEW
+    // =========================================================
+
     private void initViews() {
         tvHello = findViewById(R.id.tvHello);
         tvBalance = findViewById(R.id.tvBalance);
@@ -120,9 +151,11 @@ public class HomeActivity extends AppCompatActivity {
         imgEye = findViewById(R.id.imgEye);
         imgBell = findViewById(R.id.imgBell);
 
-        viewNotificationDot = findViewById(R.id.viewNotificationDot);
+        viewNotificationDot =
+                findViewById(R.id.viewNotificationDot);
 
-        layoutTransactions = findViewById(R.id.layoutTransactions);
+        layoutTransactions =
+                findViewById(R.id.layoutTransactions);
 
         btnIncome = findViewById(R.id.btnIncome);
         btnExpense = findViewById(R.id.btnExpense);
@@ -131,8 +164,13 @@ public class HomeActivity extends AppCompatActivity {
         btnGoal = findViewById(R.id.btnGoal);
     }
 
+    // =========================================================
+    // SAFE AREA
+    // =========================================================
+
     private void setupSafeArea() {
-        View content = findViewById(R.id.contentLayout);
+        View content =
+                findViewById(R.id.contentLayout);
 
         if (content == null) {
             return;
@@ -142,9 +180,12 @@ public class HomeActivity extends AppCompatActivity {
                 content,
                 (view, insets) -> {
 
-                    Insets systemBars = insets.getInsets(
-                            WindowInsetsCompat.Type.systemBars()
-                    );
+                    Insets systemBars =
+                            insets.getInsets(
+                                    WindowInsetsCompat
+                                            .Type
+                                            .systemBars()
+                            );
 
                     view.setPadding(
                             dp(24),
@@ -160,24 +201,109 @@ public class HomeActivity extends AppCompatActivity {
         ViewCompat.requestApplyInsets(content);
     }
 
+    // =========================================================
+    // TẢI DỮ LIỆU HOME
+    // =========================================================
+
+    private void loadHomeData() {
+        updateGreeting();
+        loadRecentTransactions();
+    }
+
+    // =========================================================
+    // CẬP NHẬT LỜI CHÀO
+    // =========================================================
+
+    private void updateGreeting() {
+        if (tvHello == null) {
+            return;
+        }
+
+        FirebaseUser currentUser =
+                auth.getCurrentUser();
+
+        /*
+         * Chưa đăng nhập:
+         * giữ nguyên chữ Người dùng.
+         */
+        if (currentUser == null) {
+            tvHello.setText(
+                    "Xin chào, Người dùng! 👋"
+            );
+
+            return;
+        }
+
+        String userId =
+                currentUser.getUid();
+
+        /*
+         * Lấy tên đã lưu trong AccountStorage
+         * theo UID của tài khoản Firebase.
+         */
+        String fullName =
+                AccountStorage.getFullName(
+                        HomeActivity.this,
+                        userId
+                );
+
+        /*
+         * Nếu AccountStorage chưa có tên,
+         * lấy displayName từ Firebase.
+         */
+        if (fullName == null
+                || fullName.trim().isEmpty()) {
+
+            fullName =
+                    currentUser.getDisplayName();
+        }
+
+        /*
+         * Nếu Firebase cũng chưa có tên,
+         * tiếp tục hiện Người dùng.
+         */
+        if (fullName == null
+                || fullName.trim().isEmpty()) {
+
+            fullName = "Người dùng";
+        }
+
+        tvHello.setText(
+                "Xin chào, "
+                        + fullName.trim()
+                        + "! 👋"
+        );
+    }
+
+    // =========================================================
+    // NÚT ẨN / HIỆN SỐ DƯ
+    // =========================================================
+
     private void setupEyeButton() {
         if (imgEye == null) {
             return;
         }
 
-        imgEye.setOnClickListener(v -> {
-            if (isBalanceVisible) {
-                hideMoney();
-            } else {
-                showMoney();
-            }
-        });
+        imgEye.setOnClickListener(
+                view -> {
+
+                    if (isBalanceVisible) {
+                        hideMoney();
+                    } else {
+                        showMoney();
+                    }
+                }
+        );
     }
+
+    // =========================================================
+    // SỰ KIỆN CÁC NÚT CHỨC NĂNG
+    // =========================================================
 
     private void setupQuickButtons() {
         if (btnIncome != null) {
-            btnIncome.setOnClickListener(v ->
-                    startActivity(
+            btnIncome.setOnClickListener(
+                    view -> startActivity(
                             new Intent(
                                     HomeActivity.this,
                                     IncomeHistoryActivity.class
@@ -187,8 +313,8 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         if (btnExpense != null) {
-            btnExpense.setOnClickListener(v ->
-                    startActivity(
+            btnExpense.setOnClickListener(
+                    view -> startActivity(
                             new Intent(
                                     HomeActivity.this,
                                     ExpenseHistoryActivity.class
@@ -198,8 +324,8 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         if (btnTransfer != null) {
-            btnTransfer.setOnClickListener(v ->
-                    startActivity(
+            btnTransfer.setOnClickListener(
+                    view -> startActivity(
                             new Intent(
                                     HomeActivity.this,
                                     TransferActivity.class
@@ -209,8 +335,8 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         if (btnWallet != null) {
-            btnWallet.setOnClickListener(v ->
-                    startActivity(
+            btnWallet.setOnClickListener(
+                    view -> startActivity(
                             new Intent(
                                     HomeActivity.this,
                                     WalletActivity.class
@@ -220,8 +346,8 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         if (btnGoal != null) {
-            btnGoal.setOnClickListener(v ->
-                    startActivity(
+            btnGoal.setOnClickListener(
+                    view -> startActivity(
                             new Intent(
                                     HomeActivity.this,
                                     GoalActivity.class
@@ -231,8 +357,8 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         if (tvViewAll != null) {
-            tvViewAll.setOnClickListener(v ->
-                    startActivity(
+            tvViewAll.setOnClickListener(
+                    view -> startActivity(
                             new Intent(
                                     HomeActivity.this,
                                     AllTransactionActivity.class
@@ -242,77 +368,103 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         if (imgBell != null) {
-            imgBell.setOnClickListener(v -> {
-                Intent intent = new Intent(
-                        HomeActivity.this,
-                        NotificationActivity.class
-                );
+            imgBell.setOnClickListener(
+                    view -> {
 
-                startActivity(intent);
-            });
+                        Intent intent =
+                                new Intent(
+                                        HomeActivity.this,
+                                        NotificationActivity.class
+                                );
+
+                        startActivity(intent);
+                    }
+            );
         }
     }
 
-    private void loadHomeData() {
-        SharedPreferences preferences =
-                getSharedPreferences(
-                        "UserData",
-                        MODE_PRIVATE
-                );
-
-        String fullName = preferences.getString(
-                "fullName",
-                "Người dùng"
-        );
-
-        if (fullName == null || fullName.trim().isEmpty()) {
-            fullName = "Người dùng";
-        }
-
-        tvHello.setText(
-                "Xin chào, " + fullName.trim() + "! 👋"
-        );
-
-        loadRecentTransactions();
-    }
+    // =========================================================
+    // HIỂN THỊ SỐ TIỀN
+    // =========================================================
 
     private void showMoney() {
-        if (database == null || !database.isOpen()) {
+        if (database == null
+                || !database.isOpen()) {
+
             return;
         }
 
-        int totalIncome = getTotalIncome();
-        int totalExpense = getTotalExpense();
-        int balance = totalIncome - totalExpense;
+        int totalIncome =
+                getTotalIncome();
 
-        tvBalance.setText(formatMoney(balance));
+        int totalExpense =
+                getTotalExpense();
 
-        tvIncome.setText(
-                "Tổng thu\n" + formatMoney(totalIncome)
-        );
+        int balance =
+                totalIncome - totalExpense;
 
-        tvExpense.setText(
-                "Tổng chi\n" + formatMoney(totalExpense)
-        );
+        if (tvBalance != null) {
+            tvBalance.setText(
+                    formatMoney(balance)
+            );
+        }
 
-        imgEye.setImageResource(R.drawable.ic_eye_off);
+        if (tvIncome != null) {
+            tvIncome.setText(
+                    "Tổng thu\n"
+                            + formatMoney(totalIncome)
+            );
+        }
+
+        if (tvExpense != null) {
+            tvExpense.setText(
+                    "Tổng chi\n"
+                            + formatMoney(totalExpense)
+            );
+        }
+
+        if (imgEye != null) {
+            imgEye.setImageResource(
+                    R.drawable.ic_eye_off
+            );
+        }
+
         isBalanceVisible = true;
     }
 
+    // =========================================================
+    // ẨN SỐ TIỀN
+    // =========================================================
+
     private void hideMoney() {
-        tvBalance.setText("********");
+        if (tvBalance != null) {
+            tvBalance.setText("********");
+        }
 
-        tvIncome.setText(
-                "Tổng thu\n********"
-        );
+        if (tvIncome != null) {
+            tvIncome.setText(
+                    "Tổng thu\n********"
+            );
+        }
 
-        tvExpense.setText(
-                "Tổng chi\n********"
-        );
+        if (tvExpense != null) {
+            tvExpense.setText(
+                    "Tổng chi\n********"
+            );
+        }
 
-        imgEye.setImageResource(R.drawable.ic_eye);
+        if (imgEye != null) {
+            imgEye.setImageResource(
+                    R.drawable.ic_eye
+            );
+        }
+
         isBalanceVisible = false;
     }
+
+    // =========================================================
+    // TÍNH TỔNG THU
+    // =========================================================
 
     private int getTotalIncome() {
         int total = 0;
@@ -321,16 +473,20 @@ public class HomeActivity extends AppCompatActivity {
 
         try {
             cursor = database.rawQuery(
-                    "SELECT SUM(ABS(amount)) " +
-                            "FROM transactions " +
-                            "WHERE type = 'INCOME'",
+                    "SELECT SUM(ABS(amount)) "
+                            + "FROM transactions "
+                            + "WHERE type = 'INCOME'",
                     null
             );
 
-            if (cursor.moveToFirst() && !cursor.isNull(0)) {
+            if (cursor.moveToFirst()
+                    && !cursor.isNull(0)) {
+
                 total = cursor.getInt(0);
             }
+
         } finally {
+
             if (cursor != null) {
                 cursor.close();
             }
@@ -338,6 +494,10 @@ public class HomeActivity extends AppCompatActivity {
 
         return total;
     }
+
+    // =========================================================
+    // TÍNH TỔNG CHI
+    // =========================================================
 
     private int getTotalExpense() {
         int total = 0;
@@ -346,16 +506,20 @@ public class HomeActivity extends AppCompatActivity {
 
         try {
             cursor = database.rawQuery(
-                    "SELECT SUM(ABS(amount)) " +
-                            "FROM transactions " +
-                            "WHERE type = 'EXPENSE'",
+                    "SELECT SUM(ABS(amount)) "
+                            + "FROM transactions "
+                            + "WHERE type = 'EXPENSE'",
                     null
             );
 
-            if (cursor.moveToFirst() && !cursor.isNull(0)) {
+            if (cursor.moveToFirst()
+                    && !cursor.isNull(0)) {
+
                 total = cursor.getInt(0);
             }
+
         } finally {
+
             if (cursor != null) {
                 cursor.close();
             }
@@ -364,10 +528,15 @@ public class HomeActivity extends AppCompatActivity {
         return total;
     }
 
+    // =========================================================
+    // TẢI GIAO DỊCH GẦN ĐÂY
+    // =========================================================
+
     private void loadRecentTransactions() {
         if (layoutTransactions == null
                 || database == null
                 || !database.isOpen()) {
+
             return;
         }
 
@@ -377,26 +546,31 @@ public class HomeActivity extends AppCompatActivity {
 
         try {
             cursor = database.rawQuery(
-                    "SELECT category, date, amount, type, icon, color " +
-                            "FROM transactions " +
-                            "ORDER BY id DESC " +
-                            "LIMIT 5",
+                    "SELECT category, date, amount, type, icon, color "
+                            + "FROM transactions "
+                            + "ORDER BY id DESC "
+                            + "LIMIT 5",
                     null
             );
 
             while (cursor.moveToNext()) {
+                String category =
+                        cursor.getString(0);
 
-                String category = cursor.getString(0);
+                String date =
+                        cursor.getString(1);
 
-                String date = cursor.getString(1);
+                int amount =
+                        cursor.getInt(2);
 
-                int amount = cursor.getInt(2);
+                String type =
+                        cursor.getString(3);
 
-                String type = cursor.getString(3);
+                String iconName =
+                        cursor.getString(4);
 
-                String iconName = cursor.getString(4);
-
-                String colorCode = cursor.getString(5);
+                String colorCode =
+                        cursor.getString(5);
 
                 if (category == null
                         || category.trim().isEmpty()) {
@@ -415,11 +589,16 @@ public class HomeActivity extends AppCompatActivity {
             }
 
         } finally {
+
             if (cursor != null) {
                 cursor.close();
             }
         }
     }
+
+    // =========================================================
+    // THÊM MỘT DÒNG GIAO DỊCH
+    // =========================================================
 
     private void addTransaction(
             String title,
@@ -429,10 +608,17 @@ public class HomeActivity extends AppCompatActivity {
             String iconName,
             String colorCode
     ) {
-        LinearLayout row = new LinearLayout(this);
+        LinearLayout row =
+                new LinearLayout(this);
 
-        row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        row.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
         row.setPadding(
                 0,
                 dp(6),
@@ -449,8 +635,13 @@ public class HomeActivity extends AppCompatActivity {
                         dp(38)
                 );
 
-        containerParams.setMarginEnd(dp(10));
-        iconContainer.setLayoutParams(containerParams);
+        containerParams.setMarginEnd(
+                dp(10)
+        );
+
+        iconContainer.setLayoutParams(
+                containerParams
+        );
 
         GradientDrawable iconBackground =
                 new GradientDrawable();
@@ -463,13 +654,17 @@ public class HomeActivity extends AppCompatActivity {
             iconBackground.setColor(
                     Color.parseColor(colorCode)
             );
+
         } catch (Exception exception) {
+
             iconBackground.setColor(
                     Color.parseColor("#ADB5BD")
             );
         }
 
-        iconContainer.setBackground(iconBackground);
+        iconContainer.setBackground(
+                iconBackground
+        );
 
         ImageView imageIcon =
                 new ImageView(this);
@@ -480,23 +675,42 @@ public class HomeActivity extends AppCompatActivity {
                         dp(18)
                 );
 
-        iconParams.gravity = Gravity.CENTER;
-        imageIcon.setLayoutParams(iconParams);
+        iconParams.gravity =
+                Gravity.CENTER;
 
-        int iconResource = getResources().getIdentifier(
-                iconName,
-                "drawable",
-                getPackageName()
+        imageIcon.setLayoutParams(
+                iconParams
         );
 
-        if (iconResource == 0) {
-            iconResource = R.drawable.ic_dot;
+        int iconResource = 0;
+
+        if (iconName != null
+                && !iconName.trim().isEmpty()) {
+
+            iconResource =
+                    getResources().getIdentifier(
+                            iconName,
+                            "drawable",
+                            getPackageName()
+                    );
         }
 
-        imageIcon.setImageResource(iconResource);
-        imageIcon.setColorFilter(Color.WHITE);
+        if (iconResource == 0) {
+            iconResource =
+                    R.drawable.ic_dot;
+        }
 
-        iconContainer.addView(imageIcon);
+        imageIcon.setImageResource(
+                iconResource
+        );
+
+        imageIcon.setColorFilter(
+                Color.WHITE
+        );
+
+        iconContainer.addView(
+                imageIcon
+        );
 
         TextView tvInfo =
                 new TextView(this);
@@ -509,11 +723,19 @@ public class HomeActivity extends AppCompatActivity {
                 )
         );
 
+        String displayDate =
+                date == null
+                        ? ""
+                        : date;
+
         tvInfo.setText(
-                title + "\n" + date
+                title
+                        + "\n"
+                        + displayDate
         );
 
         tvInfo.setTextSize(14);
+
         tvInfo.setTextColor(
                 ContextCompat.getColor(
                         this,
@@ -529,15 +751,22 @@ public class HomeActivity extends AppCompatActivity {
 
         if ("INCOME".equals(type)) {
             tvMoney.setText(
-                    "+" + formatMoney(Math.abs(money))
+                    "+"
+                            + formatMoney(
+                            Math.abs(money)
+                    )
             );
 
             tvMoney.setTextColor(
                     Color.parseColor("#00A86B")
             );
+
         } else {
             tvMoney.setText(
-                    "-" + formatMoney(Math.abs(money))
+                    "-"
+                            + formatMoney(
+                            Math.abs(money)
+                    )
             );
 
             tvMoney.setTextColor(
@@ -552,21 +781,9 @@ public class HomeActivity extends AppCompatActivity {
         layoutTransactions.addView(row);
     }
 
-    private int dp(int value) {
-        return Math.round(
-                value
-                        * getResources()
-                        .getDisplayMetrics()
-                        .density
-        );
-    }
-
-    private String formatMoney(int money) {
-        return String.format(
-                "%,d đ",
-                money
-        ).replace(",", ".");
-    }
+    // =========================================================
+    // CHẤM ĐỎ THÔNG BÁO
+    // =========================================================
 
     private void updateNotificationDot() {
         if (viewNotificationDot == null) {
@@ -574,7 +791,8 @@ public class HomeActivity extends AppCompatActivity {
         }
 
         if (dbHelper == null) {
-            dbHelper = new DatabaseHelper(this);
+            dbHelper =
+                    new DatabaseHelper(this);
         }
 
         int unreadCount =
@@ -587,8 +805,32 @@ public class HomeActivity extends AppCompatActivity {
         );
 
         /*
-         * Đảm bảo chấm đỏ luôn nằm trên icon chuông.
+         * Đảm bảo chấm đỏ nằm phía trên icon chuông.
          */
         viewNotificationDot.bringToFront();
+    }
+
+    // =========================================================
+    // ĐỔI DP THÀNH PX
+    // =========================================================
+
+    private int dp(int value) {
+        return Math.round(
+                value
+                        * getResources()
+                        .getDisplayMetrics()
+                        .density
+        );
+    }
+
+    // =========================================================
+    // ĐỊNH DẠNG TIỀN
+    // =========================================================
+
+    private String formatMoney(int money) {
+        return String.format(
+                "%,d đ",
+                money
+        ).replace(",", ".");
     }
 }

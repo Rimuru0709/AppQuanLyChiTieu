@@ -80,7 +80,7 @@
             android:drawableStart="@drawable/ic_email"
             android:drawablePadding="10dp"
             android:gravity="center_vertical"
-            android:hint="Email hoặc số điện thoại"
+            android:hint="Email"
             android:imeOptions="actionNext"
             android:inputType="textEmailAddress"
             android:maxLines="1"
