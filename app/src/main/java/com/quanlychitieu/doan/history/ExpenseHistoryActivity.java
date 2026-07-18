@@ -194,6 +194,9 @@ public class ExpenseHistoryActivity extends AppCompatActivity {
         }
     }
 
+    //=====================
+    // Ẩn bàn phím
+    //=====================
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
         if (event.getAction() ==

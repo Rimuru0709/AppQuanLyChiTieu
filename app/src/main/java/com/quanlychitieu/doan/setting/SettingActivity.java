@@ -9,22 +9,26 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.activity.LoginActivity;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+public class SettingActivity
+        extends AppCompatActivity {
 
-public class SettingActivity extends AppCompatActivity {
+    private static final String PREF_SETTING =
+            "AppSetting";
 
-    private static final String PREF_SETTING = "AppSetting";
-    private static final String KEY_THEME = "theme";
+    private static final String KEY_THEME =
+            "theme";
 
     private ImageView imgBack;
 
@@ -36,25 +40,33 @@ public class SettingActivity extends AppCompatActivity {
     private LinearLayout itemLogout;
 
     private TextView tvThemeValue;
+    private TextView tvLoginLogout;
+
+    private ImageView imgLoginLogout;
 
     private SharedPreferences preferences;
 
     private FirebaseAuth auth;
 
-    private TextView tvLoginLogout;
-    private ImageView imgLoginLogout;
-
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(
+            Bundle savedInstanceState
+    ) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_setting);
 
-        preferences = getSharedPreferences(
-                PREF_SETTING,
-                MODE_PRIVATE
+        setContentView(
+                R.layout.activity_setting
         );
 
-        auth = FirebaseAuth.getInstance();
+        preferences =
+                getSharedPreferences(
+                        PREF_SETTING,
+                        MODE_PRIVATE
+                );
+
+        auth =
+                FirebaseAuth.getInstance();
+
         initViews();
         setupHeaderInsets();
         BottomNavHelper.setup(this);
@@ -70,81 +82,145 @@ public class SettingActivity extends AppCompatActivity {
         if (preferences != null) {
             updateSettingValues();
         }
+
         updateLoginLogoutUI();
     }
 
     private void initViews() {
-        imgBack = findViewById(R.id.imgBack);
+        imgBack =
+                findViewById(
+                        R.id.imgBack
+                );
 
-        itemAccount = findViewById(R.id.itemAccount);
-        itemBudget = findViewById(R.id.itemBudget);
-        itemReminder = findViewById(R.id.itemReminder);
-        itemBackup = findViewById(R.id.itemBackup);
-        itemTheme = findViewById(R.id.itemTheme);
-        itemLogout = findViewById(R.id.itemLogout);
-        tvThemeValue = findViewById(R.id.tvThemeValue);
-        tvLoginLogout = findViewById(R.id.tvLoginLogout);
-        imgLoginLogout = findViewById(R.id.imgLoginLogout);
-        tvLoginLogout = findViewById(R.id.tvLoginLogout);
-        imgLoginLogout = findViewById(R.id.imgLoginLogout);
+        itemAccount =
+                findViewById(
+                        R.id.itemAccount
+                );
+
+        itemBudget =
+                findViewById(
+                        R.id.itemBudget
+                );
+
+        itemReminder =
+                findViewById(
+                        R.id.itemReminder
+                );
+
+        itemBackup =
+                findViewById(
+                        R.id.itemBackup
+                );
+
+        itemTheme =
+                findViewById(
+                        R.id.itemTheme
+                );
+
+        itemLogout =
+                findViewById(
+                        R.id.itemLogout
+                );
+
+        tvThemeValue =
+                findViewById(
+                        R.id.tvThemeValue
+                );
+
+        tvLoginLogout =
+                findViewById(
+                        R.id.tvLoginLogout
+                );
+
+        imgLoginLogout =
+                findViewById(
+                        R.id.imgLoginLogout
+                );
     }
 
     private void setupHeaderInsets() {
-        View header = findViewById(R.id.headerSetting);
+        View header =
+                findViewById(
+                        R.id.headerSetting
+                );
 
         if (header == null) {
             return;
         }
 
-        ViewCompat.setOnApplyWindowInsetsListener(
-                header,
-                (view, insets) -> {
+        ViewCompat
+                .setOnApplyWindowInsetsListener(
+                        header,
+                        (view, insets) -> {
 
-                    Insets systemBars = insets.getInsets(
-                            WindowInsetsCompat.Type.systemBars()
-                    );
+                            Insets systemBars =
+                                    insets.getInsets(
+                                            WindowInsetsCompat
+                                                    .Type
+                                                    .systemBars()
+                                    );
 
-                    view.setPadding(
-                            dpToPx(16),
-                            systemBars.top + dpToPx(8),
-                            dpToPx(16),
-                            dpToPx(8)
-                    );
+                            view.setPadding(
+                                    dpToPx(16),
+                                    systemBars.top
+                                            + dpToPx(8),
+                                    dpToPx(16),
+                                    dpToPx(8)
+                            );
 
-                    view.getLayoutParams().height =
-                            dpToPx(64) + systemBars.top;
+                            view
+                                    .getLayoutParams()
+                                    .height =
+                                    dpToPx(64)
+                                            + systemBars.top;
 
-                    view.requestLayout();
+                            view.requestLayout();
 
-                    return insets;
-                }
-        );
+                            return insets;
+                        }
+                );
 
-        ViewCompat.requestApplyInsets(header);
+        ViewCompat
+                .requestApplyInsets(
+                        header
+                );
     }
 
     private void setupEvents() {
         if (imgBack != null) {
-            imgBack.setOnClickListener(v -> finish());
+            imgBack.setOnClickListener(
+                    v -> finish()
+            );
         }
 
         if (itemAccount != null) {
             itemAccount.setOnClickListener(v -> {
-                Intent intent = new Intent(
-                        SettingActivity.this,
-                        AccountActivity.class
-                );
 
-                startActivity(intent);
+                FirebaseUser currentUser =
+                        auth.getCurrentUser();
+
+                if (currentUser == null) {
+
+                    showLoginRequiredDialog();
+
+                } else {
+
+                    Intent intent = new Intent(
+                            SettingActivity.this,
+                            AccountActivity.class
+                    );
+
+                    startActivity(intent);
+                }
             });
         }
-
         if (itemBudget != null) {
             itemBudget.setOnClickListener(v -> {
-                Intent intent = new Intent(
-                        SettingActivity.this,
-                        BudgetActivity.class
-                );
+                Intent intent =
+                        new Intent(
+                                SettingActivity.this,
+                                BudgetActivity.class
+                        );
 
                 startActivity(intent);
             });
@@ -152,21 +228,38 @@ public class SettingActivity extends AppCompatActivity {
 
         if (itemReminder != null) {
             itemReminder.setOnClickListener(v -> {
-                Intent intent = new Intent(
-                        SettingActivity.this,
-                        ReminderActivity.class
-                );
+                Intent intent =
+                        new Intent(
+                                SettingActivity.this,
+                                ReminderActivity.class
+                        );
 
                 startActivity(intent);
             });
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Sao lưu và khôi phục
+        |--------------------------------------------------------------------------
+        */
+
         if (itemBackup != null) {
             itemBackup.setOnClickListener(v -> {
-                Intent intent = new Intent(
-                        SettingActivity.this,
-                        BackupActivity.class
-                );
+
+                FirebaseUser currentUser =
+                        auth.getCurrentUser();
+
+                if (currentUser == null) {
+                    showLoginRequiredDialog();
+                    return;
+                }
+
+                Intent intent =
+                        new Intent(
+                                SettingActivity.this,
+                                BackupActivity.class
+                        );
 
                 startActivity(intent);
             });
@@ -174,10 +267,11 @@ public class SettingActivity extends AppCompatActivity {
 
         if (itemTheme != null) {
             itemTheme.setOnClickListener(v -> {
-                Intent intent = new Intent(
-                        SettingActivity.this,
-                        ThemeActivity.class
-                );
+                Intent intent =
+                        new Intent(
+                                SettingActivity.this,
+                                ThemeActivity.class
+                        );
 
                 startActivity(intent);
             });
@@ -190,7 +284,6 @@ public class SettingActivity extends AppCompatActivity {
                         auth.getCurrentUser();
 
                 if (user == null) {
-
                     Intent intent =
                             new Intent(
                                     SettingActivity.this,
@@ -198,14 +291,46 @@ public class SettingActivity extends AppCompatActivity {
                             );
 
                     startActivity(intent);
-
                 } else {
-
                     logout();
                 }
-
             });
         }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hộp thoại yêu cầu đăng nhập
+    |--------------------------------------------------------------------------
+    */
+
+    private void showLoginRequiredDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(
+                        "Yêu cầu đăng nhập"
+                )
+                .setMessage(
+                        "Bạn cần đăng nhập để sử dụng tính năng sao lưu và khôi phục dữ liệu."
+                )
+                .setNegativeButton(
+                        "Hủy",
+                        (dialog, which) ->
+                                dialog.dismiss()
+                )
+                .setPositiveButton(
+                        "Đăng nhập",
+                        (dialog, which) -> {
+                            Intent intent =
+                                    new Intent(
+                                            SettingActivity.this,
+                                            LoginActivity.class
+                                    );
+
+                            startActivity(intent);
+                        }
+                )
+                .setCancelable(true)
+                .show();
     }
 
     private void updateSettingValues() {
@@ -217,24 +342,32 @@ public class SettingActivity extends AppCompatActivity {
             return;
         }
 
-        String currentTheme = preferences.getString(
-                KEY_THEME,
-                "light"
-        );
+        String currentTheme =
+                preferences.getString(
+                        KEY_THEME,
+                        "light"
+                );
 
         if ("dark".equals(currentTheme)) {
             tvThemeValue.setText("Tối");
 
-        } else if ("system".equals(currentTheme)) {
-            tvThemeValue.setText("Theo hệ thống");
+        } else if (
+                "system".equals(
+                        currentTheme
+                )
+        ) {
+            tvThemeValue.setText(
+                    "Theo hệ thống"
+            );
 
         } else {
             tvThemeValue.setText("Sáng");
         }
     }
 
-    private void logout() {
 
+
+    private void logout() {
         auth.signOut();
 
         Toast.makeText(
@@ -261,6 +394,39 @@ public class SettingActivity extends AppCompatActivity {
         finish();
     }
 
+    private void updateLoginLogoutUI() {
+        FirebaseUser user =
+                auth.getCurrentUser();
+
+        if (user == null) {
+            if (tvLoginLogout != null) {
+                tvLoginLogout.setText(
+                        "Đăng nhập"
+                );
+            }
+
+            if (imgLoginLogout != null) {
+                imgLoginLogout
+                        .setImageResource(
+                                R.drawable.ic_logout
+                        );
+            }
+        } else {
+            if (tvLoginLogout != null) {
+                tvLoginLogout.setText(
+                        "Đăng xuất"
+                );
+            }
+
+            if (imgLoginLogout != null) {
+                imgLoginLogout
+                        .setImageResource(
+                                R.drawable.ic_logout
+                        );
+            }
+        }
+    }
+
     private int dpToPx(int dp) {
         return Math.round(
                 dp
@@ -268,37 +434,5 @@ public class SettingActivity extends AppCompatActivity {
                         .getDisplayMetrics()
                         .density
         );
-    }
-
-    private void updateLoginLogoutUI() {
-
-        FirebaseUser user =
-                auth.getCurrentUser();
-
-        if (user == null) {
-
-            if (tvLoginLogout != null) {
-                tvLoginLogout.setText("Đăng nhập");
-            }
-
-            if (imgLoginLogout != null) {
-                imgLoginLogout.setImageResource(
-                        R.drawable.ic_logout
-                );
-            }
-
-        } else {
-
-            if (tvLoginLogout != null) {
-                tvLoginLogout.setText("Đăng xuất");
-            }
-
-            if (imgLoginLogout != null) {
-                imgLoginLogout.setImageResource(
-                        R.drawable.ic_logout
-                );
-            }
-
-        }
     }
 }
