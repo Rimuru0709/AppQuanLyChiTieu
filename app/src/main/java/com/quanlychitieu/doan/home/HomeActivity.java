@@ -122,6 +122,7 @@ public class HomeActivity extends AppCompatActivity {
 
     // =========================================================
     // ON DESTROY
+    // Khi người dùng đóng ứng dụng sẽ tự động giải phóng bộ nhớ
     // =========================================================
 
     @Override
