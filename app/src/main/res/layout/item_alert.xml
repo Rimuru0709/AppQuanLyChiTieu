@@ -1,28 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
+    android:background="@color/card_background"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="8dp">
+    android:padding="10dp">
 
-    <!-- Icon -->
-    <ImageView
-        android:id="@+id/imgIcon"
+    <FrameLayout
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:src="@mipmap/ic_launcher"
-        android:background="#EEEEEE"
-        android:padding="8dp" />
+        android:background="@drawable/bg_card">
 
-    <!-- Thông tin -->
+        <ImageView
+            android:id="@+id/imgIcon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_circle"
+            android:padding="10dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_dot"
+            app:tint="@color/white" />
+
+    </FrameLayout>
+
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:layout_marginStart="12dp"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
@@ -30,8 +39,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Ăn uống"
-            android:textColor="#000000"
-            android:textSize="16sp"
+            android:textColor="@color/text_primary"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
@@ -39,35 +48,35 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            android:text="Ngân sách: 2.000.000 đ/tháng"
-            android:textColor="#666666"
-            android:textSize="13sp" />
+            android:text="Ngân sách: 2.000.000 đ"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
 
         <TextView
             android:id="@+id/txtUsed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Đã dùng: 1.600.000 đ"
-            android:textColor="#666666"
-            android:textSize="13sp" />
+            android:text="Đã chi: 1.600.000 đ"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
 
     </LinearLayout>
 
-    <!-- Phần trăm -->
     <TextView
         android:id="@+id/txtPercent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="8dp"
         android:text="80%"
-        android:textColor="#F44336"
-        android:textSize="16sp"
+        android:textColor="@color/delete_color"
+        android:textSize="15sp"
         android:textStyle="bold" />
 
-    <!-- Công tắc -->
     <Switch
         android:id="@+id/swAlert"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:thumbTint="@color/switch_thumb_color"
+        android:trackTint="@color/switch_track_color" />
 
 </LinearLayout>

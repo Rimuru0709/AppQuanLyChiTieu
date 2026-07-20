@@ -2,178 +2,180 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F4F6F9">
+    android:background="@color/app_background">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/layoutHeaderWallet"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:background="#2C3E50"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageView
-            android:id="@+id/imgWalletBack"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="12dp"
-            android:padding="8dp"
-            android:src="@drawable/ic_lock"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:tint="#FFFFFF" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Ví Của Tôi"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
+    <!-- Nội dung -->
+    <ScrollView
+        android:id="@+id/scrollWallet"
+        android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@color/app_background"
         android:fillViewport="true"
-        app:layout_constraintBottom_toTopOf="@id/btnAddWallet"
-        app:layout_constraintTop_toBottomOf="@id/layoutHeaderWallet">
+        android:overScrollMode="never"
+        android:scrollbars="none"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomNav"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
+            android:id="@+id/contentLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@color/app_background"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="24dp">
 
-            <androidx.cardview.widget.CardView
+            <!-- Header -->
+            <LinearLayout
+                android:id="@+id/headerWallet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="20dp"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
+                android:minHeight="56dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/imgBack"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:clickable="true"
+                    android:contentDescription="Quay lại"
+                    android:focusable="true"
+                    android:padding="6dp"
+                    android:src="@drawable/ic_back"
+                    app:tint="@color/text_secondary" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Ví của tôi"
+                    android:textColor="@color/text_primary"
+                    android:textSize="22sp"
+                    android:textStyle="bold" />
+
+                <View
+                    android:layout_width="36dp"
+                    android:layout_height="36dp" />
+
+            </LinearLayout>
+
+            <!-- Card tổng số dư -->
+            <LinearLayout
+                android:id="@+id/cardTotalWallet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="130dp"
+                android:layout_marginTop="14dp"
+                android:background="@drawable/bg_balance_card"
+                android:orientation="vertical"
+                android:padding="18dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tổng số dư các ví"
+                    android:textColor="#EAF1FF"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvTotalWalletBalance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="0 đ"
+                    android:textColor="@color/white"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="#2980B9"
-                    android:orientation="vertical"
-                    android:padding="20dp">
+                    android:layout_marginTop="14dp"
+                    android:orientation="horizontal">
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:id="@+id/tvWalletIncome"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Tổng số dư"
-                        android:textColor="#E0E0E0"
-                        android:textSize="14sp" />
+                        android:layout_weight="1"
+                        android:text="Thu\n0 đ"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
-                    <RelativeLayout
-                        android:layout_width="match_parent"
+                    <TextView
+                        android:id="@+id/tvWalletExpense"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp">
+                        android:layout_weight="1"
+                        android:gravity="end"
+                        android:text="Chi\n0 đ"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
 
-                        <TextView
-                            android:id="@+id/tvTotalBalance"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="15.500.000 đ"
-                            android:textColor="#FFFFFF"
-                            android:textSize="28sp"
-                            android:textStyle="bold" />
-
-                        <ImageView
-                            android:id="@+id/imgToggleHideBalance"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerInParent="true"
-                            android:src="@drawable/ic_lock"
-                            android:tint="#FFFFFF" />
-                    </RelativeLayout>
                 </LinearLayout>
-            </androidx.cardview.widget.CardView>
 
+            </LinearLayout>
+
+            <!-- Thêm ví -->
+            <TextView
+                android:id="@+id/btnAddWallet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="54dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_input"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:gravity="center"
+                android:paddingTop="12dp"
+                android:paddingBottom="12dp"
+                android:text="+ Thêm ví mới"
+                android:textColor="@color/color_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <!-- Tiêu đề danh sách -->
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                android:text="Danh sách tài khoản / Ví"
-                android:textColor="#2C3E50"
-                android:textSize="15sp"
+                android:layout_marginTop="22dp"
+                android:text="Danh sách ví"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
                 android:textStyle="bold" />
 
-            <androidx.cardview.widget.CardView
+            <!-- Danh sách ví được tạo bằng Java -->
+            <LinearLayout
+                android:id="@+id/layoutWallets"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
-
-                <RelativeLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="16dp"
-                    android:background="#FFFFFF">
-
-                    <ImageView
-                        android:id="@+id/imgWalletIcon1"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:src="@drawable/ic_lock" />
-
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_toEndOf="@id/imgWalletIcon1"
-                        android:layout_marginStart="12dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Tiền mặt"
-                            android:textColor="#2C3E50"
-                            android:textSize="16sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Ví mặc định"
-                            android:textColor="#95A5A6"
-                            android:textSize="12sp" />
-                    </LinearLayout>
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_alignParentEnd="true"
-                        android:layout_centerInParent="true"
-                        android:text="500.000 đ"
-                        android:textColor="#27AE60"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-                </RelativeLayout>
-            </androidx.cardview.widget.CardView>
+                android:layout_marginTop="12dp"
+                android:orientation="vertical" />
 
         </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
 
-    <Button
-        android:id="@+id/btnAddWallet"
-        android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:layout_margin="16dp"
-        android:text="+ THÊM TÀI KHOẢN / VÍ"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:backgroundTint="#2C3E50"
-        app:layout_constraintBottom_toBottomOf="parent" />
+    </ScrollView>
+
+    <!-- Bottom Navigation -->
+    <include
+        android:id="@+id/bottomNav"
+        layout="@layout/bottom_nav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
