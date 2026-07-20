@@ -680,7 +680,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // =========================================================
-    // TRANSACTIONS
+    // TRANSACTIONS (Thêm giao dịch)
     // =========================================================
 
     public long insertTransaction(

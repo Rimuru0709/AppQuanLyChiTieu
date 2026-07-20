@@ -27,8 +27,8 @@
 
             <ImageView
                 android:id="@+id/imgBack"
-                android:layout_width="62dp"
-                android:layout_height="62dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:clickable="true"
                 android:contentDescription="Quay lại"
                 android:focusable="true"
