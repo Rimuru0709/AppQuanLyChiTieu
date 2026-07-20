@@ -3,8 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
+        android:name=".app.MyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -14,34 +17,34 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.QuanLyChiTieu">
 
+        <!-- Facebook SDK -->
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
-
         <meta-data
             android:name="com.facebook.sdk.ClientToken"
             android:value="@string/facebook_client_token" />
 
+        <!-- File Provider -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
             android:grantUriPermissions="true">
-
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
 
+        <!-- Facebook Activity -->
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:exported="false"
             android:label="@string/app_name" />
-
         <activity
             android:name="com.facebook.CustomTabActivity"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -52,15 +55,11 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
+        <!-- Trang chủ -->
         <activity
             android:name=".home.HomeActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -68,71 +67,128 @@
             </intent-filter>
         </activity>
 
+        <!-- Đăng ký -->
         <activity
             android:name=".activity.SignUpActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Đăng nhập -->
         <activity
             android:name=".activity.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Lịch sử thu nhập -->
         <activity
             android:name=".history.IncomeHistoryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Lịch sử chi tiêu -->
         <activity
             android:name=".history.ExpenseHistoryActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Chọn giao dịch -->
         <activity
             android:name=".choosetransaction.ChooseTransactionActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Tất cả giao dịch -->
         <activity
             android:name=".alltransaction.AllTransactionActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Cài đặt -->
         <activity
             android:name=".setting.SettingActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Ngân sách -->
         <activity
             android:name=".setting.BudgetActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Giao diện -->
+        <activity
+            android:name=".setting.ThemeActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Cảnh báo -->
         <activity
             android:name=".alert.AlertActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Thống kê -->
         <activity
             android:name=".statistic.StatisticActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Mục tiêu -->
         <activity
-            android:name=".category.CategoryActivity"
+            android:name=".goal.GoalActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Thêm mục tiêu -->
+        <activity
+            android:name=".goal.AddGoalActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Chuyển khoản -->
         <activity
             android:name=".transfer.TransferActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Ví -->
         <activity
             android:name=".wallet.WalletActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Chỉnh sửa giao dịch -->
+        <activity
+            android:name=".edittransaction.EditTransactionActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Nhắc nhở -->
+        <activity
+            android:name=".setting.ReminderActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <receiver
+            android:name=".alert.ReminderReceiver"
+            android:exported="false" />
+
+        <activity
+            android:name=".notification.NotificationActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".notification.NotificationDetailActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".setting.BackupActivity"
+            android:exported="false"/>
+
+        <activity
+            android:name=".setting.AccountActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

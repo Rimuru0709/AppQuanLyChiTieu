@@ -3,6 +3,7 @@ package com.quanlychitieu.doan.choosetransaction;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -20,14 +21,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.content.ContextCompat;
 
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.database.DatabaseHelper;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Calendar;
 
 public class ChooseTransactionActivity extends AppCompatActivity {
 
@@ -39,7 +42,9 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     private Button btnSave;
 
     private DatabaseHelper databaseHelper;
+
     private String transactionType = "EXPENSE";
+    private String selectedWallet = "Ví mặc định";
 
     private String selectedIcon = "ic_food";
     private String selectedColor = "#FF3131";
@@ -66,6 +71,8 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         edtOtherCategory = findViewById(R.id.edtOtherCategory);
 
         tvWallet = findViewById(R.id.tvWallet);
+        tvWallet.setText(selectedWallet);
+
         btnSave = findViewById(R.id.btnSave);
 
         ImageView imgback = findViewById(R.id.imgback);
@@ -145,9 +152,23 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         tabThuNhap.setBackgroundResource(R.drawable.bg_tab_unselected);
 
         tabChiTieu.setTextColor(Color.WHITE);
-        tabThuNhap.setTextColor(Color.parseColor("#111827"));
+
+        tabThuNhap.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
 
         tvCategoryName.setText("Ăn uống");
+
+        tvCategoryName.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
         imgCategoryIcon.setImageResource(R.drawable.ic_food);
         setIconBackgroundColor("#FF3131");
 
@@ -165,9 +186,23 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         tabChiTieu.setBackgroundResource(R.drawable.bg_tab_unselected);
 
         tabThuNhap.setTextColor(Color.WHITE);
-        tabChiTieu.setTextColor(Color.parseColor("#111827"));
+
+        tabChiTieu.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
 
         tvCategoryName.setText("Lương");
+
+        tvCategoryName.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
         imgCategoryIcon.setImageResource(R.drawable.ic_salary);
         setIconBackgroundColor("#2ECC71");
 
@@ -184,7 +219,11 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     }
 
     private void setCurrentDate() {
-        String currentDate = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(new Date());
+        String currentDate = new SimpleDateFormat(
+                "dd/MM/yyyy",
+                Locale.getDefault()
+        ).format(new Date());
+
         edtDate.setText(currentDate);
     }
 
@@ -201,6 +240,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                             month + 1,
                             year
                     );
+
                     edtDate.setText(selectedDate);
                 },
                 calendar.get(Calendar.YEAR),
@@ -212,17 +252,29 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     }
 
     private void showWalletDialog() {
-        String[] wallets = {
-                "Ví mặc định",
-                "Tiết kiệm",
-                "Ngân hàng",
-                "Momo"
-        };
+        Cursor cursor = databaseHelper.getAllWallets();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Chọn ví");
-        builder.setItems(wallets, (dialog, which) -> tvWallet.setText(wallets[which]));
-        builder.show();
+        ArrayList<String> walletList = new ArrayList<>();
+
+        while (cursor.moveToNext()) {
+            walletList.add(cursor.getString(0));
+        }
+
+        cursor.close();
+
+        if (walletList.isEmpty()) {
+            walletList.add("Ví mặc định");
+        }
+
+        String[] wallets = walletList.toArray(new String[0]);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Chọn ví")
+                .setItems(wallets, (dialog, which) -> {
+                    selectedWallet = wallets[which];
+                    tvWallet.setText(selectedWallet);
+                })
+                .show();
     }
 
     private void showCategoryDialog() {
@@ -256,6 +308,13 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         builder.setItems(categories, (dialog, which) -> {
             String selectedCategory = categories[which];
             tvCategoryName.setText(selectedCategory);
+
+            tvCategoryName.setTextColor(
+                    ContextCompat.getColor(
+                            this,
+                            R.color.text_primary
+                    )
+            );
 
             if (selectedCategory.equals("Khác")) {
                 edtOtherCategory.setVisibility(View.VISIBLE);
@@ -312,7 +371,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                 selectedIcon = "ic_heart";
                 selectedColor = "#FFB3C6";
                 break;
-            case 6:
+            default:
                 imgCategoryIcon.setImageResource(R.drawable.ic_dot);
                 setIconBackgroundColor("#ADB5BD");
                 selectedIcon = "ic_dot";
@@ -359,7 +418,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                 selectedIcon = "ic_donate";
                 selectedColor = "#9D6B53";
                 break;
-            case 6:
+            default:
                 imgCategoryIcon.setImageResource(R.drawable.ic_dot);
                 setIconBackgroundColor("#ADB5BD");
                 selectedIcon = "ic_dot";
@@ -370,20 +429,37 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
     private void saveTransaction() {
         String amountText = edtAmount.getText().toString().trim();
-        String category = tvCategoryName.getText().toString();
-        String date = edtDate.getText().toString();
-        String wallet = tvWallet.getText().toString();
+
+        String category = tvCategoryName.getText().toString().trim();
+
+        String date = edtDate.getText().toString().trim();
+
+        String wallet = selectedWallet;
+
+        String note = edtNote.getText().toString().trim();
 
         if (amountText.isEmpty()) {
-            Toast.makeText(this, "Vui lòng nhập số tiền", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "Vui lòng nhập số tiền",
+                    Toast.LENGTH_SHORT
+            ).show();
+
             return;
         }
 
-        if (category.equals("Khác")) {
+        /*
+         * Nếu người dùng chọn Khác thì lấy tên danh mục
+         * được nhập trong edtOtherCategory.
+         */
+        if ("Khác".equals(category)) {
             String otherCategory = edtOtherCategory.getText().toString().trim();
 
             if (otherCategory.isEmpty()) {
-                edtOtherCategory.setError("Nhập tên danh mục khác");
+                edtOtherCategory.setError(
+                        "Nhập tên danh mục khác"
+                );
+
+                edtOtherCategory.requestFocus();
                 return;
             }
 
@@ -392,19 +468,74 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             selectedColor = "#ADB5BD";
         }
 
-        int amount = Integer.parseInt(amountText);
+        int amount;
 
-        databaseHelper.insertTransaction(
-                category,
-                date,
-                amount,
-                wallet,
-                transactionType,
-                selectedIcon,
-                selectedColor
-        );
+        try {
+            amount = Integer.parseInt(
+                            amountText
+                    );
 
-        Toast.makeText(this, "Lưu giao dịch thành công", Toast.LENGTH_SHORT).show();
+        } catch (NumberFormatException exception) {
+            Toast.makeText(this,
+                    "Số tiền không hợp lệ",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        if (amount <= 0) {
+            Toast.makeText(this,
+                    "Số tiền phải lớn hơn 0",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        /*
+         * title là tên giao dịch.
+         *
+         * Nếu người dùng nhập ghi chú:
+         * title = nội dung ghi chú.
+         *
+         * Nếu không nhập:
+         * title = tên danh mục.
+         */
+        String title;
+
+        if (note.isEmpty()) {
+            title = category;
+        } else {
+            title = note;
+        }
+
+        long result =
+                databaseHelper.insertTransaction(
+                        title,
+                        category,
+                        date,
+                        amount,
+                        wallet,
+                        transactionType,
+                        selectedIcon,
+                        selectedColor
+                );
+
+        if (result == -1) {
+            Toast.makeText(this,
+                    "Lưu giao dịch thất bại",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        Toast.makeText(this,
+                "Lưu giao dịch thành công",
+                Toast.LENGTH_SHORT
+        ).show();
+
         finish();
     }
 

@@ -3,6 +3,7 @@ package com.quanlychitieu.doan.history;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -19,6 +20,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -26,42 +28,57 @@ import androidx.core.view.WindowInsetsCompat;
 import com.quanlychitieu.doan.R;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
 import com.quanlychitieu.doan.database.DatabaseHelper;
+import com.quanlychitieu.doan.edittransaction.EditTransactionActivity;
 import com.quanlychitieu.doan.export.ReportExporter;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 public class IncomeHistoryActivity extends AppCompatActivity {
 
-    LinearLayout layoutTransactions;
+    private LinearLayout layoutTransactions;
 
-    TextView btnMonth, btnMonthTop, btnWallet, btnSort, btnExport;
-    EditText edtSearch;
-    ImageView imgBack;
+    private TextView btnMonth;
+    private TextView btnMonthTop;
+    private TextView btnWallet;
+    private TextView btnSort;
+    private TextView btnExport;
+    private TextView tvTotalIncome;
 
-    TextView tvTotalIncome;
+    private EditText edtSearch;
+    private ImageView imgBack;
 
-    DatabaseHelper dbHelper;
-    SQLiteDatabase database;
+    private DatabaseHelper dbHelper;
+    private SQLiteDatabase database;
 
-    int totalIncome = 0;
-    int transactionCount = 0;
-    int refund = 0;
+    private int totalIncome = 0;
+    private int transactionCount = 0;
+    private int refund = 0;
 
-    int selectedMonth;
-    int selectedYear;
+    private int selectedMonth;
+    private int selectedYear;
 
-    String selectedWallet = "Tất cả ví";
-    String sortType = "Mới nhất";
+    private String selectedWallet = "Tất cả ví";
+    private String sortType = "Mới nhất";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_income_history);
 
+        initViews();
         setupSafeArea();
-
         BottomNavHelper.setup(this);
+        setupDatabase();
+        setupCurrentMonth();
+        setupEvents();
 
+        updateMonthText();
+        loadIncomeHistory();
+    }
+
+    private void initViews() {
         imgBack = findViewById(R.id.imgBack);
         layoutTransactions = findViewById(R.id.layoutTransactions);
 
@@ -73,70 +90,123 @@ public class IncomeHistoryActivity extends AppCompatActivity {
 
         edtSearch = findViewById(R.id.edtSearch);
         tvTotalIncome = findViewById(R.id.tvTotalIncome);
+    }
 
+    private void setupDatabase() {
         dbHelper = new DatabaseHelper(this);
         database = dbHelper.getReadableDatabase();
+    }
 
+    private void setupCurrentMonth() {
         Calendar calendar = Calendar.getInstance();
-        selectedMonth = calendar.get(Calendar.MONTH) + 1;
-        selectedYear = calendar.get(Calendar.YEAR);
 
-        updateMonthText();
-        setClickEvents();
-        loadIncomeHistory();
+        selectedMonth =
+                calendar.get(Calendar.MONTH) + 1;
+
+        selectedYear =
+                calendar.get(Calendar.YEAR);
     }
 
     private void setupSafeArea() {
         View content = findViewById(R.id.contentLayout);
 
-        if (content == null) return;
+        if (content == null) {
+            return;
+        }
 
-        ViewCompat.setOnApplyWindowInsetsListener(content, (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+        ViewCompat.setOnApplyWindowInsetsListener(
+                content,
+                (view, insets) -> {
 
-            v.setPadding(
-                    dp(18),
-                    systemBars.top + dp(10),
-                    dp(18),
-                    dp(18)
-            );
+                    Insets systemBars =
+                            insets.getInsets(
+                                    WindowInsetsCompat.Type.systemBars()
+                            );
 
-            return insets;
-        });
+                    view.setPadding(
+                            dp(18),
+                            systemBars.top + dp(10),
+                            dp(18),
+                            dp(18)
+                    );
+
+                    return insets;
+                }
+        );
+
+        ViewCompat.requestApplyInsets(content);
+    }
+
+    private void setupEvents() {
+        imgBack.setOnClickListener(v -> finish());
+
+        btnMonth.setOnClickListener(v ->
+                showDatePicker()
+        );
+
+        btnMonthTop.setOnClickListener(v ->
+                showDatePicker()
+        );
+
+        btnWallet.setOnClickListener(v ->
+                showWalletDialog()
+        );
+
+        btnSort.setOnClickListener(v ->
+                showSortDialog()
+        );
+
+        btnExport.setOnClickListener(v ->
+                showExportDialog()
+        );
+
+        edtSearch.setOnEditorActionListener(
+                (view, actionId, event) -> {
+                    hideKeyboard();
+                    loadIncomeHistory();
+                    return false;
+                }
+        );
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        if (dbHelper != null) {
+            database = dbHelper.getReadableDatabase();
+        }
+
         loadIncomeHistory();
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev.getAction() == MotionEvent.ACTION_DOWN) {
-            hideKeyboard();
+    protected void onDestroy() {
+        super.onDestroy();
+
+        if (database != null && database.isOpen()) {
+            database.close();
         }
-        return super.dispatchTouchEvent(ev);
+
+        if (dbHelper != null) {
+            dbHelper.close();
+        }
     }
 
-    private void setClickEvents() {
-        imgBack.setOnClickListener(v -> finish());
-
-        btnMonth.setOnClickListener(v -> showDatePicker());
-        btnMonthTop.setOnClickListener(v -> showDatePicker());
-        btnWallet.setOnClickListener(v -> showWalletDialog());
-        btnSort.setOnClickListener(v -> showSortDialog());
-        btnExport.setOnClickListener(v -> showExportDialog());
-
-        edtSearch.setOnEditorActionListener((v, actionId, event) -> {
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
             hideKeyboard();
-            loadIncomeHistory();
-            return false;
-        });
+        }
+
+        return super.dispatchTouchEvent(event);
     }
 
     private void showExportDialog() {
-        String[] options = {"Xuất PDF", "Xuất Excel (.xlsx)"};
+        String[] options = {
+                "Xuất PDF",
+                "Xuất Excel (.xlsx)"
+        };
 
         new AlertDialog.Builder(this)
                 .setTitle("Chọn định dạng báo cáo")
@@ -178,20 +248,40 @@ public class IncomeHistoryActivity extends AppCompatActivity {
                 .setTitle("Sắp xếp")
                 .setItems(options, (dialog, which) -> {
                     sortType = options[which];
-                    btnSort.setText(sortType + "  ☷");
+
+                    btnSort.setText(
+                            sortType + "  ☷"
+                    );
+
                     loadIncomeHistory();
                 })
                 .show();
     }
 
     private void showWalletDialog() {
-        String[] wallets = {
-                "Tất cả ví",
-                "Ví mặc định",
-                "Tiết kiệm",
-                "Ngân hàng",
-                "Momo"
-        };
+        ArrayList<String> walletList =
+                new ArrayList<>();
+
+        walletList.add("Tất cả ví");
+
+        Cursor cursor = null;
+
+        try {
+            cursor = dbHelper.getAllWallets();
+
+            while (cursor.moveToNext()) {
+                walletList.add(
+                        cursor.getString(0)
+                );
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        String[] wallets =
+                walletList.toArray(new String[0]);
 
         new AlertDialog.Builder(this)
                 .setTitle("Chọn ví")
@@ -204,207 +294,460 @@ public class IncomeHistoryActivity extends AppCompatActivity {
     }
 
     private void showDatePicker() {
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                this,
-                (view, year, month, dayOfMonth) -> {
-                    selectedMonth = month + 1;
-                    selectedYear = year;
+        DatePickerDialog datePickerDialog =
+                new DatePickerDialog(
+                        this,
+                        (view, year, month, dayOfMonth) -> {
+                            selectedMonth = month + 1;
+                            selectedYear = year;
 
-                    updateMonthText();
-                    loadIncomeHistory();
-                },
-                selectedYear,
-                selectedMonth - 1,
-                1
-        );
+                            updateMonthText();
+                            loadIncomeHistory();
+                        },
+                        selectedYear,
+                        selectedMonth - 1,
+                        1
+                );
 
         datePickerDialog.show();
     }
 
     private void updateMonthText() {
-        String monthText = "Tháng " + selectedMonth + "/" + selectedYear;
+        String monthText =
+                "Tháng " +
+                        selectedMonth +
+                        "/" +
+                        selectedYear;
 
         btnMonth.setText(monthText);
-        btnMonthTop.setText(monthText + " ▼");
+        btnMonthTop.setText(
+                monthText + " ▼"
+        );
     }
 
     private void loadIncomeHistory() {
+        if (layoutTransactions == null
+                || database == null
+                || !database.isOpen()) {
+
+            return;
+        }
+
         layoutTransactions.removeAllViews();
 
         totalIncome = 0;
         transactionCount = 0;
         refund = 0;
 
-        String monthText = String.format("%02d/%04d", selectedMonth, selectedYear);
-        String keyword = edtSearch.getText().toString().trim().toLowerCase();
+        String monthText =
+                String.format(
+                        Locale.getDefault(),
+                        "%02d/%04d",
+                        selectedMonth,
+                        selectedYear
+                );
+
+        String keyword =
+                edtSearch.getText()
+                        .toString()
+                        .trim()
+                        .toLowerCase(Locale.getDefault());
 
         String orderBy = "id DESC";
 
-        if (sortType.equals("Cũ nhất")) {
+        if ("Cũ nhất".equals(sortType)) {
             orderBy = "id ASC";
-        } else if (sortType.equals("Số tiền cao nhất")) {
-            orderBy = "amount DESC";
-        } else if (sortType.equals("Số tiền thấp nhất")) {
-            orderBy = "amount ASC";
+
+        } else if ("Số tiền cao nhất".equals(sortType)) {
+            orderBy = "ABS(amount) DESC";
+
+        } else if ("Số tiền thấp nhất".equals(sortType)) {
+            orderBy = "ABS(amount) ASC";
         }
 
-        Cursor cursor;
+        Cursor cursor = null;
 
-        if (selectedWallet.equals("Tất cả ví")) {
-            cursor = database.rawQuery(
-                    "SELECT title, date, amount, icon, color FROM transactions " +
-                            "WHERE type='INCOME' AND substr(date, 4, 7) = ? " +
-                            "ORDER BY " + orderBy,
-                    new String[]{monthText}
-            );
-        } else {
-            cursor = database.rawQuery(
-                    "SELECT title, date, amount, icon, color FROM transactions " +
-                            "WHERE type='INCOME' AND substr(date, 4, 7) = ? AND wallet = ? " +
-                            "ORDER BY " + orderBy,
-                    new String[]{monthText, selectedWallet}
-            );
-        }
+        try {
+            if ("Tất cả ví".equals(selectedWallet)) {
+                cursor = database.rawQuery(
+                        "SELECT id, category, date, amount, icon, color "
+                                + "FROM transactions "
+                                + "WHERE type = 'INCOME' "
+                                + "AND substr(date, 4, 7) = ? "
+                                + "ORDER BY "
+                                + orderBy,
+                        new String[]{
+                                monthText
+                        }
+                );
 
-        while (cursor.moveToNext()) {
-            String title = cursor.getString(0);
-            String date = cursor.getString(1);
-            int amount = cursor.getInt(2);
-            String iconName = cursor.getString(3);
-            String colorCode = cursor.getString(4);
-
-            if (!keyword.isEmpty() && !title.toLowerCase().contains(keyword)) {
-                continue;
+            } else {
+                cursor = database.rawQuery(
+                        "SELECT id, category, date, amount, icon, color "
+                                + "FROM transactions "
+                                + "WHERE type = 'INCOME' "
+                                + "AND substr(date, 4, 7) = ? "
+                                + "AND wallet = ? "
+                                + "ORDER BY "
+                                + orderBy,
+                        new String[]{
+                                monthText,
+                                selectedWallet
+                        }
+                );
             }
 
-            totalIncome += amount;
-            transactionCount++;
+            while (cursor.moveToNext()) {
+                int id =
+                        cursor.getInt(0);
 
-            if (title.toLowerCase().contains("hoàn")) {
-                refund += amount;
+                String category =
+                        cursor.getString(1);
+
+                String date =
+                        cursor.getString(2);
+
+                int amount =
+                        cursor.getInt(3);
+
+                String iconName =
+                        cursor.getString(4);
+
+                String colorCode =
+                        cursor.getString(5);
+
+                if (category == null
+                        || category.trim().isEmpty()) {
+
+                    category = "Khác";
+                }
+
+                if (!keyword.isEmpty()
+                        && !category
+                        .toLowerCase(Locale.getDefault())
+                        .contains(keyword)) {
+
+                    continue;
+                }
+
+                totalIncome += Math.abs(amount);
+                transactionCount++;
+
+                if (category
+                        .toLowerCase(Locale.getDefault())
+                        .contains("hoàn")) {
+
+                    refund += Math.abs(amount);
+                }
+
+                addItem(
+                        id,
+                        category,
+                        date,
+                        amount,
+                        iconName,
+                        colorCode
+                );
             }
 
-            addItem(title, date, amount, iconName, colorCode);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
         }
 
-        cursor.close();
+        if (transactionCount == 0) {
+            showEmptyMessage();
+        }
+
         updateStatistics();
     }
 
     private void updateStatistics() {
-        tvTotalIncome.setText(formatMoney(totalIncome));
+        tvTotalIncome.setText(
+                formatMoney(totalIncome)
+        );
     }
 
-    private void addItem(String title, String date, int amount, String iconName, String colorCode) {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
-        card.setPadding(dp(14), dp(12), dp(14), dp(12));
+    private void showEmptyMessage() {
+        TextView emptyView =
+                new TextView(this);
+
+        emptyView.setText(
+                "Không có khoản thu nào"
+        );
+
+        emptyView.setTextSize(15);
+        emptyView.setGravity(Gravity.CENTER);
+
+        emptyView.setPadding(
+                0,
+                dp(30),
+                0,
+                dp(30)
+        );
+
+        emptyView.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_secondary
+                )
+        );
+
+        layoutTransactions.addView(emptyView);
+    }
+
+    private void addItem(
+            int id,
+            String title,
+            String date,
+            int amount,
+            String iconName,
+            String colorCode
+    ) {
+        LinearLayout card =
+                new LinearLayout(this);
+
+        card.setOrientation(
+                LinearLayout.HORIZONTAL
+        );
+
+        card.setGravity(
+                Gravity.CENTER_VERTICAL
+        );
+
+        card.setPadding(
+                dp(14),
+                dp(12),
+                dp(14),
+                dp(12)
+        );
 
         LinearLayout.LayoutParams cardParams =
                 new LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 );
-        cardParams.setMargins(0, dp(6), 0, dp(10));
-        card.setLayoutParams(cardParams);
 
-        GradientDrawable cardBg = new GradientDrawable();
-        cardBg.setColor(Color.WHITE);
-        cardBg.setCornerRadius(dp(16));
-        cardBg.setStroke(dp(1), Color.parseColor("#E5E7EB"));
-        card.setBackground(cardBg);
-        card.setElevation(dp(2));
-
-        ImageView imgIcon = new ImageView(this);
-
-        int iconRes = getResources().getIdentifier(
-                iconName,
-                "drawable",
-                getPackageName()
+        cardParams.setMargins(
+                0,
+                dp(6),
+                0,
+                dp(10)
         );
 
-        if (iconRes == 0) {
-            iconRes = R.drawable.ic_dot;
+        card.setLayoutParams(cardParams);
+
+        GradientDrawable cardBackground =
+                new GradientDrawable();
+
+        cardBackground.setColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.card_background
+                )
+        );
+
+        cardBackground.setCornerRadius(
+                dp(16)
+        );
+
+        cardBackground.setStroke(
+                dp(1),
+                ContextCompat.getColor(
+                        this,
+                        R.color.divider_color
+                )
+        );
+
+        card.setBackground(cardBackground);
+        card.setElevation(dp(2));
+
+        ImageView imgIcon =
+                new ImageView(this);
+
+        int iconResource =
+                getResources().getIdentifier(
+                        iconName,
+                        "drawable",
+                        getPackageName()
+                );
+
+        if (iconResource == 0) {
+            iconResource = R.drawable.ic_dot;
         }
 
-        imgIcon.setImageResource(iconRes);
+        imgIcon.setImageResource(iconResource);
         imgIcon.setColorFilter(Color.WHITE);
-        imgIcon.setPadding(dp(9), dp(9), dp(9), dp(9));
 
-        GradientDrawable iconBg = new GradientDrawable();
-        iconBg.setShape(GradientDrawable.OVAL);
+        imgIcon.setPadding(
+                dp(9),
+                dp(9),
+                dp(9),
+                dp(9)
+        );
+
+        GradientDrawable iconBackground =
+                new GradientDrawable();
+
+        iconBackground.setShape(
+                GradientDrawable.OVAL
+        );
 
         try {
-            iconBg.setColor(Color.parseColor(colorCode));
-        } catch (Exception e) {
-            iconBg.setColor(Color.parseColor("#ADB5BD"));
+            iconBackground.setColor(
+                    Color.parseColor(colorCode)
+            );
+        } catch (Exception exception) {
+            iconBackground.setColor(
+                    Color.parseColor("#ADB5BD")
+            );
         }
 
-        imgIcon.setBackground(iconBg);
+        imgIcon.setBackground(iconBackground);
 
         LinearLayout.LayoutParams iconParams =
-                new LinearLayout.LayoutParams(dp(46), dp(46));
-        iconParams.setMargins(0, 0, dp(12), 0);
+                new LinearLayout.LayoutParams(
+                        dp(46),
+                        dp(46)
+                );
+
+        iconParams.setMargins(
+                0,
+                0,
+                dp(12),
+                0
+        );
+
         imgIcon.setLayoutParams(iconParams);
 
-        LinearLayout textBox = new LinearLayout(this);
-        textBox.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout textBox =
+                new LinearLayout(this);
 
-        LinearLayout.LayoutParams textParams =
+        textBox.setOrientation(
+                LinearLayout.VERTICAL
+        );
+
+        textBox.setLayoutParams(
                 new LinearLayout.LayoutParams(
                         0,
                         LinearLayout.LayoutParams.WRAP_CONTENT,
                         1
-                );
-        textBox.setLayoutParams(textParams);
+                )
+        );
 
-        TextView tvTitle = new TextView(this);
+        TextView tvTitle =
+                new TextView(this);
+
         tvTitle.setText(title);
         tvTitle.setTextSize(15);
-        tvTitle.setTypeface(null, Typeface.BOLD);
-        tvTitle.setTextColor(Color.parseColor("#111827"));
+        tvTitle.setTypeface(
+                null,
+                Typeface.BOLD
+        );
 
-        TextView tvDate = new TextView(this);
+        tvTitle.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
+        TextView tvDate =
+                new TextView(this);
+
         tvDate.setText(date);
         tvDate.setTextSize(13);
-        tvDate.setTextColor(Color.parseColor("#6B7280"));
+
+        tvDate.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_secondary
+                )
+        );
 
         textBox.addView(tvTitle);
         textBox.addView(tvDate);
 
-        TextView tvAmount = new TextView(this);
-        tvAmount.setText("+" + formatMoney(amount));
+        TextView tvAmount =
+                new TextView(this);
+
+        tvAmount.setText(
+                "+" +
+                        formatMoney(
+                                Math.abs(amount)
+                        )
+        );
+
         tvAmount.setTextSize(15);
-        tvAmount.setTypeface(null, Typeface.BOLD);
-        tvAmount.setTextColor(Color.parseColor("#16A34A"));
-        tvAmount.setGravity(Gravity.END);
+        tvAmount.setTypeface(
+                null,
+                Typeface.BOLD
+        );
+
+        tvAmount.setGravity(
+                Gravity.END
+        );
+
+        tvAmount.setTextColor(
+                Color.parseColor("#16A34A")
+        );
 
         card.addView(imgIcon);
         card.addView(textBox);
         card.addView(tvAmount);
 
+        card.setOnClickListener(v -> {
+            Intent intent = new Intent(
+                    IncomeHistoryActivity.this,
+                    EditTransactionActivity.class
+            );
+
+            intent.putExtra(
+                    "transactionId",
+                    id
+            );
+
+            startActivity(intent);
+        });
+
         layoutTransactions.addView(card);
     }
 
-    private int dp(int value) {
-        return (int) (value * getResources().getDisplayMetrics().density);
-    }
-
     private void hideKeyboard() {
-        InputMethodManager imm =
-                (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) getSystemService(
+                        Context.INPUT_METHOD_SERVICE
+                );
 
-        if (getCurrentFocus() != null) {
-            imm.hideSoftInputFromWindow(
-                    getCurrentFocus().getWindowToken(),
+        View currentView = getCurrentFocus();
+
+        if (inputMethodManager != null &&
+                currentView != null) {
+
+            inputMethodManager.hideSoftInputFromWindow(
+                    currentView.getWindowToken(),
                     0
             );
-            getCurrentFocus().clearFocus();
+
+            currentView.clearFocus();
         }
     }
 
+    private int dp(int value) {
+        return Math.round(
+                value
+                        * getResources()
+                        .getDisplayMetrics()
+                        .density
+        );
+    }
+
     private String formatMoney(int money) {
-        return String.format("%,d đ", money).replace(",", ".");
+        return String.format(
+                Locale.getDefault(),
+                "%,d đ",
+                money
+        ).replace(",", ".");
     }
 }

@@ -1,5 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <color name="color_primary">#2563EB</color>
+    <color name="delete_color">#EF4444</color>
+
+    <color name="app_background">#F7F9FC</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="input_background">#F8FAFC</color>
+
+    <color name="text_primary">#111827</color>
+    <color name="text_secondary">#64748B</color>
+    <color name="text_hint">#94A3B8</color>
+
+    <color name="divider_color">#E2E8F0</color>
+    <color name="input_stroke">#DCE3EC</color>
+
+    <color name="switch_thumb_color">#2563EB</color>
+    <color name="switch_track_color">#93C5FD</color>
+
+    <color name="tab_unselected_text">#111827</color>
 </resources>
