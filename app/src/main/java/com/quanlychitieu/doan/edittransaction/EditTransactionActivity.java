@@ -1,8 +1,10 @@
 package com.quanlychitieu.doan.edittransaction;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -19,6 +21,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
@@ -26,6 +30,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.quanlychitieu.doan.R;
+import com.quanlychitieu.doan.category.CategoryActivity;
 import com.quanlychitieu.doan.database.DatabaseHelper;
 
 import java.util.ArrayList;
@@ -60,19 +65,32 @@ public class EditTransactionActivity extends AppCompatActivity {
     private String selectedWallet = "Ví mặc định";
 
     /*
-     * Tên/nội dung giao dịch được giữ nguyên.
-     * Ví dụ: Ăn sáng Highland.
+     * Tên / nội dung giao dịch được giữ nguyên.
+     *
+     * Ví dụ:
+     * transactionTitle = "Ăn sáng Highland"
+     * categoryName = "Ăn uống"
      */
     private String transactionTitle = "Giao dịch";
 
     /*
-     * Danh mục riêng.
-     * Ví dụ: Ăn uống.
+     * Danh mục của giao dịch.
      */
     private String categoryName = "Ăn uống";
 
+    /*
+     * Icon và màu của danh mục.
+     */
     private String iconName = "ic_food";
     private String colorCode = "#FF3131";
+
+    /*
+     * Dùng khi mở CategoryActivity từ màn hình sửa giao dịch.
+     *
+     * true = đang CHỌN danh mục cho giao dịch.
+     * Không phải đang sửa danh mục.
+     */
+    private ActivityResultLauncher<Intent> categoryLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +100,7 @@ public class EditTransactionActivity extends AppCompatActivity {
         initViews();
         setupSafeArea();
         setupDatabase();
+        setupCategoryLauncher();
         setupEvents();
 
         transactionId = getIntent().getIntExtra(
@@ -104,32 +123,185 @@ public class EditTransactionActivity extends AppCompatActivity {
         }
     }
 
+    // =========================================================
+    // KHỞI TẠO VIEW
+    // =========================================================
+
     private void initViews() {
-        imgBack = findViewById(R.id.imgBack);
-        imgCategory = findViewById(R.id.imgCategory);
 
-        tabExpense = findViewById(R.id.tabExpense);
-        tabIncome = findViewById(R.id.tabIncome);
+        imgBack = findViewById(
+                R.id.imgBack
+        );
 
-        tvWallet = findViewById(R.id.tvWallet);
-        tvCategory = findViewById(R.id.tvCategory);
+        imgCategory = findViewById(
+                R.id.imgCategory
+        );
 
-        layoutCategory = findViewById(R.id.layoutCategory);
+        tabExpense = findViewById(
+                R.id.tabExpense
+        );
 
-        edtAmount = findViewById(R.id.edtAmount);
-        edtDate = findViewById(R.id.edtDate);
-        edtOtherCategory = findViewById(R.id.edtOtherCategory);
+        tabIncome = findViewById(
+                R.id.tabIncome
+        );
 
-        btnSave = findViewById(R.id.btnSave);
-        btnDelete = findViewById(R.id.btnDelete);
+        tvWallet = findViewById(
+                R.id.tvWallet
+        );
+
+        tvCategory = findViewById(
+                R.id.tvCategory
+        );
+
+        layoutCategory = findViewById(
+                R.id.layoutCategory
+        );
+
+        edtAmount = findViewById(
+                R.id.edtAmount
+        );
+
+        edtDate = findViewById(
+                R.id.edtDate
+        );
+
+        edtOtherCategory = findViewById(
+                R.id.edtOtherCategory
+        );
+
+        btnSave = findViewById(
+                R.id.btnSave
+        );
+
+        btnDelete = findViewById(
+                R.id.btnDelete
+        );
     }
 
+    // =========================================================
+    // DATABASE
+    // =========================================================
+
     private void setupDatabase() {
+
         dbHelper = new DatabaseHelper(this);
+
         database = dbHelper.getReadableDatabase();
     }
 
+    // =========================================================
+    // CATEGORY LAUNCHER
+    // =========================================================
+
+    private void setupCategoryLauncher() {
+
+        categoryLauncher =
+                registerForActivityResult(
+                        new ActivityResultContracts
+                                .StartActivityForResult(),
+
+                        result -> {
+
+                            if (result.getResultCode()
+                                    != Activity.RESULT_OK) {
+
+                                return;
+                            }
+
+                            if (result.getData() == null) {
+                                return;
+                            }
+
+                            Intent data =
+                                    result.getData();
+
+                            String name =
+                                    data.getStringExtra(
+                                            CategoryActivity
+                                                    .EXTRA_CATEGORY_NAME
+                                    );
+
+                            String icon =
+                                    data.getStringExtra(
+                                            CategoryActivity
+                                                    .EXTRA_CATEGORY_ICON
+                                    );
+
+                            String color =
+                                    data.getStringExtra(
+                                            CategoryActivity
+                                                    .EXTRA_CATEGORY_COLOR
+                                    );
+
+                            String type =
+                                    data.getStringExtra(
+                                            CategoryActivity
+                                                    .EXTRA_CATEGORY_TYPE
+                                    );
+
+                            /*
+                             * Kiểm tra dữ liệu trả về.
+                             */
+                            if (name == null
+                                    || icon == null
+                                    || color == null) {
+
+                                return;
+                            }
+
+                            /*
+                             * Cập nhật loại giao dịch.
+                             */
+                            if ("INCOME".equals(type)) {
+
+                                transactionType =
+                                        "INCOME";
+
+                            } else {
+
+                                transactionType =
+                                        "EXPENSE";
+                            }
+
+                            /*
+                             * Cập nhật danh mục.
+                             */
+                            categoryName = name;
+
+                            iconName = icon;
+
+                            colorCode = color;
+
+                            /*
+                             * Đã chọn danh mục thật
+                             * nên ẩn ô "Danh mục khác".
+                             */
+                            edtOtherCategory.setVisibility(
+                                    View.GONE
+                            );
+
+                            edtOtherCategory.setText("");
+
+                            /*
+                             * Cập nhật tab.
+                             */
+                            updateTabUI();
+
+                            /*
+                             * Cập nhật icon,
+                             * màu và tên danh mục.
+                             */
+                            updateCategoryUI();
+                        }
+                );
+    }
+
+    // =========================================================
+    // EVENTS
+    // =========================================================
+
     private void setupEvents() {
+
         edtAmount.setImeOptions(
                 EditorInfo.IME_ACTION_DONE
         );
@@ -137,9 +309,13 @@ public class EditTransactionActivity extends AppCompatActivity {
         edtAmount.setOnEditorActionListener(
                 (view, actionId, event) -> {
 
-                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    if (actionId
+                            == EditorInfo.IME_ACTION_DONE) {
+
                         hideKeyboard();
+
                         edtAmount.clearFocus();
+
                         return true;
                     }
 
@@ -159,45 +335,78 @@ public class EditTransactionActivity extends AppCompatActivity {
                 view -> showWalletDialog()
         );
 
+        /*
+         * Bấm vào ô danh mục.
+         */
         layoutCategory.setOnClickListener(
                 view -> showCategoryDialog()
         );
 
+        /*
+         * Chuyển sang chi tiêu.
+         */
         tabExpense.setOnClickListener(view -> {
+
             transactionType = "EXPENSE";
 
             setDefaultCategoryByType();
 
-            edtOtherCategory.setVisibility(View.GONE);
+            edtOtherCategory.setVisibility(
+                    View.GONE
+            );
+
             edtOtherCategory.setText("");
 
             updateTabUI();
+
             updateCategoryUI();
         });
 
+        /*
+         * Chuyển sang thu nhập.
+         */
         tabIncome.setOnClickListener(view -> {
+
             transactionType = "INCOME";
 
             setDefaultCategoryByType();
 
-            edtOtherCategory.setVisibility(View.GONE);
+            edtOtherCategory.setVisibility(
+                    View.GONE
+            );
+
             edtOtherCategory.setText("");
 
             updateTabUI();
+
             updateCategoryUI();
         });
 
+        /*
+         * Lưu.
+         */
         btnSave.setOnClickListener(
                 view -> updateTransaction()
         );
 
+        /*
+         * Xóa.
+         */
         btnDelete.setOnClickListener(
                 view -> confirmDelete()
         );
     }
 
+    // =========================================================
+    // SAFE AREA
+    // =========================================================
+
     private void setupSafeArea() {
-        View content = findViewById(R.id.contentLayout);
+
+        View content =
+                findViewById(
+                        R.id.contentLayout
+                );
 
         if (content == null) {
             return;
@@ -207,9 +416,12 @@ public class EditTransactionActivity extends AppCompatActivity {
                 content,
                 (view, insets) -> {
 
-                    Insets bars = insets.getInsets(
-                            WindowInsetsCompat.Type.systemBars()
-                    );
+                    Insets bars =
+                            insets.getInsets(
+                                    WindowInsetsCompat
+                                            .Type
+                                            .systemBars()
+                            );
 
                     view.setPadding(
                             dp(24),
@@ -222,24 +434,36 @@ public class EditTransactionActivity extends AppCompatActivity {
                 }
         );
 
-        ViewCompat.requestApplyInsets(content);
+        ViewCompat.requestApplyInsets(
+                content
+        );
     }
 
+    // =========================================================
+    // LOAD GIAO DỊCH
+    // =========================================================
+
     private void loadTransactionDetail() {
+
         Cursor cursor = null;
 
         try {
+
             cursor = database.rawQuery(
                     "SELECT title, category, date, amount, " +
                             "wallet, type, icon, color " +
                             "FROM transactions " +
                             "WHERE id = ?",
+
                     new String[]{
-                            String.valueOf(transactionId)
+                            String.valueOf(
+                                    transactionId
+                            )
                     }
             );
 
             if (!cursor.moveToFirst()) {
+
                 Toast.makeText(
                         this,
                         "Không tìm thấy giao dịch",
@@ -247,45 +471,96 @@ public class EditTransactionActivity extends AppCompatActivity {
                 ).show();
 
                 finish();
+
                 return;
             }
 
-            transactionTitle = cursor.getString(0);
-            categoryName = cursor.getString(1);
+            transactionTitle =
+                    cursor.getString(0);
 
-            String date = cursor.getString(2);
-            int amount = cursor.getInt(3);
+            categoryName =
+                    cursor.getString(1);
 
-            selectedWallet = cursor.getString(4);
-            transactionType = cursor.getString(5);
-            iconName = cursor.getString(6);
-            colorCode = cursor.getString(7);
+            String date =
+                    cursor.getString(2);
+
+            int amount =
+                    cursor.getInt(3);
+
+            selectedWallet =
+                    cursor.getString(4);
+
+            transactionType =
+                    cursor.getString(5);
+
+            iconName =
+                    cursor.getString(6);
+
+            colorCode =
+                    cursor.getString(7);
+
+            /*
+             * Xử lý dữ liệu null.
+             */
 
             if (transactionTitle == null
-                    || transactionTitle.trim().isEmpty()) {
+                    || transactionTitle
+                    .trim()
+                    .isEmpty()) {
 
-                transactionTitle = "Giao dịch";
+                transactionTitle =
+                        "Giao dịch";
             }
 
             if (categoryName == null
-                    || categoryName.trim().isEmpty()) {
+                    || categoryName
+                    .trim()
+                    .isEmpty()) {
 
-                categoryName = "Khác";
+                categoryName =
+                        "Khác";
+            }
+
+            if (iconName == null
+                    || iconName
+                    .trim()
+                    .isEmpty()) {
+
+                iconName =
+                        "ic_dot";
+            }
+
+            if (colorCode == null
+                    || colorCode
+                    .trim()
+                    .isEmpty()) {
+
+                colorCode =
+                        "#ADB5BD";
             }
 
             /*
-             * Tương thích với dữ liệu cũ:
-             * nếu category đang là Khác nhưng title là danh mục chuẩn,
-             * dùng title làm category.
+             * Tương thích dữ liệu cũ.
              */
             if ("Khác".equals(categoryName)
-                    && isStandardCategory(transactionTitle)) {
+                    && isStandardCategory(
+                    transactionTitle
+            )) {
 
-                categoryName = transactionTitle;
+                categoryName =
+                        transactionTitle;
             }
 
-            tvCategory.setText(categoryName);
-            edtDate.setText(date);
+            /*
+             * Hiển thị dữ liệu lên giao diện.
+             */
+            tvCategory.setText(
+                    categoryName
+            );
+
+            edtDate.setText(
+                    date
+            );
 
             edtAmount.setText(
                     String.valueOf(
@@ -293,37 +568,106 @@ public class EditTransactionActivity extends AppCompatActivity {
                     )
             );
 
-            tvWallet.setText(selectedWallet);
+            tvWallet.setText(
+                    selectedWallet
+            );
 
             /*
-             * Nếu đây là danh mục tự nhập thì hiện ô nhập.
+             * Nếu là danh mục tự nhập
+             * thì hiện ô nhập.
              */
-            if (!isStandardCategory(categoryName)) {
-                edtOtherCategory.setVisibility(View.VISIBLE);
-                edtOtherCategory.setText(categoryName);
+            if (!isStandardCategory(
+                    categoryName
+            )) {
+
+                edtOtherCategory.setVisibility(
+                        View.VISIBLE
+                );
+
+                edtOtherCategory.setText(
+                        categoryName
+                );
+
             } else {
-                edtOtherCategory.setVisibility(View.GONE);
+
+                edtOtherCategory.setVisibility(
+                        View.GONE
+                );
+
                 edtOtherCategory.setText("");
             }
 
             updateTabUI();
+
             updateCategoryUI();
 
         } finally {
+
             if (cursor != null) {
                 cursor.close();
             }
         }
     }
 
+    // =========================================================
+    // MỞ CATEGORY ACTIVITY
+    // =========================================================
+
+    private void openCategoryScreen() {
+
+        Intent intent =
+                new Intent(
+                        this,
+                        CategoryActivity.class
+                );
+
+        /*
+         * Cho CategoryActivity biết
+         * đang chọn danh mục cho giao dịch.
+         */
+        intent.putExtra(
+                CategoryActivity
+                        .EXTRA_CATEGORY_TYPE,
+                transactionType
+        );
+
+        /*
+         * Rất quan trọng:
+         *
+         * true = chọn danh mục
+         * false = sửa danh mục
+         */
+        intent.putExtra(
+                "select_category_mode",
+                true
+        );
+
+        categoryLauncher.launch(
+                intent
+        );
+    }
+
+    // =========================================================
+    // UPDATE TRANSACTION
+    // =========================================================
+
     private void updateTransaction() {
+
         String amountText =
-                edtAmount.getText().toString().trim();
+                edtAmount
+                        .getText()
+                        .toString()
+                        .trim();
 
         String date =
-                edtDate.getText().toString().trim();
+                edtDate
+                        .getText()
+                        .toString()
+                        .trim();
 
-        if (amountText.isEmpty() || date.isEmpty()) {
+        if (amountText.isEmpty()
+                || date.isEmpty()) {
+
             Toast.makeText(
                     this,
                     "Vui lòng nhập đầy đủ thông tin",
@@ -333,8 +677,12 @@ public class EditTransactionActivity extends AppCompatActivity {
             return;
         }
 
+        /*
+         * Nếu đang dùng danh mục tự nhập.
+         */
         if ("Khác".equals(categoryName)
-                || edtOtherCategory.getVisibility()
+                || edtOtherCategory
+                .getVisibility()
                 == View.VISIBLE) {
 
             String otherCategory =
@@ -344,6 +692,7 @@ public class EditTransactionActivity extends AppCompatActivity {
                             .trim();
 
             if (otherCategory.isEmpty()) {
+
                 edtOtherCategory.setError(
                         "Nhập tên danh mục khác"
                 );
@@ -351,17 +700,27 @@ public class EditTransactionActivity extends AppCompatActivity {
                 return;
             }
 
-            categoryName = otherCategory;
-            iconName = "ic_dot";
-            colorCode = "#ADB5BD";
+            categoryName =
+                    otherCategory;
+
+            iconName =
+                    "ic_dot";
+
+            colorCode =
+                    "#ADB5BD";
         }
 
         int amount;
 
         try {
-            amount = Integer.parseInt(amountText);
+
+            amount =
+                    Integer.parseInt(
+                            amountText
+                    );
 
         } catch (NumberFormatException exception) {
+
             Toast.makeText(
                     this,
                     "Số tiền không hợp lệ",
@@ -372,6 +731,7 @@ public class EditTransactionActivity extends AppCompatActivity {
         }
 
         if (amount <= 0) {
+
             Toast.makeText(
                     this,
                     "Số tiền phải lớn hơn 0",
@@ -382,32 +742,39 @@ public class EditTransactionActivity extends AppCompatActivity {
         }
 
         /*
-         * Nếu dữ liệu cũ dùng tên danh mục làm title,
+         * Nếu title cũ là tên danh mục,
          * cập nhật title theo danh mục mới.
          *
-         * Nếu title là nội dung riêng như "Ăn sáng Highland",
-         * title vẫn được giữ nguyên.
+         * Nếu title là nội dung riêng,
+         * giữ nguyên.
          */
         if (transactionTitle == null
-                || transactionTitle.trim().isEmpty()
-                || isStandardCategory(transactionTitle)) {
+                || transactionTitle
+                .trim()
+                .isEmpty()
+                || isStandardCategory(
+                transactionTitle
+        )) {
 
-            transactionTitle = categoryName;
+            transactionTitle =
+                    categoryName;
         }
 
-        int updatedRows = dbHelper.updateTransaction(
-                transactionId,
-                transactionTitle,
-                categoryName,
-                date,
-                amount,
-                selectedWallet,
-                transactionType,
-                iconName,
-                colorCode
-        );
+        int updatedRows =
+                dbHelper.updateTransaction(
+                        transactionId,
+                        transactionTitle,
+                        categoryName,
+                        date,
+                        amount,
+                        selectedWallet,
+                        transactionType,
+                        iconName,
+                        colorCode
+                );
 
         if (updatedRows > 0) {
+
             Toast.makeText(
                     this,
                     "Đã cập nhật giao dịch",
@@ -417,6 +784,7 @@ public class EditTransactionActivity extends AppCompatActivity {
             finish();
 
         } else {
+
             Toast.makeText(
                     this,
                     "Không thể cập nhật giao dịch",
@@ -425,22 +793,34 @@ public class EditTransactionActivity extends AppCompatActivity {
         }
     }
 
+    // =========================================================
+    // DELETE
+    // =========================================================
+
     private void confirmDelete() {
+
         new AlertDialog.Builder(this)
-                .setTitle("Xóa giao dịch")
+
+                .setTitle(
+                        "Xóa giao dịch"
+                )
+
                 .setMessage(
                         "Bạn có chắc muốn xóa giao dịch này không?"
                 )
+
                 .setPositiveButton(
                         "Xóa",
                         (dialog, which) -> {
 
                             int deletedRows =
-                                    dbHelper.deleteTransaction(
-                                            transactionId
-                                    );
+                                    dbHelper
+                                            .deleteTransaction(
+                                                    transactionId
+                                            );
 
                             if (deletedRows > 0) {
+
                                 Toast.makeText(
                                         this,
                                         "Đã xóa giao dịch",
@@ -450,6 +830,7 @@ public class EditTransactionActivity extends AppCompatActivity {
                                 finish();
 
                             } else {
+
                                 Toast.makeText(
                                         this,
                                         "Không thể xóa giao dịch",
@@ -458,21 +839,31 @@ public class EditTransactionActivity extends AppCompatActivity {
                             }
                         }
                 )
+
                 .setNegativeButton(
                         "Hủy",
                         null
                 )
+
                 .show();
     }
 
+    // =========================================================
+    // TAB UI
+    // =========================================================
+
     private void updateTabUI() {
+
         int normalTextColor =
                 ContextCompat.getColor(
                         this,
                         R.color.text_primary
                 );
 
-        if ("EXPENSE".equals(transactionType)) {
+        if ("EXPENSE".equals(
+                transactionType
+        )) {
+
             tabExpense.setBackgroundResource(
                     R.drawable.bg_tab_selected
             );
@@ -481,10 +872,16 @@ public class EditTransactionActivity extends AppCompatActivity {
                     R.drawable.bg_tab_unselected
             );
 
-            tabExpense.setTextColor(Color.WHITE);
-            tabIncome.setTextColor(normalTextColor);
+            tabExpense.setTextColor(
+                    Color.WHITE
+            );
+
+            tabIncome.setTextColor(
+                    normalTextColor
+            );
 
         } else {
+
             tabIncome.setBackgroundResource(
                     R.drawable.bg_tab_selected
             );
@@ -493,13 +890,25 @@ public class EditTransactionActivity extends AppCompatActivity {
                     R.drawable.bg_tab_unselected
             );
 
-            tabIncome.setTextColor(Color.WHITE);
-            tabExpense.setTextColor(normalTextColor);
+            tabIncome.setTextColor(
+                    Color.WHITE
+            );
+
+            tabExpense.setTextColor(
+                    normalTextColor
+            );
         }
     }
 
+    // =========================================================
+    // CATEGORY UI
+    // =========================================================
+
     private void updateCategoryUI() {
-        tvCategory.setText(categoryName);
+
+        tvCategory.setText(
+                categoryName
+        );
 
         tvCategory.setTextColor(
                 ContextCompat.getColor(
@@ -516,11 +925,18 @@ public class EditTransactionActivity extends AppCompatActivity {
                 );
 
         if (iconResource == 0) {
-            iconResource = R.drawable.ic_dot;
+
+            iconResource =
+                    R.drawable.ic_dot;
         }
 
-        imgCategory.setImageResource(iconResource);
-        imgCategory.setColorFilter(Color.WHITE);
+        imgCategory.setImageResource(
+                iconResource
+        );
+
+        imgCategory.setColorFilter(
+                Color.WHITE
+        );
 
         GradientDrawable background =
                 new GradientDrawable();
@@ -530,41 +946,83 @@ public class EditTransactionActivity extends AppCompatActivity {
         );
 
         try {
+
             background.setColor(
-                    Color.parseColor(colorCode)
+                    Color.parseColor(
+                            colorCode
+                    )
             );
 
         } catch (IllegalArgumentException exception) {
+
             background.setColor(
-                    Color.parseColor("#ADB5BD")
+                    Color.parseColor(
+                            "#ADB5BD"
+                    )
             );
         }
 
-        imgCategory.setBackground(background);
+        imgCategory.setBackground(
+                background
+        );
     }
 
+    // =========================================================
+    // DEFAULT CATEGORY
+    // =========================================================
+
     private void setDefaultCategoryByType() {
-        if ("EXPENSE".equals(transactionType)) {
-            categoryName = "Ăn uống";
-            iconName = "ic_food";
-            colorCode = "#FF3131";
+
+        if ("EXPENSE".equals(
+                transactionType
+        )) {
+
+            categoryName =
+                    "Ăn uống";
+
+            iconName =
+                    "ic_food";
+
+            colorCode =
+                    "#FF3131";
 
         } else {
-            categoryName = "Lương";
-            iconName = "ic_salary";
-            colorCode = "#2ECC71";
+
+            categoryName =
+                    "Lương";
+
+            iconName =
+                    "ic_salary";
+
+            colorCode =
+                    "#2ECC71";
         }
     }
 
+    // =========================================================
+    // SHOW CATEGORY
+    // =========================================================
+
     private void showCategoryDialog() {
-        if ("EXPENSE".equals(transactionType)) {
+
+        if ("EXPENSE".equals(
+                transactionType
+        )) {
+
             showExpenseCategoryDialog();
+
         } else {
+
             showIncomeCategoryDialog();
         }
     }
 
+    // =========================================================
+    // EXPENSE CATEGORY
+    // =========================================================
+
     private void showExpenseCategoryDialog() {
+
         String[] categories = {
                 "Ăn uống",
                 "Đi lại",
@@ -577,66 +1035,89 @@ public class EditTransactionActivity extends AppCompatActivity {
 
         new AlertDialog.Builder(this)
                 .setTitle("Chọn danh mục chi tiêu")
-                .setItems(categories, (dialog, which) -> {
-                    categoryName = categories[which];
+                .setItems(
+                        categories,
+                        (dialog, which) -> {
 
-                    if ("Khác".equals(categoryName)) {
-                        iconName = "ic_dot";
-                        colorCode = "#ADB5BD";
+                            String selectedCategory =
+                                    categories[which];
 
-                        edtOtherCategory.setVisibility(
-                                View.VISIBLE
-                        );
+                            // Bấm "Khác" -> mở danh sách danh mục
+                            if ("Khác".equals(selectedCategory)) {
 
-                        edtOtherCategory.setText("");
-                        edtOtherCategory.requestFocus();
+                                dialog.dismiss();
 
-                    } else {
-                        edtOtherCategory.setVisibility(
-                                View.GONE
-                        );
+                                openCategoryScreen();
 
-                        edtOtherCategory.setText("");
+                                return;
+                            }
 
-                        switch (categoryName) {
-                            case "Ăn uống":
-                                iconName = "ic_food";
-                                colorCode = "#FF3131";
-                                break;
+                            categoryName =
+                                    selectedCategory;
 
-                            case "Đi lại":
-                                iconName = "ic_bus";
-                                colorCode = "#2196F3";
-                                break;
+                            edtOtherCategory.setVisibility(
+                                    View.GONE
+                            );
 
-                            case "Mua sắm":
-                                iconName = "ic_shopping";
-                                colorCode = "#FF9800";
-                                break;
+                            edtOtherCategory.setText("");
 
-                            case "Giải trí":
-                                iconName = "ic_default";
-                                colorCode = "#9C27B0";
-                                break;
+                            switch (categoryName) {
 
-                            case "Hóa đơn":
-                                iconName = "ic_bill";
-                                colorCode = "#FF9800";
-                                break;
+                                case "Ăn uống":
 
-                            case "Sức khỏe":
-                                iconName = "ic_heart";
-                                colorCode = "#FFB3C6";
-                                break;
+                                    iconName = "ic_food";
+                                    colorCode = "#FF3131";
+
+                                    break;
+
+                                case "Đi lại":
+
+                                    iconName = "ic_bus";
+                                    colorCode = "#2196F3";
+
+                                    break;
+
+                                case "Mua sắm":
+
+                                    iconName = "ic_shopping";
+                                    colorCode = "#FF9800";
+
+                                    break;
+
+                                case "Giải trí":
+
+                                    iconName = "ic_default";
+                                    colorCode = "#9C27B0";
+
+                                    break;
+
+                                case "Hóa đơn":
+
+                                    iconName = "ic_bill";
+                                    colorCode = "#FF9800";
+
+                                    break;
+
+                                case "Sức khỏe":
+
+                                    iconName = "ic_heart";
+                                    colorCode = "#FFB3C6";
+
+                                    break;
+                            }
+
+                            updateCategoryUI();
                         }
-                    }
-
-                    updateCategoryUI();
-                })
+                )
                 .show();
     }
 
+    // =========================================================
+    // INCOME CATEGORY
+    // =========================================================
+
     private void showIncomeCategoryDialog() {
+
         String[] categories = {
                 "Lương",
                 "Thưởng",
@@ -649,68 +1130,91 @@ public class EditTransactionActivity extends AppCompatActivity {
 
         new AlertDialog.Builder(this)
                 .setTitle("Chọn danh mục thu nhập")
-                .setItems(categories, (dialog, which) -> {
-                    categoryName = categories[which];
+                .setItems(
+                        categories,
+                        (dialog, which) -> {
 
-                    if ("Khác".equals(categoryName)) {
-                        iconName = "ic_dot";
-                        colorCode = "#ADB5BD";
+                            String selectedCategory =
+                                    categories[which];
 
-                        edtOtherCategory.setVisibility(
-                                View.VISIBLE
-                        );
+                            // Bấm "Khác" -> mở danh sách danh mục
+                            if ("Khác".equals(selectedCategory)) {
 
-                        edtOtherCategory.setText("");
-                        edtOtherCategory.requestFocus();
+                                dialog.dismiss();
 
-                    } else {
-                        edtOtherCategory.setVisibility(
-                                View.GONE
-                        );
+                                openCategoryScreen();
 
-                        edtOtherCategory.setText("");
+                                return;
+                            }
 
-                        switch (categoryName) {
-                            case "Lương":
-                                iconName = "ic_salary";
-                                colorCode = "#2ECC71";
-                                break;
+                            categoryName =
+                                    selectedCategory;
 
-                            case "Thưởng":
-                                iconName = "ic_reward";
-                                colorCode = "#FB8500";
-                                break;
+                            edtOtherCategory.setVisibility(
+                                    View.GONE
+                            );
 
-                            case "Làm thêm":
-                                iconName = "ic_work";
-                                colorCode = "#A2D2FF";
-                                break;
+                            edtOtherCategory.setText("");
 
-                            case "Đầu tư":
-                                iconName = "ic_invest";
-                                colorCode = "#2A9D8F";
-                                break;
+                            switch (categoryName) {
 
-                            case "Bán hàng":
-                                iconName = "ic_sell";
-                                colorCode = "#9D4EDD";
-                                break;
+                                case "Lương":
 
-                            case "Được tặng":
-                                iconName = "ic_donate";
-                                colorCode = "#9D6B53";
-                                break;
+                                    iconName = "ic_salary";
+                                    colorCode = "#2ECC71";
+
+                                    break;
+
+                                case "Thưởng":
+
+                                    iconName = "ic_reward";
+                                    colorCode = "#FB8500";
+
+                                    break;
+
+                                case "Làm thêm":
+
+                                    iconName = "ic_work";
+                                    colorCode = "#A2D2FF";
+
+                                    break;
+
+                                case "Đầu tư":
+
+                                    iconName = "ic_invest";
+                                    colorCode = "#2A9D8F";
+
+                                    break;
+
+                                case "Bán hàng":
+
+                                    iconName = "ic_sell";
+                                    colorCode = "#9D4EDD";
+
+                                    break;
+
+                                case "Được tặng":
+
+                                    iconName = "ic_donate";
+                                    colorCode = "#9D6B53";
+
+                                    break;
+                            }
+
+                            updateCategoryUI();
                         }
-                    }
-
-                    updateCategoryUI();
-                })
+                )
                 .show();
     }
+
+    // =========================================================
+    // CHECK STANDARD CATEGORY
+    // =========================================================
 
     private boolean isStandardCategory(
             String category
     ) {
+
         if (category == null) {
             return false;
         }
@@ -730,29 +1234,41 @@ public class EditTransactionActivity extends AppCompatActivity {
                 || "Khác".equals(category);
     }
 
+    // =========================================================
+    // WALLET
+    // =========================================================
+
     private void showWalletDialog() {
+
         ArrayList<String> walletList =
                 new ArrayList<>();
 
         Cursor cursor = null;
 
         try {
-            cursor = dbHelper.getAllWallets();
+
+            cursor =
+                    dbHelper.getAllWallets();
 
             while (cursor.moveToNext()) {
+
                 walletList.add(
                         cursor.getString(0)
                 );
             }
 
         } finally {
+
             if (cursor != null) {
                 cursor.close();
             }
         }
 
         if (walletList.isEmpty()) {
-            walletList.add("Ví mặc định");
+
+            walletList.add(
+                    "Ví mặc định"
+            );
         }
 
         String[] wallets =
@@ -761,7 +1277,11 @@ public class EditTransactionActivity extends AppCompatActivity {
                 );
 
         new AlertDialog.Builder(this)
-                .setTitle("Chọn ví")
+
+                .setTitle(
+                        "Chọn ví"
+                )
+
                 .setItems(
                         wallets,
                         (dialog, which) -> {
@@ -781,16 +1301,23 @@ public class EditTransactionActivity extends AppCompatActivity {
                             );
                         }
                 )
+
                 .show();
     }
 
+    // =========================================================
+    // DATE PICKER
+    // =========================================================
+
     private void showDatePicker() {
+
         Calendar calendar =
                 Calendar.getInstance();
 
         DatePickerDialog dialog =
                 new DatePickerDialog(
                         this,
+
                         (view,
                          year,
                          month,
@@ -809,18 +1336,32 @@ public class EditTransactionActivity extends AppCompatActivity {
                                     selectedDate
                             );
                         },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
+
+                        calendar.get(
+                                Calendar.YEAR
+                        ),
+
+                        calendar.get(
+                                Calendar.MONTH
+                        ),
+
+                        calendar.get(
+                                Calendar.DAY_OF_MONTH
+                        )
                 );
 
         dialog.show();
     }
 
+    // =========================================================
+    // TOUCH / KEYBOARD
+    // =========================================================
+
     @Override
     public boolean dispatchTouchEvent(
             MotionEvent event
     ) {
+
         if (event.getAction()
                 == MotionEvent.ACTION_DOWN) {
 
@@ -828,19 +1369,25 @@ public class EditTransactionActivity extends AppCompatActivity {
                     getCurrentFocus();
 
             if (currentView != null) {
+
                 hideKeyboard();
+
                 currentView.clearFocus();
             }
         }
 
-        return super.dispatchTouchEvent(event);
+        return super.dispatchTouchEvent(
+                event
+        );
     }
 
     private void hideKeyboard() {
+
         InputMethodManager inputMethodManager =
-                (InputMethodManager) getSystemService(
-                        Context.INPUT_METHOD_SERVICE
-                );
+                (InputMethodManager)
+                        getSystemService(
+                                Context.INPUT_METHOD_SERVICE
+                        );
 
         View currentView =
                 getCurrentFocus();
@@ -848,15 +1395,21 @@ public class EditTransactionActivity extends AppCompatActivity {
         if (currentView != null
                 && inputMethodManager != null) {
 
-            inputMethodManager.hideSoftInputFromWindow(
-                    currentView.getWindowToken(),
-                    0
-            );
+            inputMethodManager
+                    .hideSoftInputFromWindow(
+                            currentView.getWindowToken(),
+                            0
+                    );
         }
     }
 
+    // =========================================================
+    // DESTROY
+    // =========================================================
+
     @Override
     protected void onDestroy() {
+
         super.onDestroy();
 
         if (database != null
@@ -866,11 +1419,17 @@ public class EditTransactionActivity extends AppCompatActivity {
         }
 
         if (dbHelper != null) {
+
             dbHelper.close();
         }
     }
 
+    // =========================================================
+    // DP
+    // =========================================================
+
     private int dp(int value) {
+
         return Math.round(
                 value
                         * getResources()

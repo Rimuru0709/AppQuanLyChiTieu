@@ -112,9 +112,9 @@
 
     </LinearLayout>
 
-    <!-- Cảnh báo -->
+    <!-- Danh mục -->
     <LinearLayout
-        android:id="@+id/navAlert"
+        android:id="@+id/navCategory"
         android:layout_width="0dp"
         android:layout_height="62dp"
         android:layout_weight="1"
@@ -125,21 +125,21 @@
         android:orientation="vertical">
 
         <ImageView
-            android:id="@+id/imgAlert"
+            android:id="@+id/imgCategory"
             android:layout_width="22dp"
             android:layout_height="22dp"
-            android:contentDescription="Cảnh báo"
+            android:contentDescription="Danh mục"
             android:scaleType="fitCenter"
-            android:src="@drawable/ic_warning" />
+            android:src="@drawable/ic_category" />
 
         <TextView
-            android:id="@+id/tvAlert"
+            android:id="@+id/tvCategory"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="3dp"
             android:gravity="center"
             android:maxLines="1"
-            android:text="Cảnh báo"
+            android:text="Danh mục"
             android:textColor="@color/text_secondary"
             android:textSize="10sp" />
 

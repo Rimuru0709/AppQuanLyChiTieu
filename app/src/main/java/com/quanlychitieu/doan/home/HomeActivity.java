@@ -22,8 +22,10 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.quanlychitieu.doan.R;
+import com.quanlychitieu.doan.alert.AlertActivity;
 import com.quanlychitieu.doan.alltransaction.AllTransactionActivity;
 import com.quanlychitieu.doan.bottomnav.BottomNavHelper;
+import com.quanlychitieu.doan.chatbot.AiChatActivity;
 import com.quanlychitieu.doan.database.DatabaseHelper;
 import com.quanlychitieu.doan.goal.GoalActivity;
 import com.quanlychitieu.doan.history.ExpenseHistoryActivity;
@@ -46,6 +48,8 @@ public class HomeActivity extends AppCompatActivity {
     private LinearLayout btnTransfer;
     private LinearLayout btnWallet;
     private LinearLayout btnGoal;
+    private LinearLayout btnAlert;
+    private LinearLayout btnAiChat;
 
     private ImageView imgEye;
     private ImageView imgBell;
@@ -101,14 +105,7 @@ public class HomeActivity extends AppCompatActivity {
 
         database = dbHelper.getWritableDatabase();
 
-        /*
-         * Cập nhật lại tên người dùng khi:
-         * - Đăng nhập thành công.
-         * - Đăng xuất.
-         * - Đổi tên trong màn hình tài khoản.
-         */
         updateGreeting();
-
         loadRecentTransactions();
 
         if (isBalanceVisible) {
@@ -122,7 +119,6 @@ public class HomeActivity extends AppCompatActivity {
 
     // =========================================================
     // ON DESTROY
-    // Khi người dùng đóng ứng dụng sẽ tự động giải phóng bộ nhớ
     // =========================================================
 
     @Override
@@ -163,6 +159,8 @@ public class HomeActivity extends AppCompatActivity {
         btnTransfer = findViewById(R.id.btnTransfer);
         btnWallet = findViewById(R.id.btnWallet);
         btnGoal = findViewById(R.id.btnGoal);
+        btnAlert = findViewById(R.id.btnAlert);
+        btnAiChat = findViewById(R.id.btnAiChat);
     }
 
     // =========================================================
@@ -223,10 +221,6 @@ public class HomeActivity extends AppCompatActivity {
         FirebaseUser currentUser =
                 auth.getCurrentUser();
 
-        /*
-         * Chưa đăng nhập:
-         * giữ nguyên chữ Người dùng.
-         */
         if (currentUser == null) {
             tvHello.setText(
                     "Xin chào, Người dùng! 👋"
@@ -238,20 +232,12 @@ public class HomeActivity extends AppCompatActivity {
         String userId =
                 currentUser.getUid();
 
-        /*
-         * Lấy tên đã lưu trong AccountStorage
-         * theo UID của tài khoản Firebase.
-         */
         String fullName =
                 AccountStorage.getFullName(
                         HomeActivity.this,
                         userId
                 );
 
-        /*
-         * Nếu AccountStorage chưa có tên,
-         * lấy displayName từ Firebase.
-         */
         if (fullName == null
                 || fullName.trim().isEmpty()) {
 
@@ -259,10 +245,6 @@ public class HomeActivity extends AppCompatActivity {
                     currentUser.getDisplayName();
         }
 
-        /*
-         * Nếu Firebase cũng chưa có tên,
-         * tiếp tục hiện Người dùng.
-         */
         if (fullName == null
                 || fullName.trim().isEmpty()) {
 
@@ -302,6 +284,8 @@ public class HomeActivity extends AppCompatActivity {
     // =========================================================
 
     private void setupQuickButtons() {
+
+        // Thu nhập
         if (btnIncome != null) {
             btnIncome.setOnClickListener(
                     view -> startActivity(
@@ -313,6 +297,7 @@ public class HomeActivity extends AppCompatActivity {
             );
         }
 
+        // Chi tiêu
         if (btnExpense != null) {
             btnExpense.setOnClickListener(
                     view -> startActivity(
@@ -324,6 +309,7 @@ public class HomeActivity extends AppCompatActivity {
             );
         }
 
+        // Chuyển khoản
         if (btnTransfer != null) {
             btnTransfer.setOnClickListener(
                     view -> startActivity(
@@ -335,6 +321,7 @@ public class HomeActivity extends AppCompatActivity {
             );
         }
 
+        // Ví của tôi
         if (btnWallet != null) {
             btnWallet.setOnClickListener(
                     view -> startActivity(
@@ -346,6 +333,31 @@ public class HomeActivity extends AppCompatActivity {
             );
         }
 
+        // Cảnh báo
+        if (btnAlert != null) {
+            btnAlert.setOnClickListener(
+                    view -> startActivity(
+                            new Intent(
+                                    HomeActivity.this,
+                                    AlertActivity.class
+                            )
+                    )
+            );
+        }
+
+        // Trợ lý AI
+        if (btnAiChat != null) {
+            btnAiChat.setOnClickListener(
+                    view -> startActivity(
+                            new Intent(
+                                    HomeActivity.this,
+                                    AiChatActivity.class
+                            )
+                    )
+            );
+        }
+
+        // Mục tiêu
         if (btnGoal != null) {
             btnGoal.setOnClickListener(
                     view -> startActivity(
@@ -357,6 +369,7 @@ public class HomeActivity extends AppCompatActivity {
             );
         }
 
+        // Xem tất cả giao dịch
         if (tvViewAll != null) {
             tvViewAll.setOnClickListener(
                     view -> startActivity(
@@ -368,6 +381,7 @@ public class HomeActivity extends AppCompatActivity {
             );
         }
 
+        // Chuông thông báo
         if (imgBell != null) {
             imgBell.setOnClickListener(
                     view -> {
@@ -805,9 +819,6 @@ public class HomeActivity extends AppCompatActivity {
                         : View.GONE
         );
 
-        /*
-         * Đảm bảo chấm đỏ nằm phía trên icon chuông.
-         */
         viewNotificationDot.bringToFront();
     }
 
@@ -825,7 +836,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     // =========================================================
-    // ĐỊNH DẠNG TIỀN
+    // ĐỊNH DẠNG TIỀN n 
     // =========================================================
 
     private String formatMoney(int money) {

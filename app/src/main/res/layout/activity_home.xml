@@ -152,24 +152,25 @@
 
             </LinearLayout>
 
-            <!-- Menu chức năng -->
-            <HorizontalScrollView
+            <!-- Menu chức năng: 2 hàng -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:fillViewport="false"
-                android:scrollbars="none">
+                android:orientation="vertical">
 
+                <!-- Hàng trên: 4 chức năng -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
                     <!-- Thu nhập -->
                     <LinearLayout
                         android:id="@+id/btnIncome"
-                        android:layout_width="100dp"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
@@ -198,8 +199,9 @@
                     <!-- Chi tiêu -->
                     <LinearLayout
                         android:id="@+id/btnExpense"
-                        android:layout_width="100dp"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
@@ -228,8 +230,9 @@
                     <!-- Chuyển khoản -->
                     <LinearLayout
                         android:id="@+id/btnTransfer"
-                        android:layout_width="100dp"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
@@ -258,8 +261,9 @@
                     <!-- Ví của tôi -->
                     <LinearLayout
                         android:id="@+id/btnWallet"
-                        android:layout_width="100dp"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
@@ -285,11 +289,88 @@
 
                     </LinearLayout>
 
+                </LinearLayout>
+
+                <!-- Hàng dưới: 3 chức năng -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <!-- Trợ lý AI -->
+                    <LinearLayout
+                        android:id="@+id/btnAiChat"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp">
+
+                        <TextView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_chat_send_button"
+                            android:gravity="center"
+                            android:text="AI"
+                            android:textColor="@color/chat_send_icon"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:gravity="center"
+                            android:text="Trợ lý AI"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp" />
+
+                    </LinearLayout>
+
+                    <!-- Cảnh báo -->
+                    <LinearLayout
+                        android:id="@+id/btnAlert"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackgroundBorderless"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        android:paddingTop="4dp"
+                        android:paddingBottom="4dp">
+
+                        <ImageView
+                            android:layout_width="30dp"
+                            android:layout_height="30dp"
+                            android:contentDescription="Cảnh báo"
+                            android:src="@drawable/ic_warning"
+                            app:tint="#FF9800" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="5dp"
+                            android:gravity="center"
+                            android:text="Cảnh báo"
+                            android:textColor="@color/text_primary"
+                            android:textSize="11sp" />
+
+                    </LinearLayout>
+
                     <!-- Mục tiêu -->
                     <LinearLayout
                         android:id="@+id/btnGoal"
-                        android:layout_width="100dp"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:clickable="true"
                         android:focusable="true"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
@@ -317,7 +398,7 @@
 
                 </LinearLayout>
 
-            </HorizontalScrollView>
+            </LinearLayout>
 
             <!-- Tiêu đề giao dịch gần đây -->
             <LinearLayout

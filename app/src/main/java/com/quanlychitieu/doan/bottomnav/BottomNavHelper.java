@@ -16,7 +16,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.quanlychitieu.doan.R;
-import com.quanlychitieu.doan.alert.AlertActivity;
+import com.quanlychitieu.doan.category.CategoryActivity;
 import com.quanlychitieu.doan.choosetransaction.ChooseTransactionActivity;
 import com.quanlychitieu.doan.home.HomeActivity;
 import com.quanlychitieu.doan.setting.SettingActivity;
@@ -44,8 +44,8 @@ public class BottomNavHelper {
         LinearLayout navAdd =
                 activity.findViewById(R.id.navAdd);
 
-        LinearLayout navAlert =
-                activity.findViewById(R.id.navAlert);
+        LinearLayout navCategory =
+                activity.findViewById(R.id.navCategory);
 
         LinearLayout navSetting =
                 activity.findViewById(R.id.navSetting);
@@ -59,8 +59,8 @@ public class BottomNavHelper {
         ImageView imgAdd =
                 activity.findViewById(R.id.imgAdd);
 
-        ImageView imgAlert =
-                activity.findViewById(R.id.imgAlert);
+        ImageView imgCategory =
+                activity.findViewById(R.id.imgCategory);
 
         ImageView imgSetting =
                 activity.findViewById(R.id.imgSetting);
@@ -74,8 +74,8 @@ public class BottomNavHelper {
         TextView tvAdd =
                 activity.findViewById(R.id.tvAdd);
 
-        TextView tvAlert =
-                activity.findViewById(R.id.tvAlert);
+        TextView tvCategory =
+                activity.findViewById(R.id.tvCategory);
 
         TextView tvSetting =
                 activity.findViewById(R.id.tvSetting);
@@ -87,12 +87,12 @@ public class BottomNavHelper {
                 imgHome,
                 imgStatistic,
                 imgAdd,
-                imgAlert,
+                imgCategory,
                 imgSetting,
                 tvHome,
                 tvStatistic,
                 tvAdd,
-                tvAlert,
+                tvCategory,
                 tvSetting
         );
 
@@ -100,17 +100,17 @@ public class BottomNavHelper {
                 activity,
                 imgHome,
                 imgStatistic,
-                imgAlert,
+                imgCategory,
                 imgSetting,
                 tvHome,
                 tvStatistic,
-                tvAlert,
+                tvCategory,
                 tvSetting
         );
 
         // Trang chủ
         if (navHome != null) {
-            navHome.setOnClickListener(v -> {
+            navHome.setOnClickListener(view -> {
 
                 if (!(activity instanceof HomeActivity)) {
 
@@ -130,7 +130,7 @@ public class BottomNavHelper {
 
         // Thống kê
         if (navStatistic != null) {
-            navStatistic.setOnClickListener(v -> {
+            navStatistic.setOnClickListener(view -> {
 
                 if (!(activity instanceof StatisticActivity)) {
 
@@ -150,7 +150,7 @@ public class BottomNavHelper {
 
         // Thêm giao dịch
         if (navAdd != null) {
-            navAdd.setOnClickListener(v -> {
+            navAdd.setOnClickListener(view -> {
 
                 Intent intent = new Intent(
                         activity,
@@ -161,15 +161,15 @@ public class BottomNavHelper {
             });
         }
 
-        // Cảnh báo
-        if (navAlert != null) {
-            navAlert.setOnClickListener(v -> {
+        // Danh mục
+        if (navCategory != null) {
+            navCategory.setOnClickListener(view -> {
 
-                if (!(activity instanceof AlertActivity)) {
+                if (!(activity instanceof CategoryActivity)) {
 
                     Intent intent = new Intent(
                             activity,
-                            AlertActivity.class
+                            CategoryActivity.class
                     );
 
                     intent.addFlags(
@@ -183,7 +183,7 @@ public class BottomNavHelper {
 
         // Cài đặt
         if (navSetting != null) {
-            navSetting.setOnClickListener(v -> {
+            navSetting.setOnClickListener(view -> {
 
                 if (!(activity instanceof SettingActivity)) {
 
@@ -209,28 +209,31 @@ public class BottomNavHelper {
             Activity activity,
             ImageView imgHome,
             ImageView imgStatistic,
-            ImageView imgAlert,
+            ImageView imgCategory,
             ImageView imgSetting,
             TextView tvHome,
             TextView tvStatistic,
-            TextView tvAlert,
+            TextView tvCategory,
             TextView tvSetting
     ) {
 
         resetAllColors(
                 imgHome,
                 imgStatistic,
-                imgAlert,
+                imgCategory,
                 imgSetting,
                 tvHome,
                 tvStatistic,
-                tvAlert,
+                tvCategory,
                 tvSetting
         );
 
         if (activity instanceof HomeActivity) {
 
-            setSelectedColor(imgHome, tvHome);
+            setSelectedColor(
+                    imgHome,
+                    tvHome
+            );
 
         } else if (activity instanceof StatisticActivity) {
 
@@ -239,11 +242,11 @@ public class BottomNavHelper {
                     tvStatistic
             );
 
-        } else if (activity instanceof AlertActivity) {
+        } else if (activity instanceof CategoryActivity) {
 
             setSelectedColor(
-                    imgAlert,
-                    tvAlert
+                    imgCategory,
+                    tvCategory
             );
 
         } else if (activity instanceof SettingActivity) {
@@ -261,17 +264,17 @@ public class BottomNavHelper {
     private static void resetAllColors(
             ImageView imgHome,
             ImageView imgStatistic,
-            ImageView imgAlert,
+            ImageView imgCategory,
             ImageView imgSetting,
             TextView tvHome,
             TextView tvStatistic,
-            TextView tvAlert,
+            TextView tvCategory,
             TextView tvSetting
     ) {
 
         setNormalColor(imgHome, tvHome);
         setNormalColor(imgStatistic, tvStatistic);
-        setNormalColor(imgAlert, tvAlert);
+        setNormalColor(imgCategory, tvCategory);
         setNormalColor(imgSetting, tvSetting);
     }
 
@@ -352,12 +355,12 @@ public class BottomNavHelper {
             ImageView imgHome,
             ImageView imgStatistic,
             ImageView imgAdd,
-            ImageView imgAlert,
+            ImageView imgCategory,
             ImageView imgSetting,
             TextView tvHome,
             TextView tvStatistic,
             TextView tvAdd,
-            TextView tvAlert,
+            TextView tvCategory,
             TextView tvSetting
     ) {
 
@@ -412,7 +415,7 @@ public class BottomNavHelper {
 
         setViewSize(
                 activity,
-                imgAlert,
+                imgCategory,
                 iconSizeDp,
                 iconSizeDp
         );
@@ -427,7 +430,7 @@ public class BottomNavHelper {
         setTextSize(tvHome, textSizeSp);
         setTextSize(tvStatistic, textSizeSp);
         setTextSize(tvAdd, textSizeSp);
-        setTextSize(tvAlert, textSizeSp);
+        setTextSize(tvCategory, textSizeSp);
         setTextSize(tvSetting, textSizeSp);
     }
 

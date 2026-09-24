@@ -2,7 +2,9 @@ package com.quanlychitieu.doan.choosetransaction;
 
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -18,12 +20,15 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.content.ContextCompat;
 
 import com.quanlychitieu.doan.R;
+import com.quanlychitieu.doan.category.CategoryActivity;
 import com.quanlychitieu.doan.database.DatabaseHelper;
 
 import java.text.SimpleDateFormat;
@@ -38,7 +43,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     private TextView tvCategoryName, tvWallet;
     private TextView tabChiTieu, tabThuNhap;
     private ImageView imgCategoryIcon;
-    private EditText edtAmount, edtDate, edtNote, edtOtherCategory;
+    private EditText edtAmount, edtDate, edtNote;
     private Button btnSave;
 
     private DatabaseHelper databaseHelper;
@@ -49,6 +54,8 @@ public class ChooseTransactionActivity extends AppCompatActivity {
     private String selectedIcon = "ic_food";
     private String selectedColor = "#FF3131";
 
+    private ActivityResultLauncher<Intent> categoryLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -57,6 +64,7 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         setupSafeArea();
 
         databaseHelper = new DatabaseHelper(this);
+        setupCategoryLauncher();
 
         layoutCategory = findViewById(R.id.layoutCategory);
         tvCategoryName = findViewById(R.id.tvCategoryName);
@@ -68,7 +76,6 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         edtAmount = findViewById(R.id.edtAmount);
         edtDate = findViewById(R.id.edtDate);
         edtNote = findViewById(R.id.edtNote);
-        edtOtherCategory = findViewById(R.id.edtOtherCategory);
 
         tvWallet = findViewById(R.id.tvWallet);
         tvWallet.setText(selectedWallet);
@@ -99,10 +106,54 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             return false;
         });
 
-        edtOtherCategory.setOnEditorActionListener((v, actionId, event) -> {
-            hideKeyboard();
-            return false;
-        });
+    }
+
+    private void setupCategoryLauncher() {
+        categoryLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() != Activity.RESULT_OK
+                            || result.getData() == null) {
+                        return;
+                    }
+
+                    Intent data = result.getData();
+
+                    String categoryName = data.getStringExtra(
+                            CategoryActivity.EXTRA_CATEGORY_NAME
+                    );
+
+                    String categoryIcon = data.getStringExtra(
+                            CategoryActivity.EXTRA_CATEGORY_ICON
+                    );
+
+                    String categoryColor = data.getStringExtra(
+                            CategoryActivity.EXTRA_CATEGORY_COLOR
+                    );
+
+                    String categoryType = data.getStringExtra(
+                            CategoryActivity.EXTRA_CATEGORY_TYPE
+                    );
+
+                    if (categoryName == null
+                            || categoryIcon == null
+                            || categoryColor == null) {
+                        return;
+                    }
+
+                    if ("INCOME".equals(categoryType)) {
+                        setIncomeMode();
+                    } else {
+                        setExpenseMode();
+                    }
+
+                    applySelectedCategory(
+                            categoryName,
+                            categoryIcon,
+                            categoryColor
+                    );
+                }
+        );
     }
 
     private void setupSafeArea() {
@@ -174,9 +225,6 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
         selectedIcon = "ic_food";
         selectedColor = "#FF3131";
-
-        edtOtherCategory.setVisibility(View.GONE);
-        edtOtherCategory.setText("");
     }
 
     private void setIncomeMode() {
@@ -208,9 +256,6 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
         selectedIcon = "ic_salary";
         selectedColor = "#2ECC71";
-
-        edtOtherCategory.setVisibility(View.GONE);
-        edtOtherCategory.setText("");
     }
 
     private void setIconBackgroundColor(String color) {
@@ -307,6 +352,13 @@ public class ChooseTransactionActivity extends AppCompatActivity {
 
         builder.setItems(categories, (dialog, which) -> {
             String selectedCategory = categories[which];
+
+            if ("Khác".equals(selectedCategory)) {
+                dialog.dismiss();
+                openCategoryScreen();
+                return;
+            }
+
             tvCategoryName.setText(selectedCategory);
 
             tvCategoryName.setTextColor(
@@ -316,13 +368,6 @@ public class ChooseTransactionActivity extends AppCompatActivity {
                     )
             );
 
-            if (selectedCategory.equals("Khác")) {
-                edtOtherCategory.setVisibility(View.VISIBLE);
-            } else {
-                edtOtherCategory.setVisibility(View.GONE);
-                edtOtherCategory.setText("");
-            }
-
             if (transactionType.equals("INCOME")) {
                 setIncomeCategoryIcon(which);
             } else {
@@ -331,6 +376,62 @@ public class ChooseTransactionActivity extends AppCompatActivity {
         });
 
         builder.show();
+    }
+
+    private void openCategoryScreen() {
+        Intent intent = new Intent(
+                this,
+                CategoryActivity.class
+        );
+
+        intent.putExtra(
+                CategoryActivity.EXTRA_CATEGORY_TYPE,
+                transactionType
+        );
+
+        intent.putExtra(
+                "select_category_mode",
+                true
+        );
+
+        categoryLauncher.launch(intent);
+    }
+
+    private void applySelectedCategory(
+            String name,
+            String icon,
+            String color
+    ) {
+        tvCategoryName.setText(name);
+
+        tvCategoryName.setTextColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.text_primary
+                )
+        );
+
+        int iconResource = getResources().getIdentifier(
+                icon,
+                "drawable",
+                getPackageName()
+        );
+
+        if (iconResource == 0) {
+            iconResource = R.drawable.ic_dot;
+        }
+
+        imgCategoryIcon.setImageResource(iconResource);
+
+        selectedIcon = icon;
+        selectedColor = color;
+
+        try {
+            setIconBackgroundColor(color);
+        } catch (IllegalArgumentException exception) {
+            selectedColor = "#ADB5BD";
+            setIconBackgroundColor(selectedColor);
+        }
     }
 
     private void setExpenseCategoryIcon(int which) {
@@ -447,33 +548,12 @@ public class ChooseTransactionActivity extends AppCompatActivity {
             return;
         }
 
-        /*
-         * Nếu người dùng chọn Khác thì lấy tên danh mục
-         * được nhập trong edtOtherCategory.
-         */
-        if ("Khác".equals(category)) {
-            String otherCategory = edtOtherCategory.getText().toString().trim();
-
-            if (otherCategory.isEmpty()) {
-                edtOtherCategory.setError(
-                        "Nhập tên danh mục khác"
-                );
-
-                edtOtherCategory.requestFocus();
-                return;
-            }
-
-            category = otherCategory;
-            selectedIcon = "ic_dot";
-            selectedColor = "#ADB5BD";
-        }
-
         int amount;
 
         try {
             amount = Integer.parseInt(
-                            amountText
-                    );
+                    amountText
+            );
 
         } catch (NumberFormatException exception) {
             Toast.makeText(this,

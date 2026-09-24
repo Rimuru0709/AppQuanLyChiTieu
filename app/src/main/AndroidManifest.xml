@@ -15,7 +15,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.QuanLyChiTieu">
+        android:theme="@style/Theme.QuanLyChiTieu"
+        android:usesCleartextTraffic="true">
 
         <!-- Facebook SDK -->
         <meta-data
@@ -189,6 +190,35 @@
         <activity
             android:name=".setting.AccountActivity"
             android:exported="false" />
+
+
+        <!-- Danh sách danh mục -->
+        <activity
+            android:name=".category.CategoryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Tạo danh mục mới -->
+        <activity
+            android:name=".category.CreateCategoryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".category.EditCategoryActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".category.IconPickerActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Trợ lý tài chính AI -->
+        <activity
+            android:name=".chatbot.AiChatActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 
 </manifest>

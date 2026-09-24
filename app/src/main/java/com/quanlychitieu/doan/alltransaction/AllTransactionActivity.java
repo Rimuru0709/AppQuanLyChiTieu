@@ -9,6 +9,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -21,6 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -118,7 +120,6 @@ public class AllTransactionActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(
                 content,
                 (view, insets) -> {
-
                     Insets systemBars = insets.getInsets(
                             WindowInsetsCompat.Type.systemBars()
                     );
@@ -187,10 +188,6 @@ public class AllTransactionActivity extends AppCompatActivity {
         int totalExpense = getTotalExpense();
         int totalCount = getTotalCount();
 
-        /*
-         * XML mới đã tách tiêu đề và giá trị.
-         * Vì vậy chỉ đặt giá trị ở đây.
-         */
         tvTotalIncome.setText(formatMoney(totalIncome));
         tvTotalExpense.setText(formatMoney(totalExpense));
         tvTotalTransaction.setText(String.valueOf(totalCount));
@@ -202,9 +199,9 @@ public class AllTransactionActivity extends AppCompatActivity {
 
         try {
             cursor = database.rawQuery(
-                    "SELECT SUM(ABS(amount)) " +
-                            "FROM transactions " +
-                            "WHERE type = 'INCOME'",
+                    "SELECT SUM(ABS(amount)) "
+                            + "FROM transactions "
+                            + "WHERE type = 'INCOME'",
                     null
             );
 
@@ -226,9 +223,9 @@ public class AllTransactionActivity extends AppCompatActivity {
 
         try {
             cursor = database.rawQuery(
-                    "SELECT SUM(ABS(amount)) " +
-                            "FROM transactions " +
-                            "WHERE type = 'EXPENSE'",
+                    "SELECT SUM(ABS(amount)) "
+                            + "FROM transactions "
+                            + "WHERE type = 'EXPENSE'",
                     null
             );
 
@@ -267,9 +264,9 @@ public class AllTransactionActivity extends AppCompatActivity {
     }
 
     private void loadAllTransactions(String keyword) {
-        if (layoutTransactions == null ||
-                database == null ||
-                !database.isOpen()) {
+        if (layoutTransactions == null
+                || database == null
+                || !database.isOpen()) {
             return;
         }
 
@@ -278,12 +275,14 @@ public class AllTransactionActivity extends AppCompatActivity {
         Cursor cursor = null;
 
         try {
+            String searchValue = "%" + keyword + "%";
+
             cursor = database.rawQuery(
-                    "SELECT id, title, date, amount, icon, color, type " +
-                            "FROM transactions " +
-                            "WHERE title LIKE ? " +
-                            "ORDER BY id DESC",
-                    new String[]{"%" + keyword + "%"}
+                    "SELECT id, title, category, date, amount, icon, color, type "
+                            + "FROM transactions "
+                            + "WHERE title LIKE ? OR category LIKE ? "
+                            + "ORDER BY id DESC",
+                    new String[]{searchValue, searchValue}
             );
 
             if (cursor.getCount() == 0) {
@@ -294,15 +293,24 @@ public class AllTransactionActivity extends AppCompatActivity {
             while (cursor.moveToNext()) {
                 int id = cursor.getInt(0);
                 String title = cursor.getString(1);
-                String date = cursor.getString(2);
-                int amount = cursor.getInt(3);
-                String iconName = cursor.getString(4);
-                String colorCode = cursor.getString(5);
-                String type = cursor.getString(6);
+                String category = cursor.getString(2);
+                String date = cursor.getString(3);
+                int amount = cursor.getInt(4);
+                String iconName = cursor.getString(5);
+                String colorCode = cursor.getString(6);
+                String type = cursor.getString(7);
+
+                // Danh sách hiển thị tên danh mục, ví dụ "Ăn uống".
+                // Giao dịch cũ chưa có category sẽ dùng title để không bị trống.
+                String displayName = category;
+
+                if (displayName == null || displayName.trim().isEmpty()) {
+                    displayName = title;
+                }
 
                 addTransaction(
                         id,
-                        title,
+                        displayName,
                         date,
                         amount,
                         iconName,
@@ -349,68 +357,95 @@ public class AllTransactionActivity extends AppCompatActivity {
             String colorCode,
             String type
     ) {
+        // Mỗi giao dịch là một thẻ giống danh sách khoản thu.
+        CardView card = new CardView(this);
+
+        LinearLayout.LayoutParams cardParams =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+
+        cardParams.setMargins(
+                0,
+                0,
+                0,
+                dp(12)
+        );
+
+        card.setLayoutParams(cardParams);
+        card.setRadius(dp(13));
+        card.setCardElevation(dp(2));
+        card.setUseCompatPadding(false);
+        card.setPreventCornerOverlap(true);
+        card.setCardBackgroundColor(
+                ContextCompat.getColor(
+                        this,
+                        R.color.card_background
+                )
+        );
+        card.setClickable(true);
+        card.setFocusable(true);
+
         LinearLayout row = new LinearLayout(this);
 
+        row.setLayoutParams(
+                new CardView.LayoutParams(
+                        CardView.LayoutParams.MATCH_PARENT,
+                        dp(64)
+                )
+        );
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
         row.setPadding(
-                0,
-                dp(7),
-                0,
-                dp(7)
+                dp(12),
+                dp(8),
+                dp(12),
+                dp(8)
         );
 
-        row.setClickable(true);
-        row.setFocusable(true);
-
-        FrameLayout iconContainer =
-                new FrameLayout(this);
+        FrameLayout iconContainer = new FrameLayout(this);
 
         LinearLayout.LayoutParams containerParams =
                 new LinearLayout.LayoutParams(
-                        dp(38),
-                        dp(38)
+                        dp(40),
+                        dp(40)
                 );
 
         containerParams.setMarginEnd(dp(10));
         iconContainer.setLayoutParams(containerParams);
 
-        GradientDrawable iconBackground =
-                new GradientDrawable();
-
-        iconBackground.setShape(
-                GradientDrawable.OVAL
-        );
+        GradientDrawable iconBackground = new GradientDrawable();
+        iconBackground.setShape(GradientDrawable.OVAL);
 
         try {
-            iconBackground.setColor(
-                    Color.parseColor(colorCode)
-            );
+            iconBackground.setColor(Color.parseColor(colorCode));
         } catch (Exception exception) {
-            iconBackground.setColor(
-                    Color.parseColor("#ADB5BD")
-            );
+            iconBackground.setColor(Color.parseColor("#ADB5BD"));
         }
 
         iconContainer.setBackground(iconBackground);
 
-        ImageView imgIcon =
-                new ImageView(this);
+        ImageView imgIcon = new ImageView(this);
 
         FrameLayout.LayoutParams iconParams =
                 new FrameLayout.LayoutParams(
-                        dp(18),
-                        dp(18)
+                        dp(20),
+                        dp(20)
                 );
 
         iconParams.gravity = Gravity.CENTER;
         imgIcon.setLayoutParams(iconParams);
 
-        int iconResource = getResources().getIdentifier(
-                iconName,
-                "drawable",
-                getPackageName()
-        );
+        int iconResource = 0;
+
+        if (iconName != null && !iconName.trim().isEmpty()) {
+            iconResource = getResources().getIdentifier(
+                    iconName,
+                    "drawable",
+                    getPackageName()
+            );
+        }
 
         if (iconResource == 0) {
             iconResource = R.drawable.ic_dot;
@@ -418,18 +453,11 @@ public class AllTransactionActivity extends AppCompatActivity {
 
         imgIcon.setImageResource(iconResource);
         imgIcon.setColorFilter(Color.WHITE);
-
         iconContainer.addView(imgIcon);
 
-        /*
-         * Khối chứa tên và ngày.
-         * Tách thành hai TextView để mỗi dòng có màu riêng.
-         */
-        LinearLayout infoLayout =
-                new LinearLayout(this);
-
+        LinearLayout infoLayout = new LinearLayout(this);
         infoLayout.setOrientation(LinearLayout.VERTICAL);
-
+        infoLayout.setGravity(Gravity.CENTER_VERTICAL);
         infoLayout.setLayoutParams(
                 new LinearLayout.LayoutParams(
                         0,
@@ -438,16 +466,16 @@ public class AllTransactionActivity extends AppCompatActivity {
                 )
         );
 
-        TextView tvTitle =
-                new TextView(this);
-
-        tvTitle.setText(title);
-        tvTitle.setTextSize(14);
-        tvTitle.setTypeface(
-                null,
-                Typeface.BOLD
+        TextView tvTitle = new TextView(this);
+        tvTitle.setText(
+                title == null || title.trim().isEmpty()
+                        ? "Giao dịch"
+                        : title
         );
-
+        tvTitle.setTextSize(14);
+        tvTitle.setTypeface(null, Typeface.BOLD);
+        tvTitle.setSingleLine(true);
+        tvTitle.setEllipsize(TextUtils.TruncateAt.END);
         tvTitle.setTextColor(
                 ContextCompat.getColor(
                         this,
@@ -455,12 +483,9 @@ public class AllTransactionActivity extends AppCompatActivity {
                 )
         );
 
-        TextView tvDate =
-                new TextView(this);
-
-        tvDate.setText(date);
+        TextView tvDate = new TextView(this);
+        tvDate.setText(date == null ? "" : date);
         tvDate.setTextSize(12);
-
         tvDate.setTextColor(
                 ContextCompat.getColor(
                         this,
@@ -471,52 +496,35 @@ public class AllTransactionActivity extends AppCompatActivity {
         infoLayout.addView(tvTitle);
         infoLayout.addView(tvDate);
 
-        TextView tvMoney =
-                new TextView(this);
-
+        TextView tvMoney = new TextView(this);
         tvMoney.setTextSize(14);
-        tvMoney.setTypeface(
-                null,
-                Typeface.BOLD
-        );
-
-        tvMoney.setGravity(Gravity.END);
+        tvMoney.setTypeface(null, Typeface.BOLD);
+        tvMoney.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
+        tvMoney.setSingleLine(true);
+        tvMoney.setPadding(dp(8), 0, 0, 0);
 
         if ("INCOME".equalsIgnoreCase(type)) {
-            tvMoney.setText(
-                    "+" + formatMoney(Math.abs(money))
-            );
-
-            tvMoney.setTextColor(
-                    Color.parseColor("#00A86B")
-            );
+            tvMoney.setText("+" + formatMoney(Math.abs(money)));
+            tvMoney.setTextColor(Color.parseColor("#00A86B"));
         } else {
-            tvMoney.setText(
-                    "-" + formatMoney(Math.abs(money))
-            );
-
-            tvMoney.setTextColor(
-                    Color.parseColor("#FF3B3B")
-            );
+            tvMoney.setText("-" + formatMoney(Math.abs(money)));
+            tvMoney.setTextColor(Color.parseColor("#FF3B3B"));
         }
 
         row.addView(iconContainer);
         row.addView(infoLayout);
         row.addView(tvMoney);
 
-        layoutTransactions.addView(row);
+        card.addView(row);
+        layoutTransactions.addView(card);
 
-        row.setOnClickListener(v -> {
+        card.setOnClickListener(v -> {
             Intent intent = new Intent(
                     AllTransactionActivity.this,
                     EditTransactionActivity.class
             );
 
-            intent.putExtra(
-                    "transactionId",
-                    id
-            );
-
+            intent.putExtra("transactionId", id);
             startActivity(intent);
         });
     }
@@ -529,9 +537,7 @@ public class AllTransactionActivity extends AppCompatActivity {
 
         View currentView = getCurrentFocus();
 
-        if (inputMethodManager != null &&
-                currentView != null) {
-
+        if (inputMethodManager != null && currentView != null) {
             inputMethodManager.hideSoftInputFromWindow(
                     currentView.getWindowToken(),
                     0

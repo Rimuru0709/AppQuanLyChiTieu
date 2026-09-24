@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Các màu này tự đổi theo giao diện sáng/tối của ứng dụng -->
+    <color name="chat_primary">@color/color_primary</color>
+
+    <color name="chat_screen_background">
+        @color/app_background
+    </color>
+
+    <color name="chat_user_bubble">
+        @color/color_primary
+    </color>
+
+    <color name="chat_ai_bubble">
+        @color/app_background
+    </color>
+
+    <color name="chat_user_text">
+        @color/white
+    </color>
+
+    <color name="chat_ai_text">
+        @color/text_primary
+    </color>
+
+    <color name="chat_input_background">
+        @color/app_background
+    </color>
+
+    <color name="chat_input_border">
+        @color/text_secondary
+    </color>
+
+    <color name="chat_hint">
+        @color/text_hint
+    </color>
+
+    <color name="chat_send_icon">
+        @color/white
+    </color>
+
+    <color name="chat_border">#8A94A6</color>
+
+</resources>

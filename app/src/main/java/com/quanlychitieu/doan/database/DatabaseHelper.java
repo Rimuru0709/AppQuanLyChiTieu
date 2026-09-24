@@ -10,7 +10,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME =
             "ExpenseDB.db";
-    private static final int DATABASE_VERSION = 12;
+    private static final int DATABASE_VERSION = 14;
 
     // =========================================================
     // TÊN BẢNG
@@ -33,6 +33,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String TABLE_BUDGET =
             "budgets";
+
+    public static final String TABLE_CATEGORY =
+            "categories";
+
+    // =========================================================
+    // CỘT BẢNG AI CHAT
+    // =========================================================
+
+    public static final String TABLE_AI_CHAT =
+            "ai_chat_messages";
+
+    public static final String AI_CHAT_ID =
+            "id";
+
+    public static final String AI_CHAT_MESSAGE =
+            "message";
+
+    public static final String AI_CHAT_TYPE =
+            "type";
+
+    public static final String AI_CHAT_CREATED_AT =
+            "created_at";
 
     // =========================================================
     // CỘT BẢNG TRANSACTIONS
@@ -161,6 +183,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             "month";
 
     // =========================================================
+    // CỘT BẢNG CATEGORIES
+    // =========================================================
+
+    public static final String CATEGORY_ID =
+            "id";
+
+    public static final String CATEGORY_NAME =
+            "name";
+
+    public static final String CATEGORY_TYPE =
+            "type";
+
+    public static final String CATEGORY_ICON =
+            "icon";
+
+    public static final String CATEGORY_COLOR =
+            "color";
+
+    public static final String CATEGORY_IS_DEFAULT =
+            "is_default";
+
+    // =========================================================
     // CONSTRUCTOR
     // =========================================================
 
@@ -185,8 +229,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         createAlertSettingTable(db);
         createNotificationTable(db);
         createBudgetTable(db);
+        createCategoryTable(db);
+        createAiChatTable(db);
 
         insertDefaultWallets(db);
+        insertDefaultCategories(db);
     }
 
     private void createTransactionTable(
@@ -375,6 +422,232 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(sql);
     }
 
+    private void createCategoryTable(
+            SQLiteDatabase db
+    ) {
+        String sql =
+                "CREATE TABLE IF NOT EXISTS "
+                        + TABLE_CATEGORY
+                        + " ("
+
+                        + CATEGORY_ID
+                        + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+
+                        + CATEGORY_NAME
+                        + " TEXT NOT NULL,"
+
+                        + CATEGORY_TYPE
+                        + " TEXT NOT NULL,"
+
+                        + CATEGORY_ICON
+                        + " TEXT NOT NULL DEFAULT 'ic_dot',"
+
+                        + CATEGORY_COLOR
+                        + " TEXT NOT NULL DEFAULT '#ADB5BD',"
+
+                        + CATEGORY_IS_DEFAULT
+                        + " INTEGER NOT NULL DEFAULT 0,"
+
+                        + "UNIQUE("
+                        + CATEGORY_NAME
+                        + ", "
+                        + CATEGORY_TYPE
+                        + ")"
+
+                        + ")";
+
+        db.execSQL(sql);
+    }
+
+    private void createAiChatTable(
+            SQLiteDatabase db
+    ) {
+        String sql =
+                "CREATE TABLE IF NOT EXISTS "
+                        + TABLE_AI_CHAT
+                        + " ("
+                        + AI_CHAT_ID
+                        + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+                        + AI_CHAT_MESSAGE
+                        + " TEXT NOT NULL,"
+                        + AI_CHAT_TYPE
+                        + " INTEGER NOT NULL,"
+                        + AI_CHAT_CREATED_AT
+                        + " INTEGER NOT NULL"
+                        + ")";
+
+        db.execSQL(sql);
+    }
+
+    private void insertDefaultCategories(
+            SQLiteDatabase db
+    ) {
+        // Danh mục chi tiêu
+        insertDefaultCategory(
+                db, "Ăn uống", "EXPENSE",
+                "ic_food", "#FF3131"
+        );
+
+        insertDefaultCategory(
+                db, "Đi lại", "EXPENSE",
+                "ic_bus", "#2196F3"
+        );
+
+        insertDefaultCategory(
+                db, "Mua sắm", "EXPENSE",
+                "ic_shopping", "#FF9800"
+        );
+
+        insertDefaultCategory(
+                db, "Giải trí", "EXPENSE",
+                "ic_default", "#9C27B0"
+        );
+
+        insertDefaultCategory(
+                db, "Hóa đơn", "EXPENSE",
+                "ic_bill", "#FF9800"
+        );
+
+        insertDefaultCategory(
+                db, "Sức khỏe", "EXPENSE",
+                "ic_heart", "#FFB3C6"
+        );
+
+        insertDefaultCategory(
+                db, "Nhà cửa", "EXPENSE",
+                "ic_default", "#F9844A"
+        );
+
+        insertDefaultCategory(
+                db, "Cafe", "EXPENSE",
+                "ic_food", "#9D4EDD"
+        );
+
+        insertDefaultCategory(
+                db, "Giáo dục", "EXPENSE",
+                "ic_work", "#5B8FD7"
+        );
+
+        insertDefaultCategory(
+                db, "Quà tặng", "EXPENSE",
+                "ic_donate", "#D14D8B"
+        );
+
+        insertDefaultCategory(
+                db, "Thực phẩm", "EXPENSE",
+                "ic_shopping", "#7CB342"
+        );
+
+        insertDefaultCategory(
+                db, "Gia đình", "EXPENSE",
+                "ic_heart", "#F9C74F"
+        );
+
+        insertDefaultCategory(
+                db, "Thể dục", "EXPENSE",
+                "ic_default", "#F3722C"
+        );
+
+        insertDefaultCategory(
+                db, "Khác", "EXPENSE",
+                "ic_dot", "#ADB5BD"
+        );
+
+        // Danh mục thu nhập
+        insertDefaultCategory(
+                db, "Lương", "INCOME",
+                "ic_salary", "#2ECC71"
+        );
+
+        insertDefaultCategory(
+                db, "Thưởng", "INCOME",
+                "ic_reward", "#FB8500"
+        );
+
+        insertDefaultCategory(
+                db, "Làm thêm", "INCOME",
+                "ic_work", "#A2D2FF"
+        );
+
+        insertDefaultCategory(
+                db, "Đầu tư", "INCOME",
+                "ic_invest", "#2A9D8F"
+        );
+
+        insertDefaultCategory(
+                db, "Bán hàng", "INCOME",
+                "ic_sell", "#9D4EDD"
+        );
+
+        insertDefaultCategory(
+                db, "Được tặng", "INCOME",
+                "ic_donate", "#9D6B53"
+        );
+
+        insertDefaultCategory(
+                db, "Hoàn tiền", "INCOME",
+                "ic_reward", "#43AA8B"
+        );
+
+        insertDefaultCategory(
+                db, "Tiền lãi", "INCOME",
+                "ic_invest", "#277DA1"
+        );
+
+        insertDefaultCategory(
+                db, "Cho thuê", "INCOME",
+                "ic_sell", "#577590"
+        );
+
+        insertDefaultCategory(
+                db, "Khác", "INCOME",
+                "ic_dot", "#ADB5BD"
+        );
+    }
+
+    private void insertDefaultCategory(
+            SQLiteDatabase db,
+            String name,
+            String type,
+            String icon,
+            String color
+    ) {
+        ContentValues values =
+                new ContentValues();
+
+        values.put(
+                CATEGORY_NAME,
+                name
+        );
+
+        values.put(
+                CATEGORY_TYPE,
+                type
+        );
+
+        values.put(
+                CATEGORY_ICON,
+                icon
+        );
+
+        values.put(
+                CATEGORY_COLOR,
+                color
+        );
+
+        values.put(
+                CATEGORY_IS_DEFAULT,
+                1
+        );
+
+        db.insertWithOnConflict(
+                TABLE_CATEGORY,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_IGNORE
+        );
+    }
+
     // =========================================================
     // NÂNG CẤP DATABASE
     // =========================================================
@@ -400,6 +673,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         if (oldVersion < 12) {
             createBudgetTable(db);
+        }
+
+        if (oldVersion < 13) {
+            createCategoryTable(db);
+            insertDefaultCategories(db);
+        }
+
+        if (oldVersion < 14) {
+            createAiChatTable(db);
         }
     }
 
@@ -675,6 +957,154 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 WALLET_NAME + " = ?",
                 new String[]{
                         name
+                }
+        );
+    }
+
+    // =========================================================
+    // CATEGORIES (Danh mục giao dịch)
+    // =========================================================
+
+    public Cursor getCategoriesByType(
+            String type
+    ) {
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+        String normalizedType =
+                "INCOME".equals(type)
+                        ? "INCOME"
+                        : "EXPENSE";
+
+        return db.query(
+                TABLE_CATEGORY,
+                new String[]{
+                        CATEGORY_ID,
+                        CATEGORY_NAME,
+                        CATEGORY_TYPE,
+                        CATEGORY_ICON,
+                        CATEGORY_COLOR,
+                        CATEGORY_IS_DEFAULT
+                },
+                CATEGORY_TYPE + " = ?",
+                new String[]{
+                        normalizedType
+                },
+                null,
+                null,
+                CATEGORY_IS_DEFAULT + " DESC, "
+                        + CATEGORY_ID + " ASC"
+        );
+    }
+
+    public long insertCategory(
+            String name,
+            String type,
+            String icon,
+            String color
+    ) {
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+        String normalizedName =
+                normalizeText(name, "");
+
+        if (normalizedName.isEmpty()) {
+            return -1;
+        }
+
+        String normalizedType =
+                "INCOME".equals(type)
+                        ? "INCOME"
+                        : "EXPENSE";
+
+        ContentValues values =
+                new ContentValues();
+
+        values.put(
+                CATEGORY_NAME,
+                normalizedName
+        );
+
+        values.put(
+                CATEGORY_TYPE,
+                normalizedType
+        );
+
+        values.put(
+                CATEGORY_ICON,
+                normalizeText(icon, "ic_dot")
+        );
+
+        values.put(
+                CATEGORY_COLOR,
+                normalizeText(color, "#ADB5BD")
+        );
+
+        values.put(
+                CATEGORY_IS_DEFAULT,
+                0
+        );
+
+        return db.insertWithOnConflict(
+                TABLE_CATEGORY,
+                null,
+                values,
+                SQLiteDatabase.CONFLICT_IGNORE
+        );
+    }
+
+    public int updateCategory(
+            long id,
+            String name,
+            String type,
+            String icon,
+            String color
+    ) {
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+        String normalizedName =
+                normalizeText(name, "");
+
+        if (normalizedName.isEmpty()) {
+            return 0;
+        }
+
+        String normalizedType =
+                "INCOME".equals(type)
+                        ? "INCOME"
+                        : "EXPENSE";
+
+        ContentValues values =
+                new ContentValues();
+
+        values.put(
+                CATEGORY_NAME,
+                normalizedName
+        );
+
+        values.put(
+                CATEGORY_TYPE,
+                normalizedType
+        );
+
+        values.put(
+                CATEGORY_ICON,
+                normalizeText(icon, "ic_dot")
+        );
+
+        values.put(
+                CATEGORY_COLOR,
+                normalizeText(color, "#ADB5BD")
+        );
+
+        return db.update(
+                TABLE_CATEGORY,
+                values,
+                CATEGORY_ID + " = ?",
+                new String[]{
+                        String.valueOf(id)
                 }
         );
     }
@@ -1718,6 +2148,97 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return db.delete(
                 TABLE_NOTIFICATION,
+                null,
+                null
+        );
+    }
+
+    // =========================================================
+    // AI CHAT
+    // =========================================================
+
+    /**
+     * type = 0: tin nhắn người dùng
+     * type = 1: câu trả lời của AI
+     */
+    public long insertAiChatMessage(
+            String message,
+            int type
+    ) {
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+        ContentValues values =
+                new ContentValues();
+
+        values.put(
+                AI_CHAT_MESSAGE,
+                normalizeText(message, "")
+        );
+
+        values.put(
+                AI_CHAT_TYPE,
+                type
+        );
+
+        values.put(
+                AI_CHAT_CREATED_AT,
+                System.currentTimeMillis()
+        );
+
+        return db.insert(
+                TABLE_AI_CHAT,
+                null,
+                values
+        );
+    }
+
+    public Cursor getAiChatMessages() {
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+        return db.query(
+                TABLE_AI_CHAT,
+                null,
+                null,
+                null,
+                null,
+                null,
+                AI_CHAT_ID + " ASC"
+        );
+    }
+
+    public int getAiChatMessageCount() {
+        SQLiteDatabase db =
+                getReadableDatabase();
+
+        Cursor cursor = null;
+
+        try {
+            cursor = db.rawQuery(
+                    "SELECT COUNT(*) FROM "
+                            + TABLE_AI_CHAT,
+                    null
+            );
+
+            if (cursor.moveToFirst()) {
+                return cursor.getInt(0);
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return 0;
+    }
+
+    public int deleteAiChatMessages() {
+        SQLiteDatabase db =
+                getWritableDatabase();
+
+        return db.delete(
+                TABLE_AI_CHAT,
                 null,
                 null
         );
